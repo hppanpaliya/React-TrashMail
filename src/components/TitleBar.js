@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Box, Button, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
+import PersonIcon from "@mui/icons-material/Person";
 const TitleBar = () => {
   const navigate = useNavigate();
   return (
@@ -11,7 +11,7 @@ const TitleBar = () => {
         style={{
           display: "flex",
           position: "absolute",
-          left: "21.7%",
+          left: "35.7%",
           top: "51%",
           opacity: "0.2",
           justifyContent: "flex-start",
@@ -37,6 +37,7 @@ const TitleBar = () => {
             alignItems: "center",
             p: 3,
             marginLeft: "2%",
+            marginTop: "2%",
           }}
         >
           <Typography
@@ -53,11 +54,11 @@ const TitleBar = () => {
             TrashMail
           </Typography>
 
-          <Typography variant="h5">
-            <Link to="/about">
-              <Button variant="text">About</Button>
-            </Link>
-          </Typography>
+          {/* <Typography variant="h5">
+            <Button onClick={() => navigate("/admin")}>
+              <PersonIcon />
+            </Button>
+          </Typography> */}
         </Box>
       </Grid>
     </>
