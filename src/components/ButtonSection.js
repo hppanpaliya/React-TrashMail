@@ -28,7 +28,9 @@ const ButtonSection = () => {
   }, [location]);
 
   const isActivePage = (path) => {
-    const isActive = activePage === path;
+    const { pathname } = location;
+
+    const isActive = pathname === path || pathname.startsWith(path + "/");
     return isActive
       ? {
           backgroundColor: "#000",
@@ -42,7 +44,7 @@ const ButtonSection = () => {
   };
 
   return (
-    <Grid item xs={0} sm={2} sx={{ marginTop: "6vh" }}>
+    <Grid item xs={0} sm={2} sx={{ marginTop: "12vh" }}>
       <Box
         sx={{
           display: "flex",
@@ -65,8 +67,8 @@ const ButtonSection = () => {
           height: "12vh",
         }}
       >
-        <Button variant="outlined" sx={{ ...buttonStyles, ...isActivePage("/index") }} component={Link} to="/index">
-          Index
+        <Button variant="outlined" sx={{ ...buttonStyles, ...isActivePage("/inbox") }} component={Link} to="/inbox">
+          Inbox
         </Button>
       </Box>
       <Box
