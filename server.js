@@ -6,6 +6,7 @@ const { connectMongoDB } = require("./db");
 const emailRoutes = require("./emailRoutes");
 const attachmentRoutes = require("./attachmentRoutes");
 const cors = require("cors");
+const path = require("path");
 
 async function startSMTPServer() {
   const server = new SMTPServer({
@@ -33,13 +34,18 @@ async function startWebServer() {
   app.use(cors());
 
   // Define routes
-  app.get("/", (req, res) => {
-    res.send("Hello, this is a mail server!");
-  });
+
   app.use(emailRoutes);
   app.use(attachmentRoutes);
+  app.use(express.static(path.join(__dirname, "build")));
+
+  // Handle all other requests by serving the React app's entry point (index.html)
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "build", "index.html"));
+  });
 
   // Start server
+
   const server = app.listen(port, () => {
     console.log("Web server listening on port", port);
   });
