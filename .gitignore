@@ -1,3 +1,40 @@
-node_modules
-attachments
-build
+# Ignore node_modules, attachments, and build directories in all subdirectories
+node_modules/
+attachments/
+
+
+# Misc MacOS
+.DS_Store
+
+# Misc Windows
+Thumbs.db
+
+# Misc React
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc Visual Studio Code
+.vscode
+
+# Misc WebStorm / IntelliJ
+.idea
+
+
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+
+# env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
