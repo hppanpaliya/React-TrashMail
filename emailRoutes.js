@@ -41,7 +41,6 @@ router.get("/emails/:emailId", async (req, res) => {
 });
 
 router.get("/emails-list/:emailId", async (req, res) => {
-  // { projection: { "from.text": 1, "subject": 1 } }
   try {
     const { emailId } = req.params;
     console.log("emailId", emailId);
@@ -50,7 +49,7 @@ router.get("/emails-list/:emailId", async (req, res) => {
     const emails = await collection
       .find(
         { "to.text": emailId.toLocaleLowerCase() },
-        { projection: { "from.text": 1, subject: 1 } } // Only fetch "from.text" and "subject" fields
+        { projection: { "from.text": 1, subject: 1 } } // Only fetch "from.text" and "subject" fields list for input email ID
       )
       .toArray();
     console.log("emails", emails);
@@ -73,7 +72,7 @@ router.get("/email/:email_id", async (req, res) => {
     const collection = db.collection(collectionName);
     email_id = new ObjectId(email_id);
 
-    const emails = await collection.find({ _id: email_id }).toArray();
+    const emails = await collection.find({ _id: email_id }).toArray(); // fetch email data for input email uid
     console.log("emails", emails);
 
     if (emails.length === 0) {
