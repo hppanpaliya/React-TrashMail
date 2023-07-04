@@ -1,34 +1,53 @@
+// TitleBar.jsx
 import React from "react";
-import { Link } from "react-router-dom";
-import { Box, Button, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import PersonIcon from "@mui/icons-material/Person";
+import { useEffect, useState } from "react";
+
 const TitleBar = () => {
   const navigate = useNavigate();
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 700);
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <>
       <p
         style={{
           display: "flex",
           position: "absolute",
-          left: "35.7%",
-          top: "51%",
+          right: "10%",
+          top: isMobile ? "85%" : "51%",
           opacity: "0.2",
           justifyContent: "flex-start",
           textAlign: "left",
           margin: "0",
           boxSizing: "border-box",
-          fontSize: "187.5pt",
+          fontSize: isMobile ? "4rem" : "15.625rem",
           fontFamily: "Abhaya Libre SemiBold",
           fontWeight: "400",
           color: "#ecca7b",
           letterSpacing: "-5px",
           textOverflow: "ellipsis",
           overflow: "hidden",
+          pointerEvents: "none",
         }}
       >
         TrashMail
       </p>
+
       <Grid item xs={12} sm={2}>
         <Box
           sx={{
@@ -41,10 +60,10 @@ const TitleBar = () => {
           }}
         >
           <Typography
-            varient="h1"
+            variant="h1"
             sx={{
               color: "#000",
-              fontSize: "2rem",
+              fontSize: isMobile ? "1.9rem" : "2rem",
               fontFamily: "Abhaya Libre",
               fontWeight: 700,
               lineHeight: "1.125rem",
@@ -53,12 +72,6 @@ const TitleBar = () => {
           >
             TrashMail
           </Typography>
-
-          {/* <Typography variant="h5">
-            <Button onClick={() => navigate("/admin")}>
-              <PersonIcon />
-            </Button>
-          </Typography> */}
         </Box>
       </Grid>
     </>
