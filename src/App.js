@@ -4,6 +4,7 @@ import Main from "./components/Main";
 import Generate from "./components/Generate";
 import Inbox from "./components/Inbox";
 import InboxEmail from "./components/InboxEmail";
+import EmailList from "./components/EmailList";
 
 const App = () => {
   return (
@@ -15,7 +16,8 @@ const App = () => {
           <Route path="/emails" element={<Main />} />
           <Route path="/generate" element={<Generate />} />
           <Route path="/inbox" element={<Inbox />} />
-          <Route path="/inbox/:emailId" element={<InboxEmail />} />
+          <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
+          <Route path="/inbox/:emailId/" element={<EmailList />} />
           <Route path="/support" element={<Main />} />
         </Routes>
       </div>
