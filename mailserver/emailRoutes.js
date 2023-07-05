@@ -114,5 +114,27 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
 });
 
 
+router.delete("/email/:emailID/:email_id", async (req, res) => {
+  try {
+    let { email_id } = req.params;
+    let { emailID } = req.params;
+    console.log("email_id", email_id);
+    const db = getDB();
+    const collection = db.collection(emailID);
+    email_id = new ObjectId(email_id);
+
+    const deleteResult = await collection.deleteOne({ _id: email_id }); // delete email data with the provided email uid
+    console.log("deleteResult", deleteResult);
+
+    if (deleteResult.deletedCount === 0) {
+      return res.status(404).json({ message: "No email found for the provided email ID" });
+    }
+
+    return res.json({ message: "Email deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting email:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 module.exports = router;
