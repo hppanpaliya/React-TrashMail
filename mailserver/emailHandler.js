@@ -5,6 +5,7 @@ const { getDB } = require("./db");
 const { collectionName } = require("./config");
 const { ObjectId } = require("mongodb");
 
+
 async function saveAttachment(attachmentFolder, attachment) {
   const attachmentsDir = path.join(__dirname, "attachments", attachmentFolder);
 
@@ -38,10 +39,11 @@ async function saveAttachment(attachmentFolder, attachment) {
 }
 
 async function saveEmailToDB(parsedEmail) {
-  console.log("parsedEmail", parsedEmail);
+  console.log("parsedEmail", parsedEmail.to.value[0].address);
+
   try {
     const db = getDB();
-    const collection = db.collection(collectionName);
+    const collection = db.collection(parsedEmail.to.value[0].address);
     const attachments = parsedEmail.attachments;
     // Generate a new MongoDB ObjectId
     const objectId = new ObjectId();
