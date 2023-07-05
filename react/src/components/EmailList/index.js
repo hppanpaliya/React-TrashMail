@@ -5,12 +5,18 @@ import axios from "axios";
 import ButtonSection from "../ButtonSection";
 import TitleBar from "../TitleBar";
 import InfoIcon from "@mui/icons-material/Info";
+import { useRef } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ConfirmModal from "../ConfirmModal";
 
 const EmailList = () => {
   const { emailId } = useParams();
   const [emailData, setEmailData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [reload, setReload] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [emailToDelete, setEmailToDelete] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -27,6 +33,8 @@ const EmailList = () => {
 
   const navigate = useNavigate();
 
+  const pollingIntervalRef = useRef(null);
+
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
@@ -34,17 +42,51 @@ const EmailList = () => {
         const response = await axios.get(`https://myserver.pw/emails-list/${emailId}`);
         setEmailData(response.data);
         console.log(response.data);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching email data:", error);
         setLoading(false);
       }
     };
 
-    fetchEmailData();
-  }, [emailId]);
+    const startPolling = () => {
+      // Fetch email data immediately
+      fetchEmailData();
+
+      // Start polling at the specified interval (e.g., every 5 seconds)
+      pollingIntervalRef.current = setInterval(fetchEmailData, 5000);
+    };
+
+    const stopPolling = () => {
+      // Clear the polling interval
+      clearInterval(pollingIntervalRef.current);
+    };
+
+    // Start polling when the component mounts or when the emailId changes
+    startPolling();
+
+    // Clean up the polling interval when the component unmounts
+    return () => {
+      stopPolling();
+    };
+  }, [emailId, reload]);
 
   const handleEmailClick = (email_Id) => {
     navigate(`/inbox/${emailId}/${email_Id}`);
+  };
+
+  const handleOpenModal = async () => {
+    setOpenModal(true);
+  };
+
+  const handleDeleteEmail = async (email_Id) => {
+    try {
+      await axios.delete(`https://myserver.pw/email/${emailId}/${email_Id}`);
+      // Refresh the email list after successful deletion
+      setReload(!reload);
+    } catch (error) {
+      console.error("Error deleting email:", error);
+    }
   };
 
   const handleNoEmails = () => {
@@ -104,6 +146,24 @@ const EmailList = () => {
                     }}
                   >
                     {email.subject}
+                    <Tooltip title="Delete">
+                      <IconButton
+                        aria-label="delete"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEmailToDelete(email._id);
+                          handleOpenModal();
+                        }}
+                        sx={{
+                          alignSelf: "flex-end",
+                          justifySelf: "flex-end",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Typography>
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography
@@ -122,6 +182,19 @@ const EmailList = () => {
               ))
             : handleNoEmails()}
         </Grid>
+        <ConfirmModal
+          open={openModal}
+          setOpen={setOpenModal}
+          title="Delete Email"
+          body="Are you sure you want to delete this email?"
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={() => {
+            handleDeleteEmail(emailToDelete);
+            setOpenModal(false);
+          }}
+          onCancel={() => setOpenModal(false)}
+        />
       </Grid>
     </>
   );

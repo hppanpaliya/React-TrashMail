@@ -5,6 +5,7 @@ import Generate from "./components/Generate";
 import Inbox from "./components/Inbox";
 import InboxEmail from "./components/InboxEmail";
 import EmailList from "./components/EmailList";
+import AllEmailList from "./components/AllEmailList";
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
           <Route path="/inbox/:emailId/" element={<EmailList />} />
           <Route path="/support" element={<Main />} />
+          <Route path="/all" element={<AllEmailList />} />
         </Routes>
       </div>
     </Router>
