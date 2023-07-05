@@ -1,7 +1,8 @@
 # Ignore node_modules, attachments, and build directories in all subdirectories
 node_modules/
 attachments/
-
+build/
+.stignore
 
 # Misc MacOS
 .DS_Store
