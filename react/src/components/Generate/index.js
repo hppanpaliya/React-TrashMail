@@ -10,8 +10,10 @@ import { InputAdornment } from "@mui/material";
 const Generate = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [error, setError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [width, setWidth] = useState(window.innerWidth);
+  const domains = ["myserver.pw", "myapi.pw"];
 
   useEffect(() => {
     const handleResize = () => {
@@ -42,6 +44,21 @@ const Generate = () => {
     let randomEmail = Math.random().toString(36).substring(5);
     randomEmail += "@myserver.pw";
     setEmail(randomEmail);
+  };
+
+  const handleInboxRedirect = () => {
+    if (email === "") {
+      alert("Please enter an email address");
+      return;
+    }
+
+    const domainMatch = domains.some((domain) => email.endsWith(domain));
+
+    if (domainMatch) {
+      navigate("/inbox/" + email);
+    } else {
+      alert("Email address does not end with a valid domain, use myserver.pw or myapi.pw");
+    }
   };
 
   const inputStyles = {
@@ -106,7 +123,7 @@ const Generate = () => {
                 value={email}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    navigate("/inbox/" + email);
+                    handleInboxRedirect();
                   }
                 }}
                 InputProps={{
@@ -127,7 +144,7 @@ const Generate = () => {
               />
             </Grid>
             <Grid item xs={12} sm={3}>
-              <Button variant="outlined" sx={buttonStyles} onClick={() => (email ? navigate("/inbox/" + email) : null)}>
+              <Button variant="outlined" sx={buttonStyles} onClick={() => handleInboxRedirect()}>
                 Access Account
               </Button>
             </Grid>
