@@ -34,7 +34,7 @@ const InboxEmail = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`https://myserver.pw/email/${email_id}`);
+        const response = await axios.get(`https://myserver.pw/email/${emailId}/${email_id}`);
         setEmailData(response.data[0]);
         console.log(response.data[0]);
         setEmailAttachments(response.data[0].attachments);
