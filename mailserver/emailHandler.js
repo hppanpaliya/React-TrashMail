@@ -40,6 +40,10 @@ async function saveAttachment(attachmentFolder, attachment) {
 
 async function saveEmailToDB(parsedEmail) {
   console.log("parsedEmail", parsedEmail.to.value[0].address);
+  parsedEmail.to.value[0].address = parsedEmail.to.value[0].address.toLowerCase();
+  parsedEmail.from.value[0].address = parsedEmail.from.value[0].address.toLowerCase();
+  parsedEmail.to.text = parsedEmail.to.text.toLowerCase();
+  
 
   try {
     const db = getDB();
