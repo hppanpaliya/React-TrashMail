@@ -2,7 +2,11 @@ import React from "react";
 import { Typography, Box, Grid, Button } from "@mui/material";
 import Modal from "@mui/material/Modal";
 
+// Generic Confirm Modal Component 
+
 const ConfirmModal = ({ open, setOpen, title, body, confirmText, cancelText, onConfirm, onCancel }) => {
+  const backgroundColor = title.includes("Delete") ? "#f44336" : "#000"; // red for delete, black for others
+
   return (
     <Modal
       open={open}
@@ -31,7 +35,7 @@ const ConfirmModal = ({ open, setOpen, title, body, confirmText, cancelText, onC
           sx={{
             fontWeight: "bold",
             textAlign: "center",
-            color: title.includes("Delete") ? "#f44336" : "#000",
+            color: backgroundColor,
           }}
         >
           {title}
@@ -47,7 +51,7 @@ const ConfirmModal = ({ open, setOpen, title, body, confirmText, cancelText, onC
               onClick={onConfirm}
               sx={{
                 "&:hover": {
-                  backgroundColor: title.includes("Delete") ? "#f44336" : "#000",
+                  backgroundColor: backgroundColor,
                   color: "#fff",
                 },
               }}
