@@ -3,11 +3,18 @@ import React from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { darkTheme } from "../theme/darkTheme";
+import { theme } from "../theme";
+import { ThemeContext } from "../context/ThemeContext";
+import { useContext } from "react";
+import Avatar from "@mui/material/Avatar";
+import AccountCircle from "@mui/icons-material/AccountCircle";
 
 const TitleBar = () => {
   const navigate = useNavigate();
 
   const [isMobile, setIsMobile] = useState(false);
+  const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const handleResize = () => {
@@ -21,6 +28,7 @@ const TitleBar = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  console.log(darkMode);
 
   return (
     <>
@@ -44,6 +52,7 @@ const TitleBar = () => {
           overflow: "hidden",
           pointerEvents: "none",
         }}
+        aria-hidden="true"
       >
         TrashMail
       </p>
@@ -62,7 +71,7 @@ const TitleBar = () => {
           <Typography
             variant="h1"
             sx={{
-              color: "#000",
+              color: darkMode ? "#FFF" : "#000",
               fontSize: isMobile ? "1.9rem" : "2rem",
               fontFamily: "Abhaya Libre",
               fontWeight: 700,
