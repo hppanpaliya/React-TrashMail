@@ -6,6 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { InputAdornment } from "@mui/material";
+import { theme } from "../../theme";
+import { darkTheme } from "../../theme/darkTheme";
+import { ThemeContext } from "../../context/ThemeContext";
+import { useContext } from "react";
 
 const Generate = () => {
   const navigate = useNavigate();
@@ -14,6 +18,8 @@ const Generate = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [width, setWidth] = useState(window.innerWidth);
   const domains = ["myserver.pw", "myapi.pw"];
+
+  const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const handleResize = () => {
@@ -68,7 +74,7 @@ const Generate = () => {
   };
 
   const buttonStyles = {
-    color: "#000",
+    color: darkMode ? "#FFF" : "#000",
     borderColor: "#000",
     fontSize: "1rem",
     paddingTop: isMobile ? "1rem" : "1.35rem",
@@ -133,7 +139,7 @@ const Generate = () => {
                         variant="text"
                         onClick={copyToClipboard}
                         sx={{
-                          color: "#000",
+                          color: darkMode ? "#FFF" : "#000",
                         }}
                       >
                         <FileCopyOutlined />

@@ -8,6 +8,10 @@ import InfoIcon from "@mui/icons-material/Info";
 import { useRef } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmModal from "../ConfirmModal";
+import { theme } from "../../theme";
+import { darkTheme } from "../../theme/darkTheme";
+import { ThemeContext } from "../../context/ThemeContext";
+import { useContext } from "react";
 
 const EmailList = () => {
   const { emailId } = useParams();
@@ -17,6 +21,7 @@ const EmailList = () => {
   const [reload, setReload] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
+  const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const handleResize = () => {
@@ -118,6 +123,7 @@ const EmailList = () => {
               justifyContent: "center",
               alignItems: "center",
               textAlign: "center",
+              color: darkMode ? "#fff" : "#000",
             }}
           >
             {emailId}

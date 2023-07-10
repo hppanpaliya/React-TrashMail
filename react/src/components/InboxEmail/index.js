@@ -5,6 +5,10 @@ import axios from "axios";
 import ButtonSection from "../ButtonSection";
 import TitleBar from "../TitleBar";
 import InfoIcon from "@mui/icons-material/Info";
+import { theme } from "../../theme";
+import { darkTheme } from "../../theme/darkTheme";
+import { ThemeContext } from "../../context/ThemeContext";
+import { useContext } from "react";
 
 const InboxEmail = () => {
   const navigate = useNavigate();
@@ -15,6 +19,8 @@ const InboxEmail = () => {
   const [emailHeaders, setEmailHeaders] = useState([]);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const handleResize = () => {
@@ -162,6 +168,14 @@ const InboxEmail = () => {
             </Box>
           </Paper>
         </Grid>
+        <style>
+          {`
+          a {
+            color: ${darkMode ? "#fff" : ""};
+            font-weight: bold;
+          }
+        `}
+        </style>
       </Grid>
     </>
   );

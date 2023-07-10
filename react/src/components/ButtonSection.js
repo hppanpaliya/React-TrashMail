@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { Button, Grid, Box } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import { ThemeContext } from "../context/ThemeContext";
 
 const ButtonSection = () => {
+  const { darkMode, setDarkMode } = useContext(ThemeContext);
+
+  const darkModeToggle = () => {
+    setDarkMode(!darkMode);
+  };
+
   const buttonStyles = {
-    color: "#000",
     borderColor: "#000",
     fontSize: "1.3rem",
     paddingTop: "1.35rem",
     paddingBottom: "1.35rem",
-    paddingLeft: "3rem",
-    paddingRight: "3rem",
+    paddingLeft: "2rem",
+    paddingRight: "2rem",
     borderRadius: "10px",
     width: "70%",
     height: "70%",
@@ -21,7 +28,6 @@ const ButtonSection = () => {
   };
 
   const buttonStylesMobile = {
-    color: "#000",
     borderColor: "#000",
     fontSize: "1.3rem",
     paddingTop: "1.35rem",
@@ -138,10 +144,11 @@ const ButtonSection = () => {
         <Button
           variant="outlined"
           sx={isMobile ? { ...buttonStylesMobile, ...isActivePage("/support") } : { ...buttonStyles, ...isActivePage("/support") }}
-          component={Link}
-          to="/support"
+          // component={Link}
+          // to="/support"
+          onClick={darkModeToggle}
         >
-          Support
+          {darkMode ? "Light" : "Dark"}
         </Button>
       </Box>
     </Grid>
