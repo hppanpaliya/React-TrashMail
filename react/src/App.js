@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Main from "./components/Main";
 import Generate from "./components/Generate";
@@ -12,7 +12,25 @@ import { ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
 import { ThemeContext } from "./context/ThemeContext";
 const App = () => {
-  const [darkMode, setDarkMode] = React.useState(true);
+  const [darkMode, setDarkMode] = React.useState(false);
+
+  useEffect(() => {
+    let isDarkMode = localStorage.getItem("darkMode");
+    console.log("local storage", isDarkMode);
+
+    if (isDarkMode != null) {
+      // Convert the value to a boolean
+      isDarkMode = isDarkMode === "true";
+      setDarkMode(isDarkMode);
+      console.log("local storage", isDarkMode);
+    } else {
+      isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setDarkMode(isDarkMode);
+      console.log("system theme", isDarkMode);
+      localStorage.setItem("darkMode", isDarkMode.toString());
+    }
+    console.log(isDarkMode);
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ darkMode, setDarkMode }}>

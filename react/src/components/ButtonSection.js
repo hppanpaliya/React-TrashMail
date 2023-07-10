@@ -8,7 +8,9 @@ const ButtonSection = () => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
 
   const darkModeToggle = () => {
-    setDarkMode(!darkMode);
+    const modeToggle = !darkMode;
+    localStorage.setItem("darkMode", modeToggle.toString());
+    setDarkMode(modeToggle);
   };
 
   const buttonStyles = {
