@@ -11,6 +11,7 @@ import darkTheme from "./theme/darkTheme.js";
 import { ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
 import { ThemeContext } from "./context/ThemeContext";
+import TitleBar from "./components/TitleBar";
 const App = () => {
   const [darkMode, setDarkMode] = React.useState(false);
 
@@ -44,6 +45,7 @@ const App = () => {
         />
         <Router>
           <div className="App">
+            <TitleBar />
             <Routes>
               {/* <Route path="/emails/:emailId"></Route> */}
               <Route path="/" element={<Main />} />

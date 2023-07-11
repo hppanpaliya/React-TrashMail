@@ -13,11 +13,11 @@ import { useContext } from "react";
 
 const Generate = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(window.localStorage.getItem("lastEmailId") || "");
   const [error, setError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [width, setWidth] = useState(window.innerWidth);
-  const domains = ["myserver.pw", "myapi.pw"];
+  const domains = JSON.parse(process.env.REACT_APP_DOMAINS);
 
   const { darkMode } = useContext(ThemeContext);
 
@@ -63,7 +63,7 @@ const Generate = () => {
     if (domainMatch) {
       navigate("/inbox/" + email);
     } else {
-      alert("Email address does not end with a valid domain, use myserver.pw or myapi.pw");
+      alert("Email address does not end with a valid domain. Valid domains are: " + domains.join(", "));
     }
   };
 
@@ -99,7 +99,6 @@ const Generate = () => {
 
   return (
     <>
-      <TitleBar />
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
         <Grid

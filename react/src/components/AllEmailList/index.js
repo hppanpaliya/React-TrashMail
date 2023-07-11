@@ -29,10 +29,11 @@ const AllEmailList = () => {
 
   const pollingIntervalRef = useRef(null);
 
+
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`https://myserver.pw/all-emails`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/all-emails`);
         setEmailData(response.data);
         console.log(response.data);
         setLoading(false);
@@ -84,7 +85,7 @@ const AllEmailList = () => {
 
   return (
     <>
-      <TitleBar />
+
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
         <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
