@@ -40,7 +40,7 @@ const InboxEmail = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`https://myserver.pw/email/${emailId}/${email_id}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/email/${emailId}/${email_id}`);
         setEmailData(response.data[0]);
         console.log(response.data[0]);
         setEmailAttachments(response.data[0].attachments);
@@ -146,7 +146,7 @@ const InboxEmail = () => {
                     label={attachment.filename}
                     onClick={() =>
                       // Navigate to the attachment URL in a new tab
-                      window.open(`https://myserver.pw/attachment/${attachment.directory}/${attachment.filename}`, "_blank")
+                      window.open(`${process.env.REACT_APP_API_URL}/attachment/${attachment.directory}/${attachment.filename}`, "_blank")
                     }
                   />
                 </Box>

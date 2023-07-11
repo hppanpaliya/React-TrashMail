@@ -43,8 +43,9 @@ const EmailList = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
+        setLoading(true);
         window.localStorage.setItem("lastEmailId", emailId);
-        const response = await axios.get(`https://myserver.pw/emails-list/${emailId}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/emails-list/${emailId}`);
         setEmailData(response.data);
         console.log(response.data);
         setLoading(false);
@@ -86,7 +87,7 @@ const EmailList = () => {
 
   const handleDeleteEmail = async (email_Id) => {
     try {
-      await axios.delete(`https://myserver.pw/email/${emailId}/${email_Id}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/email/${emailId}/${email_Id}`);
       // Refresh the email list after successful deletion
       setReload(!reload);
     } catch (error) {
@@ -95,6 +96,17 @@ const EmailList = () => {
   };
 
   const handleNoEmails = () => {
+    if (loading == true) {
+      return (
+        <Box sx={{ textAlign: "center", marginTop: "10vh" }}>
+          <Paper elevation={3} sx={{ p: 2, marginBottom: 2, margin: isMobile ? "2vh" : "" }}>
+            <Typography variant="p" gutterBottom>
+              Loading...
+            </Typography>
+          </Paper>
+        </Box>
+      );
+    }
     if (emailData.length === 0) {
       return (
         <Box sx={{ textAlign: "center", marginTop: "10vh" }}>
