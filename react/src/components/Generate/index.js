@@ -13,7 +13,7 @@ import { useContext } from "react";
 
 const Generate = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(window.localStorage.getItem("lastEmailId") || "");
   const [error, setError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [width, setWidth] = useState(window.innerWidth);
