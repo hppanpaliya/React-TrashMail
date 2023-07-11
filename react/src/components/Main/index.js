@@ -27,7 +27,6 @@ const Main = () => {
 
   return (
     <>
-      <TitleBar />
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
         <Grid

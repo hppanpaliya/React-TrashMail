@@ -85,7 +85,7 @@ const AllEmailList = () => {
 
   return (
     <>
-      <TitleBar />
+
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
         <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>

@@ -1,14 +1,9 @@
-// TitleBar.jsx
-import React from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { darkTheme } from "../theme/darkTheme";
 import { theme } from "../theme";
 import { ThemeContext } from "../context/ThemeContext";
-import { useContext } from "react";
-import Avatar from "@mui/material/Avatar";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 
 const TitleBar = () => {
   const navigate = useNavigate();
@@ -28,7 +23,6 @@ const TitleBar = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-  console.log(darkMode);
 
   return (
     <>
@@ -65,7 +59,7 @@ const TitleBar = () => {
             alignItems: "center",
             p: 3,
             marginLeft: "2%",
-            marginTop: "2%",
+            marginTop: "0%",
           }}
         >
           <Typography
