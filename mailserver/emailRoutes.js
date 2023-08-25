@@ -54,6 +54,7 @@ router.get("/emails-list/:emailId", async (req, res) => {
         { "to.text": emailId.toLocaleLowerCase() },
         { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } } // Only fetch the required fields
       )
+      .sort({ date: -1 }) // Sort by date in descending order
       .toArray();
     console.log("emails", emails);
     if (emails.length === 0) {
@@ -85,6 +86,7 @@ router.get("/all-emails", async (req, res) => {
       const emails = await db
         .collection(collection.name)
         .find({}, { projection: { "from.text": 1, subject: 1, "to.value.address": 1, "from.value.address": 1, date: 1, readStatus: 1 } })
+        .sort({ date: -1 }) // Sort by date in descending order
         .toArray();
       allEmails.push(...emails);
     }
