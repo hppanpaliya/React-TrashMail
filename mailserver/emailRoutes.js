@@ -42,7 +42,6 @@ router.get("/emails/:emailId", async (req, res) => {
   }
 });
 
-
 // GET list of Subject, Time, Read-Status and From fields for a specific emailId (email address)
 router.get("/emails-list/:emailId", async (req, res) => {
   try {
@@ -53,7 +52,7 @@ router.get("/emails-list/:emailId", async (req, res) => {
     const emails = await collection
       .find(
         { "to.text": emailId.toLocaleLowerCase() },
-        { projection: { "from.text": 1, subject: 1, date: 1, "readStatus":1 } } // Only fetch the required fields
+        { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } } // Only fetch the required fields
       )
       .toArray();
     console.log("emails", emails);
@@ -85,7 +84,7 @@ router.get("/all-emails", async (req, res) => {
     for (const collection of collections) {
       const emails = await db
         .collection(collection.name)
-        .find({}, { projection: { "from.text": 1, subject: 1, "to.value.address": 1, "from.value.address": 1 } })
+        .find({}, { projection: { "from.text": 1, subject: 1, "to.value.address": 1, "from.value.address": 1, date: 1, readStatus: 1 } })
         .toArray();
       allEmails.push(...emails);
     }
@@ -125,14 +124,12 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
       console.log("updateResult", updateResult);
     }
 
-
     return res.json(emails);
   } catch (error) {
     console.error("Error retrieving emails:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 // Delete email data and attachments for emailId with specific mongodb id (email_id)
 router.delete("/email/:emailID/:email_id", async (req, res) => {
