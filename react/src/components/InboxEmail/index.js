@@ -10,6 +10,7 @@ import { darkTheme } from "../../theme/darkTheme";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 
+
 const InboxEmail = () => {
   const navigate = useNavigate();
   const { emailId } = useParams();
@@ -122,7 +123,11 @@ const InboxEmail = () => {
               }}
             >
               <Typography variant="subtitle1">From: {emailData ? emailData.from.text : "No From"}</Typography>
-              <Chip label={`To: ${emailData ? emailData.to.text : "No To"}`} />
+              <Tooltip title="Click to copy to clipboard" placement="top">
+              <Chip label={`To: ${emailData ? emailData.to.text : "No To"}`}
+                onClick={() => emailData ? navigator.clipboard.writeText(emailData.to.text) : null}
+                />
+              </Tooltip>
             </Box>
             <Typography variant="body1" mb={2}>
               Date: {emailData ? new Date(emailData.date).toLocaleString() : "No Date"}
