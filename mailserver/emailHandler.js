@@ -66,6 +66,7 @@ async function saveEmailToDB(parsedEmail) {
       }));
     }
     parsedEmail._id = objectId;
+    parsedEmail.readStatus = false;
     await collection.insertOne(parsedEmail);
     console.log("Email saved to MongoDB");
   } catch (error) {
