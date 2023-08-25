@@ -1,9 +1,9 @@
-name: Build React App
+name: Test React App Build
 
 on:
   push:
     branches:
-      - main # Trigger the workflow on push or pull request to the main branch
+      - main
 
 jobs:
   build:
@@ -18,23 +18,19 @@ jobs:
       with:
         node-version: '18'
 
-    # Cache dependencies
-    - name: Cache npm dependencies
+    - name: Cache Yarn dependencies
       uses: actions/cache@v2
       with:
         path: react/node_modules
-        key: ${{ runner.OS }}-node-${{ hashFiles('react/package-lock.json') }}
+        key: ${{ runner.OS }}-yarn-${{ hashFiles('react/yarn.lock') }}
 
     - name: Install dependencies
       run: |
         cd react
-        npm install
+        yarn install
 
     - name: Build React App
       run: |
         cd react
-        npm run build
-
-    - name: Move Build To Mailserver Directory
-      run: |
-        mv react/build mailserver/
+        CI=false yarn build
+    
