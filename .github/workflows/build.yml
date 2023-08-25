@@ -1,0 +1,40 @@
+name: Build React App
+
+on:
+  push:
+    branches:
+      - main # Trigger the workflow on push or pull request to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    # Cache dependencies
+    - name: Cache npm dependencies
+      uses: actions/cache@v2
+      with:
+        path: react/node_modules
+        key: ${{ runner.OS }}-node-${{ hashFiles('react/package-lock.json') }}
+
+    - name: Install dependencies
+      run: |
+        cd react
+        npm install
+
+    - name: Build React App
+      run: |
+        cd react
+        npm run build
+
+    - name: Move Build To Mailserver Directory
+      run: |
+        mv react/build mailserver/
