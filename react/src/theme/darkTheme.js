@@ -6,25 +6,25 @@ const darkTheme = createTheme({
   },
   palette: {
     primary: {
-      main: "#fff",
+      main: "#90caf9", // Light blue, you can pick your own
       contrastText: "#fff",
     },
     secondary: {
-      main: "#fff",
+      main: "#f48fb1", // Light pink, you can pick your own
       contrastText: "#fff",
     },
     text: {
-      primary: "#fff",
-      secondary: "#fff",
+      primary: "#ffffff",
+      secondary: "#bbbbbb", // Light gray for secondary text
     },
     mode: "dark",
     background: {
       default: "#121212",
       paper: "#1e1e1e",
-      box: "#1e1e1e",
     },
     error: {
-      main: "#ff0000",
+      main: "#ff5252",
+      contrastText: "#fff",
     },
   },
   components: {
@@ -45,57 +45,39 @@ const darkTheme = createTheme({
     MuiTextField: {
       styleOverrides: {
         root: {
-          backgroundColor: "#1e1e1e",
-          "&.Mui-focused": {
-            color: "#fff",
+          "& .MuiInputBase-root": {
+            color: "#ffffff", // Primary text color
           },
-        },
-        input: {
-          color: "#fff",
-        },
-        inputLabel: {
-          color: "#fff",
-        },
-
-        notchedOutline: {
-          borderColor: "#fff",
+          "& .MuiInputLabel-root": {
+            color: "#bbbbbb", // Secondary text color
+          },
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#333333", // Border color
+          },
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          backgroundColor: "#1e1e1e",
-          color: "#fff",
-
+          backgroundColor: "#333333", // Button color
+          color: "#ffffff",
           "&:hover": {
-            backgroundColor: "#1f1f1f",
-            color: "#fff",
-          },
-          "&:active": {
-            backgroundColor: "#000",
-            color: "#fff",
+            backgroundColor: "#555555",
           },
         },
-      },
-    },
-
-    MuiSelect: {
-      styleOverrides: {
-        root: {},
       },
     },
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          // color: "#6D83B2",
-          // "&.Mui-selected": {
-          //   backgroundColor: "#9BC1BC",
-          //   color: "#fff",
-          //   "&:hover": {
-          //     backgroundColor: "#8EB3B0",
-          //   },
-          // },
+          color: "#ffffff",
+          "&.Mui-selected": {
+            backgroundColor: "#333333",
+            "&:hover": {
+              backgroundColor: "#555555",
+            },
+          },
         },
       },
     },
