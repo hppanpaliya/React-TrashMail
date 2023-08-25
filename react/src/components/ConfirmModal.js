@@ -40,19 +40,20 @@ const ConfirmModal = ({ open, setOpen, title, body, confirmText, cancelText, onC
         >
           {title}
         </Typography>
-        <Typography id="modal-modal-description" sx={{ mt: 2, textAlign: "center", color: "#000" }}>
+        <Typography id="modal-modal-description" sx={{ mt: 2, textAlign: "center", color: backgroundColor }}>
           {body}
         </Typography>
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={6}>
             <Button
               fullWidth
-              variant="contained"
+              variant="outlined"
               onClick={onConfirm}
               sx={{
                 "&:hover": {
                   backgroundColor: backgroundColor,
                   color: "#fff",
+                  variant: "contained",
                 },
               }}
             >
