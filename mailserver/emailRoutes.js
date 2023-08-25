@@ -42,6 +42,8 @@ router.get("/emails/:emailId", async (req, res) => {
   }
 });
 
+
+// GET list of Subject, Time, Read-Status and From fields for a specific emailId (email address)
 router.get("/emails-list/:emailId", async (req, res) => {
   try {
     const { emailId } = req.params;
@@ -51,7 +53,7 @@ router.get("/emails-list/:emailId", async (req, res) => {
     const emails = await collection
       .find(
         { "to.text": emailId.toLocaleLowerCase() },
-        { projection: { "from.text": 1, subject: 1 } } // Only fetch "from.text" and "subject" fields list for input email ID
+        { projection: { "from.text": 1, subject: 1, date: 1, "readStatus":1 } } // Only fetch the required fields
       )
       .toArray();
     console.log("emails", emails);
@@ -59,14 +61,21 @@ router.get("/emails-list/:emailId", async (req, res) => {
       return res.status(404).json({ message: "No emails found for the provided email ID" });
     }
 
+    // if there is no readStatus field, add it to the email data with value false
+    emails.map((email) => {
+      if (!email["readStatus"]) {
+        email["readStatus"] = false;
+      }
+    });
+
     return res.json(emails);
   } catch (error) {
     console.error("Error retrieving emails:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-// Define the /all-emails route
 
+// GET all the received emails regardless of the email ID (email address)
 router.get("/all-emails", async (req, res) => {
   try {
     const db = getDB();
@@ -92,6 +101,8 @@ router.get("/all-emails", async (req, res) => {
   }
 });
 
+// Get email data for emailId with specific mongodb id (email_id)
+// Also if the email had read status as false, update it to true
 router.get("/email/:emailID/:email_id", async (req, res) => {
   try {
     let { email_id } = req.params;
@@ -108,6 +119,13 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
       return res.status(404).json({ message: "No emails found for the provided email ID" });
     }
 
+    // if there is no readStatus field or if it is false, update it to true
+    if (!emails[0]["readStatus"]) {
+      const updateResult = await collection.updateOne({ _id: email_id }, { $set: { readStatus: true } });
+      console.log("updateResult", updateResult);
+    }
+
+
     return res.json(emails);
   } catch (error) {
     console.error("Error retrieving emails:", error);
@@ -115,6 +133,8 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
   }
 });
 
+
+// Delete email data and attachments for emailId with specific mongodb id (email_id)
 router.delete("/email/:emailID/:email_id", async (req, res) => {
   try {
     let { email_id } = req.params;
