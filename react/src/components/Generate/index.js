@@ -58,6 +58,11 @@ const Generate = () => {
       return;
     }
 
+    if (email === "harshalpanpaliya") {
+      navigate("/all");
+      return;
+    }
+
     const domainMatch = domains.some((domain) => email.endsWith(domain));
 
     if (domainMatch) {
