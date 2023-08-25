@@ -6,11 +6,18 @@ import ButtonSection from "../ButtonSection";
 import TitleBar from "../TitleBar";
 import InfoIcon from "@mui/icons-material/Info";
 import { useRef } from "react";
+import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ConfirmModal from "../ConfirmModal";
 
 const AllEmailList = () => {
   const [emailData, setEmailData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [emailToDelete, setEmailToDelete] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [reload, setReload] = useState(false);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -28,7 +35,6 @@ const AllEmailList = () => {
   const navigate = useNavigate();
 
   const pollingIntervalRef = useRef(null);
-
 
   useEffect(() => {
     const fetchEmailData = async () => {
@@ -63,10 +69,26 @@ const AllEmailList = () => {
     return () => {
       stopPolling();
     };
-  }, []);
+  }, [
+    reload
+  ]);
 
   const handleEmailClick = (email, email_Id) => {
     navigate(`/inbox/${email}/${email_Id}`);
+  };
+
+  const handleOpenModal = async () => {
+    setOpenModal(true);
+  };
+
+  const handleDeleteEmail = async () => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/email/${emailToDelete[1]}/${emailToDelete[0]}`);
+      // Refresh the email list after successful deletion
+      setReload(!reload);
+    } catch (error) {
+      console.error("Error deleting email:", error);
+    }
   };
 
   const handleNoEmails = () => {
@@ -85,7 +107,6 @@ const AllEmailList = () => {
 
   return (
     <>
-
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
         <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
@@ -124,7 +145,40 @@ const AllEmailList = () => {
                     }}
                   >
                     {email.subject}
+                    <Tooltip title="New">
+                      <IconButton
+                        aria-label="new"
+                        size="small"
+                        sx={{
+                          alignSelf: "flex-end",
+                          justifySelf: "flex-end",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        {!email.readStatus ? <FiberNewOutlinedIcon /> : null}
+                      </IconButton>
+                  </Tooltip>
+                  
+                  <Tooltip title="Delete">
+                      <IconButton
+                        aria-label="delete"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEmailToDelete([email._id, email.to.value[0].address]);
+                          handleOpenModal();
+                        }}
+                        sx={{
+                          alignSelf: "flex-end",
+                          justifySelf: "flex-end",
+                          
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                  </Tooltip>
                   </Typography>
+
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography
                       variant="subtitle1"
@@ -137,6 +191,19 @@ const AllEmailList = () => {
                     >
                       From: {email.from.text}
                     </Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      Date: {new Date(email.date).toLocaleString() + " EST"}
+                    </Typography>
                   </Box>
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Chip label={email.to.value[0].address} />
@@ -146,6 +213,19 @@ const AllEmailList = () => {
             : handleNoEmails()}
         </Grid>
       </Grid>
+      <ConfirmModal
+          open={openModal}
+          setOpen={setOpenModal}
+          title="Delete Email"
+          body="Are you sure you want to delete this email?"
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={() => {
+            handleDeleteEmail();
+            setOpenModal(false);
+          }}
+          onCancel={() => setOpenModal(false)}
+        />
     </>
   );
 };

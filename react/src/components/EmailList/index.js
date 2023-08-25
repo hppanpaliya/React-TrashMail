@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../ButtonSection";
 import TitleBar from "../TitleBar";
-import InfoIcon from "@mui/icons-material/Info";
 import { useRef } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmModal from "../ConfirmModal";
@@ -12,6 +11,8 @@ import { theme } from "../../theme";
 import { darkTheme } from "../../theme/darkTheme";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
+import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
+import { FileCopyOutlined } from "@mui/icons-material";
 
 const EmailList = () => {
   const { emailId } = useParams();
@@ -122,24 +123,30 @@ const EmailList = () => {
 
   return (
     <>
-
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
         <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
         <Grid item xs={12} sm={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
-              color: darkMode ? "#fff" : "#000",
-            }}
-          >
-            {emailId}
-          </Typography>
+          <Tooltip title="Copy Email" placement="top">
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
+                color: darkMode ? "#fff" : "#000",
+                "&:hover": {
+                  cursor: "pointer",
+                },
+              }}
+              onClick={() => navigator.clipboard.writeText(emailId)}
+            >
+              {emailId} <FileCopyOutlined sx={{ marginLeft: "1rem" }} onClick={() => navigator.clipboard.writeText(emailId)} />
+            </Typography>
+          </Tooltip>
+
           {emailData.length > 0
             ? emailData.map((email) => (
                 <Paper
@@ -164,6 +171,21 @@ const EmailList = () => {
                     }}
                   >
                     {email.subject}
+
+                    <Tooltip title="New">
+                      <IconButton
+                        aria-label="new"
+                        size="small"
+                        sx={{
+                          alignSelf: "flex-end",
+                          justifySelf: "flex-end",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        {!email.readStatus ? <FiberNewOutlinedIcon /> : null}
+                      </IconButton>
+                    </Tooltip>
+
                     <Tooltip title="Delete">
                       <IconButton
                         aria-label="delete"
@@ -176,7 +198,6 @@ const EmailList = () => {
                         sx={{
                           alignSelf: "flex-end",
                           justifySelf: "flex-end",
-                          marginLeft: "auto",
                         }}
                       >
                         <DeleteIcon />
@@ -194,6 +215,19 @@ const EmailList = () => {
                       }}
                     >
                       From: {email.from.text}
+                    </Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      Date: {new Date(email.date).toLocaleString() + " EST"}
                     </Typography>
                   </Box>
                 </Paper>
