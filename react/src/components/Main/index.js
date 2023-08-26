@@ -1,10 +1,7 @@
 import React from "react";
-import { Button, Grid, Box, Typography } from "@mui/material";
+import { Grid, Box, Typography } from "@mui/material";
 import ButtonSection from "../ButtonSection";
-import TitleBar from "../TitleBar";
 import { useEffect, useState } from "react";
-import { theme } from "../../theme";
-import { darkTheme } from "../../theme/darkTheme";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 

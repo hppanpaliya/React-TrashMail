@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { darkTheme } from "../theme/darkTheme";
-import { theme } from "../theme";
+
 import { ThemeContext } from "../context/ThemeContext";
 
 const TitleBar = () => {

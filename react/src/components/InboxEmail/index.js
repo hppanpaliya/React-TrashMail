@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/material";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../ButtonSection";
-import TitleBar from "../TitleBar";
 import InfoIcon from "@mui/icons-material/Info";
-import { theme } from "../../theme";
-import { darkTheme } from "../../theme/darkTheme";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 
 
 const InboxEmail = () => {
-  const navigate = useNavigate();
   const { emailId } = useParams();
   const { email_id } = useParams();
   const [emailData, setEmailData] = useState();
@@ -52,7 +48,7 @@ const InboxEmail = () => {
     };
 
     fetchEmailData();
-  }, [email_id]);
+  }, [email_id, emailId]);
 
   if (emailHeaders) {
     headers = emailHeaders.map((header, i) => {

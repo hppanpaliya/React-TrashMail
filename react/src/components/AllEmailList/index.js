@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../ButtonSection";
-import TitleBar from "../TitleBar";
-import InfoIcon from "@mui/icons-material/Info";
 import { useRef } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -12,12 +10,12 @@ import ConfirmModal from "../ConfirmModal";
 
 const AllEmailList = () => {
   const [emailData, setEmailData] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [reload, setReload] = useState(false);
-
 
   useEffect(() => {
     const handleResize = () => {
@@ -69,9 +67,7 @@ const AllEmailList = () => {
     return () => {
       stopPolling();
     };
-  }, [
-    reload
-  ]);
+  }, [reload]);
 
   const handleEmailClick = (email, email_Id) => {
     navigate(`/inbox/${email}/${email_Id}`);
@@ -157,9 +153,9 @@ const AllEmailList = () => {
                       >
                         {!email.readStatus ? <FiberNewOutlinedIcon /> : null}
                       </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title="Delete">
+                    </Tooltip>
+
+                    <Tooltip title="Delete">
                       <IconButton
                         aria-label="delete"
                         size="small"
@@ -171,12 +167,11 @@ const AllEmailList = () => {
                         sx={{
                           alignSelf: "flex-end",
                           justifySelf: "flex-end",
-                          
                         }}
                       >
                         <DeleteIcon />
                       </IconButton>
-                  </Tooltip>
+                    </Tooltip>
                   </Typography>
 
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -191,8 +186,8 @@ const AllEmailList = () => {
                     >
                       From: {email.from.text}
                     </Typography>
-                </Box>
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography
                       variant="subtitle1"
                       sx={{
@@ -214,18 +209,18 @@ const AllEmailList = () => {
         </Grid>
       </Grid>
       <ConfirmModal
-          open={openModal}
-          setOpen={setOpenModal}
-          title="Delete Email"
-          body="Are you sure you want to delete this email?"
-          confirmText="Delete"
-          cancelText="Cancel"
-          onConfirm={() => {
-            handleDeleteEmail();
-            setOpenModal(false);
-          }}
-          onCancel={() => setOpenModal(false)}
-        />
+        open={openModal}
+        setOpen={setOpenModal}
+        title="Delete Email"
+        body="Are you sure you want to delete this email?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() => {
+          handleDeleteEmail();
+          setOpenModal(false);
+        }}
+        onCancel={() => setOpenModal(false)}
+      />
     </>
   );
 };

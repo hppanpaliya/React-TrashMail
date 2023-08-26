@@ -48,11 +48,11 @@ const ButtonSection = () => {
   };
 
   const location = useLocation();
-  const [activePage, setActivePage] = useState("");
+  // const [activePage, setActivePage] = useState("");
 
-  useEffect(() => {
-    setActivePage(location.pathname);
-  }, [location]);
+  // useEffect(() => {
+  //   setActivePage(location.pathname);
+  // }, [location]);
 
   const isActivePage = (path) => {
     const { pathname } = location;

@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/material";
+import { Grid, Typography, Paper, Box, Tooltip, IconButton } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../ButtonSection";
-import TitleBar from "../TitleBar";
 import { useRef } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmModal from "../ConfirmModal";
-import { theme } from "../../theme";
-import { darkTheme } from "../../theme/darkTheme";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
@@ -97,7 +94,7 @@ const EmailList = () => {
   };
 
   const handleNoEmails = () => {
-    if (loading == true) {
+    if (loading === true) {
       return (
         <Box sx={{ textAlign: "center", marginTop: "10vh" }}>
           <Paper elevation={3} sx={{ p: 2, marginBottom: 2, margin: isMobile ? "2vh" : "" }}>

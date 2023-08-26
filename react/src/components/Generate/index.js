@@ -1,20 +1,17 @@
 import React from "react";
 import ButtonSection from "../ButtonSection";
-import TitleBar from "../TitleBar";
-import { Grid, Box, Typography, TextField, Button } from "@mui/material";
+import { Grid, Box, TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { InputAdornment } from "@mui/material";
-import { theme } from "../../theme";
-import { darkTheme } from "../../theme/darkTheme";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 
 const Generate = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState(window.localStorage.getItem("lastEmailId") || "");
-  const [error, setError] = useState(false);
+  // const [error, setError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [width, setWidth] = useState(window.innerWidth);
   const domains = JSON.parse(process.env.REACT_APP_DOMAINS);

@@ -1,6 +1,4 @@
 import React from "react";
-import TitleBar from "../TitleBar";
-import ButtonSection from "../ButtonSection";
 import Generate from "../Generate";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,13 +10,14 @@ const Inbox = () => {
   useEffect(() => {
     setLastEmail(localStorage.getItem("lastEmailId"));
     console.log(lastEmail);
-  }, []);
+  }, [lastEmail]);
 
   useEffect(() => {
     if (lastEmail) {
       navigate(`/inbox/${lastEmail}`);
     }
-  }, [lastEmail]);
+    
+  }, [lastEmail, navigate]);
   
 
   return (
