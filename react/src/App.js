@@ -12,6 +12,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
 import { ThemeContext } from "./context/ThemeContext";
 import TitleBar from "./components/TitleBar";
+import {AnimatePresence} from "framer-motion";
 const App = () => {
   const [darkMode, setDarkMode] = React.useState(false);
 
@@ -46,6 +47,7 @@ const App = () => {
         <Router>
           <div className="App">
             <TitleBar />
+            <AnimatePresence mode="wait">
             <Routes>
               {/* <Route path="/emails/:emailId"></Route> */}
               <Route path="/" element={<Main />} />
@@ -56,7 +58,8 @@ const App = () => {
               <Route path="/inbox/:emailId/" element={<EmailList />} />
               <Route path="/support" element={<Main />} />
               <Route path="/all" element={<AllEmailList />} />
-            </Routes>
+              </Routes>
+              </AnimatePresence>
           </div>
         </Router>
       </ThemeProvider>
