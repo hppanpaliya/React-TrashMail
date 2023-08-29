@@ -10,6 +10,7 @@ import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import { FileCopyOutlined } from "@mui/icons-material";
+import { motion } from "framer-motion";
 
 const EmailList = () => {
   const { emailId } = useParams();
@@ -20,6 +21,7 @@ const EmailList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
   const { darkMode } = useContext(ThemeContext);
+  const staggerDuration = 0.1;
 
   useEffect(() => {
     const handleResize = () => {
@@ -145,65 +147,32 @@ const EmailList = () => {
           </Tooltip>
 
           {emailData.length > 0
-            ? emailData.map((email) => (
-                <Paper
-                  elevation={3}
-                  sx={{
-                    p: 2,
-                    marginBottom: 2,
-                    margin: isMobile ? "2vh" : "",
-                    cursor: "pointer",
+            ? emailData.map((email, index) => (
+                <motion.div
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 0.8, x: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 50,
+                    damping: 9,
+                    delay: staggerDuration * index, // Added delay based on index
                   }}
                   key={email._id}
-                  onClick={() => handleEmailClick(email._id)}
                 >
-                  <Typography
-                    variant="h5"
-                    gutterBottom
+                  <Paper
+                    elevation={3}
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      wordBreak: "break-all",
+                      p: 2,
+                      marginBottom: 2,
+                      margin: isMobile ? "2vh" : "",
+                      cursor: "pointer",
                     }}
+                    key={email._id}
+                    onClick={() => handleEmailClick(email._id)}
                   >
-                    {email.subject}
-
-                    <Tooltip title="New">
-                      <IconButton
-                        aria-label="new"
-                        size="small"
-                        sx={{
-                          alignSelf: "flex-end",
-                          justifySelf: "flex-end",
-                          marginLeft: "auto",
-                        }}
-                      >
-                        {!email.readStatus ? <FiberNewOutlinedIcon /> : null}
-                      </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="Delete">
-                      <IconButton
-                        aria-label="delete"
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEmailToDelete(email._id);
-                          handleOpenModal();
-                        }}
-                        sx={{
-                          alignSelf: "flex-end",
-                          justifySelf: "flex-end",
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography
-                      variant="subtitle1"
+                      variant="h5"
+                      gutterBottom
                       sx={{
                         display: "flex",
                         justifyContent: "space-between",
@@ -211,23 +180,68 @@ const EmailList = () => {
                         wordBreak: "break-all",
                       }}
                     >
-                      From: {email.from.text}
+                      {email.subject}
+
+                      <Tooltip title="New">
+                        <IconButton
+                          aria-label="new"
+                          size="small"
+                          sx={{
+                            alignSelf: "flex-end",
+                            justifySelf: "flex-end",
+                            marginLeft: "auto",
+                          }}
+                        >
+                          {!email.readStatus ? <FiberNewOutlinedIcon /> : null}
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Delete">
+                        <IconButton
+                          aria-label="delete"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEmailToDelete(email._id);
+                            handleOpenModal();
+                          }}
+                          sx={{
+                            alignSelf: "flex-end",
+                            justifySelf: "flex-end",
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        wordBreak: "break-all",
-                      }}
-                    >
-                      Date: {new Date(email.date).toLocaleString() + " EST"}
-                    </Typography>
-                  </Box>
-                </Paper>
+                    <Box display="flex" alignItems="center" gap={2} mb={2}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        From: {email.from.text}
+                      </Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={2} mb={2}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        Date: {new Date(email.date).toLocaleString() + " EST"}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </motion.div>
               ))
             : handleNoEmails()}
         </Grid>
