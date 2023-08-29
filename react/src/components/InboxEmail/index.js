@@ -6,6 +6,7 @@ import ButtonSection from "../ButtonSection";
 import InfoIcon from "@mui/icons-material/Info";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
+import { motion } from "framer-motion";
 
 
 const InboxEmail = () => {
@@ -79,6 +80,30 @@ const InboxEmail = () => {
 
   console.log(emailData);
 
+  const containerVariants = {
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.2,
+        staggerChildren: 0.2
+      }
+    }
+  };
+  
+  const childVariants = {
+    initial: {
+      opacity: 0,
+      y: -20
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    }
+  };
+
   return (
     <>
       <Grid container spacing={2} sx={{ height: "100%" }}>
@@ -92,80 +117,94 @@ const InboxEmail = () => {
               margin: isMobile ? "6vh" : "0vh",
             }}
           >
-            <Typography
-              variant="h5"
-              gutterBottom
-              sx={{
-                justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
-                wordBreak: "break-all",
-              }}
-            >
-              {emailData ? emailData.subject : "No Subject"}
-            </Typography>
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={2}
-              mb={2}
-              sx={{
-                justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
-                wordBreak: "break-all",
-                display: "flex",
-                flexDirection: isMobile ? "column" : "row",
-              }}
-            >
-              <Typography variant="subtitle1">From: {emailData ? emailData.from.text : "No From"}</Typography>
-              <Tooltip title="Click to copy to clipboard" placement="top">
-              <Chip label={`To: ${emailData ? emailData.to.text : "No To"}`}
-                onClick={() => emailData ? navigator.clipboard.writeText(emailData.to.text) : null}
-                />
-              </Tooltip>
-            </Box>
-            <Typography variant="body1" mb={2}>
-              Date: {emailData ? new Date(emailData.date).toLocaleString() : "No Date"}
-            </Typography>
-            <Typography
-              variant="body1"
-              mb={2}
-              sx={{
-                justifyContent: "center",
-
-                wordBreak: "break-all",
-              }}
-              dangerouslySetInnerHTML={{ __html: emailData ? emailData.textAsHtml : "No Message" }}
-            />
-            <Typography variant="body1">Attachments: {emailData ? emailAttachments.length : "No Attachments"}</Typography>
-            {emailAttachments.map((attachment, i) => {
-              return (
-                <Box key={i} display="flex" alignItems="center" gap={2} mb={2}>
-                  <Chip
-                    label={attachment.filename}
-                    onClick={() =>
-                      // Navigate to the attachment URL in a new tab
-                      window.open(`${process.env.REACT_APP_API_URL}/attachment/${attachment.directory}/${attachment.filename}`, "_blank")
-                    }
-                  />
+            <motion.div variants={containerVariants} initial="initial" animate="animate">
+              <motion.div variants={childVariants}>
+                <Typography
+                  variant="h5"
+                  gutterBottom
+                  sx={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {emailData ? emailData.subject : "No Subject"}
+                </Typography>
+              </motion.div>
+              <motion.div variants={childVariants}>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={2}
+                  mb={2}
+                  sx={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    wordBreak: "break-all",
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
+                  <Typography variant="subtitle1">From: {emailData ? emailData.from.text : "No From"}</Typography>
+                  <Tooltip title="Click to copy to clipboard" placement="top">
+                    <Chip label={`To: ${emailData ? emailData.to.text : "No To"}`}
+                          onClick={() => emailData ? navigator.clipboard.writeText(emailData.to.text) : null}
+                    />
+                  </Tooltip>
                 </Box>
-              );
-            })}
-
-            <Tooltip
-              title="Security Information"
-              placement="top"
-              // Pass the state value to the 'open' prop
-              onClick={handleTooltip} // Handle click event
-            >
-              <IconButton aria-label="security">
-                <InfoIcon />
-              </IconButton>
-            </Tooltip>
-            <Box alignItems="center" id="securityInfo">
-              {isTooltipOpen ? headers : null}
-            </Box>
+              </motion.div>
+              <motion.div variants={childVariants}>
+                <Typography variant="body1" mb={2}>
+                  Date: {emailData ? new Date(emailData.date).toLocaleString() : "No Date"}
+                </Typography>
+              </motion.div>
+              <motion.div variants={childVariants}>
+                <Typography
+                  variant="body1"
+                  mb={2}
+                  sx={{
+                    justifyContent: "center",
+                    wordBreak: "break-all",
+                  }}
+                  dangerouslySetInnerHTML={{ __html: emailData ? emailData.textAsHtml : "No Message" }}
+                />
+              </motion.div>
+              <motion.div variants={childVariants}>
+                <Typography variant="body1">Attachments: {emailData ? emailAttachments.length : "No Attachments"}</Typography>
+              </motion.div>
+              <motion.div variants={childVariants}>
+                {emailAttachments.map((attachment, i) => {
+                  return (
+                    <Box key={i} display="flex" alignItems="center" gap={2} mb={2}>
+                      <Chip
+                        label={attachment.filename}
+                        onClick={() =>
+                          window.open(`${process.env.REACT_APP_API_URL}/attachment/${attachment.directory}/${attachment.filename}`, "_blank")
+                        }
+                      />
+                    </Box>
+                  );
+                })}
+              </motion.div>
+              <motion.div variants={childVariants}>
+                <Tooltip
+                  title="Security Information"
+                  placement="top"
+                  onClick={handleTooltip}
+                >
+                  <IconButton aria-label="security">
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              </motion.div>
+              <motion.div variants={childVariants}>
+                <Box alignItems="center" id="securityInfo">
+                  {isTooltipOpen ? headers : null}
+                </Box>
+              </motion.div>
+            </motion.div>
           </Paper>
         </Grid>
         <style>
