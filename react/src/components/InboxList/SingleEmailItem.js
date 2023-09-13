@@ -11,7 +11,7 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollPos = window.pageYOffset;
+      const currentScrollPos = window.scrollY;
       setScrollDirection(prevScrollPos.current > currentScrollPos ? 'up' : 'down');
       prevScrollPos.current = currentScrollPos;
     };
