@@ -4,7 +4,7 @@ import Main from "./components/Main";
 import Generate from "./components/Generate";
 import Inbox from "./components/Inbox";
 import InboxEmail from "./components/InboxEmail";
-import EmailList from "./components/EmailList";
+// import EmailList from "./components/EmailList";
 import AllEmailList from "./components/AllEmailList";
 import theme from "./theme";
 import darkTheme from "./theme/darkTheme.js";
@@ -12,7 +12,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
 import { ThemeContext } from "./context/ThemeContext";
 import TitleBar from "./components/TitleBar";
-import {AnimatePresence} from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import InboxList from "./components/InboxList";
 const App = () => {
   const [darkMode, setDarkMode] = React.useState(false);
 
@@ -55,7 +56,8 @@ const App = () => {
               <Route path="/generate" element={<Generate />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
-              <Route path="/inbox/:emailId/" element={<EmailList />} />
+              {/* <Route path="/inbox/:emailId/" element={<EmailList />} /> */}
+              <Route path="/inbox/:emailId/" element={<InboxList />} />
               <Route path="/support" element={<Main />} />
               <Route path="/all" element={<AllEmailList />} />
               </Routes>
