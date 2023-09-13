@@ -115,6 +115,7 @@ const InboxEmail = () => {
             sx={{
               p: 2,
               margin: isMobile ? "6vh" : "0vh",
+              marginBottom: 2,
             }}
           >
             <motion.div variants={containerVariants} initial="initial" animate="animate">
