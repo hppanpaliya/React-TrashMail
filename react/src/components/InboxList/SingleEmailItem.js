@@ -5,8 +5,22 @@ import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import { motion } from "framer-motion";
 
 const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToDelete, index, staggerDuration, isMobile }) => {
-    const [isVisible, setIsVisible] = useState(false);
-  const itemRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState('down');
+  const prevScrollPos = useRef(window.scrollY);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      setScrollDirection(prevScrollPos.current > currentScrollPos ? 'up' : 'down');
+      prevScrollPos.current = currentScrollPos;
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -29,19 +43,21 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
       }
     };
   }, []);
-    
+
+  const itemRef = useRef(null);
+
   return (
     <motion.div
-      ref={itemRef}
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: isVisible ? 0.8 : 0, x: isVisible ? 0 : 100 }}
-      transition={{
-        type: "spring",
-        stiffness: 50,
-        damping: 9,
-        delay: isVisible ? staggerDuration * index : 0,
-      }}
-    >
+        ref={itemRef}
+        initial={{ opacity: 0, y: scrollDirection === 'down' ? 100 : -100 }}
+        animate={{ opacity: isVisible ? 0.8 : 0, y: isVisible ? 0 : (scrollDirection === 'down' ? 100 : -100) }}
+        transition={{
+          type: "spring",
+          stiffness: 50,
+          damping: 9,
+          delay: isVisible ? staggerDuration : 0,
+        }}
+      >
       <Paper
         elevation={3}
         sx={{

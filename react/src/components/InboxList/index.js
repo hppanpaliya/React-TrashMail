@@ -18,7 +18,7 @@ const EmailList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
   const { darkMode } = useContext(ThemeContext);
-  const staggerDuration = 0.1;
+  const staggerDuration = 0.05;
 
   useEffect(() => {
     const handleResize = () => {
