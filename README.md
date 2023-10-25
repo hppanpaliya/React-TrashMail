@@ -1,6 +1,6 @@
 # TrashMail - Disposable Email Service
 
-TrashMail is a web application for generating disposable/temporary email addresses and viewing emails sent to those addresses. The project consists of a React frontend and a Node.js backend mail server.
+TrashMail is a web application for generating disposable/temporary email addresses and viewing emails sent to those addresses. The project consists of a React frontend and a Node.js and MongoDB backend mail server.
 
 ## Table of Contents
 - [Frontend](#frontend)
