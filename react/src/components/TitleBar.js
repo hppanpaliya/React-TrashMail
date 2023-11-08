@@ -44,6 +44,7 @@ const TitleBar = () => {
           textOverflow: "ellipsis",
           overflow: "hidden",
           pointerEvents: "none",
+          zIndex: "-1",
         }}
         aria-hidden="true"
       >

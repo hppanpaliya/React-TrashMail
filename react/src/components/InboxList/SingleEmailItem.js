@@ -6,19 +6,19 @@ import { motion } from "framer-motion";
 
 const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToDelete, index, staggerDuration, isMobile }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState('down');
+  const [scrollDirection, setScrollDirection] = useState("down");
   const prevScrollPos = useRef(window.scrollY);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
-      setScrollDirection(prevScrollPos.current > currentScrollPos ? 'up' : 'down');
+      setScrollDirection(prevScrollPos.current > currentScrollPos ? "up" : "down");
       prevScrollPos.current = currentScrollPos;
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -28,8 +28,8 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
       },
       {
         root: null,
-        rootMargin: '0px',
-        threshold: 0.1
+        rootMargin: "0px",
+        threshold: 0.1,
       }
     );
 
@@ -48,16 +48,17 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
 
   return (
     <motion.div
-        ref={itemRef}
-        initial={{ opacity: 0, y: scrollDirection === 'down' ? 100 : -100 }}
-        animate={{ opacity: isVisible ? 0.8 : 0, y: isVisible ? 0 : (scrollDirection === 'down' ? 100 : -100) }}
-        transition={{
-          type: "spring",
-          stiffness: 50,
-          damping: 9,
-          delay: isVisible ? staggerDuration : 0,
-        }}
-      >
+      ref={itemRef}
+      initial={{ opacity: 0, y: scrollDirection === "down" ? 100 : -100 }}
+      animate={{ opacity: isVisible ? 0.8 : 0, y: isVisible ? 0 : scrollDirection === "down" ? 100 : -100 }}
+      exit={{ opacity: 0, y: -100 }}
+      transition={{
+        type: "spring",
+        stiffness: 50,
+        damping: 9,
+        delay: isVisible ? staggerDuration : 0,
+      }}
+    >
       <Paper
         elevation={3}
         sx={{
