@@ -7,6 +7,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import { ThemeContext } from "../../context/ThemeContext";
 import { useContext } from "react";
 import { motion } from "framer-motion";
+import DOMPurify from "dompurify";
 
 
 const InboxEmail = () => {
@@ -150,8 +151,9 @@ const InboxEmail = () => {
                 >
                   <Typography variant="subtitle1">From: {emailData ? emailData.from.text : "No From"}</Typography>
                   <Tooltip title="Click to copy to clipboard" placement="top">
-                    <Chip label={`To: ${emailData ? emailData.to.text : "No To"}`}
-                          onClick={() => emailData ? navigator.clipboard.writeText(emailData.to.text) : null}
+                    <Chip
+                      label={`To: ${emailData ? emailData.to.text : "No To"}`}
+                      onClick={() => (emailData ? navigator.clipboard.writeText(emailData.to.text) : null)}
                     />
                   </Tooltip>
                 </Box>
@@ -169,7 +171,7 @@ const InboxEmail = () => {
                     justifyContent: "center",
                     wordBreak: "break-all",
                   }}
-                  dangerouslySetInnerHTML={{ __html: emailData ? emailData.textAsHtml : "No Message" }}
+                  dangerouslySetInnerHTML={{ __html: emailData ? DOMPurify.sanitize(emailData.html) : "No Message" }}
                 />
               </motion.div>
               <motion.div variants={childVariants}>
@@ -190,11 +192,7 @@ const InboxEmail = () => {
                 })}
               </motion.div>
               <motion.div variants={childVariants}>
-                <Tooltip
-                  title="Security Information"
-                  placement="top"
-                  onClick={handleTooltip}
-                >
+                <Tooltip title="Security Information" placement="top" onClick={handleTooltip}>
                   <IconButton aria-label="security">
                     <InfoIcon />
                   </IconButton>
