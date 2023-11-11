@@ -8,7 +8,7 @@ const fs = require("fs");
 const router = express.Router();
 
 // GET /emails/:emailId
-// Retrieve emails and attachment file links for a specific email ID
+// Retrieve emails and attachment file links for a specific email ID( Unused in the frontend as of now)
 router.get("/emails/:emailId", async (req, res) => {
   try {
     const { emailId } = req.params;
