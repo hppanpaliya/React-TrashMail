@@ -10,6 +10,16 @@ RUN apt-get update && \
 # Clone the repository
 RUN git clone https://github.com/hppanpaliya/React-TrashMail
 
+# Set arguments for environment variables
+ARG REACT_APP_API_URL
+ARG REACT_APP_DOMAINS
+
+# Check if REACT_APP_DOMAINS is set
+RUN if [ -z "$REACT_APP_DOMAINS" ] ; then echo "REACT_APP_DOMAINS argument not provided" && exit 1; fi
+
+# Create .env file
+RUN echo "REACT_APP_API_URL=$REACT_APP_API_URL\nREACT_APP_DOMAINS=$REACT_APP_DOMAINS" > /React-TrashMail/react/.env
+
 # Build the React project
 WORKDIR /React-TrashMail/react
 RUN yarn && \
