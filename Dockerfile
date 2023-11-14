@@ -1,29 +1,22 @@
 # Start with the official MongoDB image
 FROM mongo:latest
 
-# Install Node.js
+# Install Node.js and Git
 RUN apt-get update && \
-    apt-get install -y curl gnupg && \
+    apt-get install -y curl gnupg git && \
     curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs git
+    apt-get install -y nodejs
+
+# Install yarn globally
+RUN npm install -g yarn
 
 # Clone the repository
 RUN git clone https://github.com/hppanpaliya/React-TrashMail
 
-# Set arguments for environment variables
-ARG REACT_APP_API_URL
-ARG REACT_APP_DOMAINS
-
-# Check if REACT_APP_DOMAINS is set
-RUN if [ -z "$REACT_APP_DOMAINS" ] ; then echo "REACT_APP_DOMAINS argument not provided" && exit 1; fi
-
-# Create .env file
-RUN echo "REACT_APP_API_URL=$REACT_APP_API_URL\nREACT_APP_DOMAINS=$REACT_APP_DOMAINS" > /React-TrashMail/react/.env
-
-# Build the React project
+# Install dependencies for the React project
 WORKDIR /React-TrashMail/react
-RUN yarn && \
-    yarn run build
+RUN yarn
+
 
 # Install dependencies for the mailserver
 WORKDIR /React-TrashMail/mailserver
@@ -35,5 +28,9 @@ RUN npm install -g pm2
 # Define mountable volume
 VOLUME ["/React-TrashMail/mailserver/attachments"]
 
-# Set the command to start MongoDB and the mail server
-CMD ["sh", "-c", "pm2-runtime start yarn -- start"]
+# Copy startup script
+COPY docker_start.sh /docker_start.sh
+RUN chmod +x /docker_start.sh
+
+# Set the command to start the application using the startup script
+CMD ["/docker_start.sh"]
