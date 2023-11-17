@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Start MongoDB in the background
+mongod --fork --logpath /var/log/mongod.log
+
 # Path to a flag file that indicates the first run is completed
 FIRST_RUN_FLAG="/React-TrashMail/.first-run-complete"
 
