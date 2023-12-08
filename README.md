@@ -97,11 +97,45 @@ The backend will run on port 4000
 
 The frontend and backend can be deployed separately. The React frontend can be built and served using any web server. The Node.js backend can be deployed to a server or hosting service like AWS or Home Server like Raspberry Pi with port forwarding. Make sure to configure the frontend to point to the correct backend URL.
 
+### Deploying with Docker
+
+For those who prefer a containerized deployment, Docker can be used to easily set up and run TrashMail. The repository includes a Dockerfile to simplify this process.
+
+#### Docker Setup
+
+1. **Build the Docker Image**: 
+   Ensure you are in the root directory of the project and run:
+   ```shell
+   docker build -t trashmail-app .
+   ```
+
+2. **Run the Docker Container**:
+   After building the image, you can start the container using:
+   ```shell
+   sudo docker run -d -p 4000:4000 -p 25:25 -v ./attachments:/React-TrashMail/mailserver/attachments -e REACT_APP_API_URL= -e REACT_APP_DOMAINS='["example.com"]' --name trashmail-container trashmail-app
+   ```
+   This command starts the TrashMail application and exposes it on ports 4000 and 25 for mailserver.
+
+3. **Accessing the Application**:
+   Once the container is running, you can access the frontend at [http://localhost:3000](http://localhost:3000) and the backend on port 4000.
+
+Ensure you have Docker installed and running on your machine before executing these commands.
+
+#### Docker environment variables and volume options used or can be added:
+
+
+| Option/Variable | Description |
+|-----------------|-----------------------|
+| `-e REACT_APP_API_URL=` | Sets the API URL. Leave empty or set to the backend URL if hosted externally. Example: `-e REACT_APP_API_URL=http://backendhost:4000` |
+| `-e REACT_APP_DOMAINS='["example.com", "example.org"]'` | Specifies the domains for the email service. Set to desired domains. |
+| `-v ./attachments:/React-TrashMail/mailserver/attachments` | Volume mount for attachments. Maps a local directory to a container directory. |
+| `-v /my/local/mongodb:/data/db` | (Optional) Volume mount for MongoDB data. Maps a local directory to the MongoDB data directory in the container. |
+
+These options and environment variables are crucial for configuring the TrashMail application within the Docker environment, especially for handling backend API communication and data persistence.
+
 ## Conclusion
 
 This application demonstrates a disposable email service with basic functionality like inbox and reading emails. Additional features like registering custom domains, tagging emails, search, etc. can be added.
-
-The frontend and backend are deployed separately for modularity and scalability. The React frontend is served using Nginx and the Node.js backend is on AWS.
 
 ## Support
 
