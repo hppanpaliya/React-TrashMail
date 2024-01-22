@@ -46,7 +46,8 @@ router.get("/emails/:emailId", async (req, res) => {
 // GET list of Subject, Time, Read-Status and From fields for a specific emailId (email address)
 router.get("/emails-list/:emailId", async (req, res) => {
   try {
-    const { emailId } = req.params;
+    let { emailId } = req.params;
+    emailId = emailId.toLowerCase();
     console.log("emailId", emailId);
     const db = getDB();
     const collection = db.collection(emailId);
