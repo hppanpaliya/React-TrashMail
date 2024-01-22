@@ -4,6 +4,7 @@ const { collectionName } = require("./config");
 const { ObjectId } = require("mongodb");
 const path = require("path");
 const fs = require("fs");
+const {deleteEmailAndAttachments} = require("./emailHandler");
 
 const router = express.Router();
 
@@ -136,25 +137,12 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
 // Delete email data and attachments for emailId with specific mongodb id (email_id)
 router.delete("/email/:emailID/:email_id", async (req, res) => {
   try {
-    let { email_id } = req.params;
-    let { emailID } = req.params;
+    const { email_id, emailID } = req.params;
     console.log("email_id", email_id);
-    const db = getDB();
-    const collection = db.collection(emailID);
-    email_id = new ObjectId(email_id);
 
-    const deleteResult = await collection.deleteOne({ _id: email_id }); // delete email data with the provided email uid
-    console.log("deleteResult", deleteResult);
+    const deletedCount = await deleteEmailAndAttachments(emailID, email_id);
 
-    // Check if the email had any attachments at attachments folder /attachments/:email_id/*
-    const attachmentsPath = path.join(__dirname, `./attachments/${email_id}`);
-
-    // Delete the attachments folder if it exists
-    if (fs.existsSync(attachmentsPath)) {
-      fs.rmdirSync(attachmentsPath, { recursive: true });
-    }
-
-    if (deleteResult.deletedCount === 0) {
+    if (deletedCount === 0) {
       return res.status(404).json({ message: "No email found for the provided email ID" });
     }
 
