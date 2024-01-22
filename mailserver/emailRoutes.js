@@ -110,6 +110,7 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
   try {
     let { email_id } = req.params;
     let { emailID } = req.params;
+    emailID = emailID.toLowerCase();
     console.log("email_id", email_id);
     const db = getDB();
     const collection = db.collection(emailID);
