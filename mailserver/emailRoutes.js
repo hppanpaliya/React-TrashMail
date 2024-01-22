@@ -5,6 +5,7 @@ const { ObjectId } = require("mongodb");
 const path = require("path");
 const fs = require("fs");
 const {deleteEmailAndAttachments} = require("./emailHandler");
+const e = require("express");
 
 const router = express.Router();
 
@@ -139,7 +140,8 @@ router.get("/email/:emailID/:email_id", async (req, res) => {
 // Delete email data and attachments for emailId with specific mongodb id (email_id)
 router.delete("/email/:emailID/:email_id", async (req, res) => {
   try {
-    const { email_id, emailID } = req.params;
+    let { email_id, emailID } = req.params;
+    emailID = emailID.toLowerCase();
     console.log("email_id", email_id);
 
     const deletedCount = await deleteEmailAndAttachments(emailID, email_id);
