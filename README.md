@@ -112,7 +112,7 @@ For those who prefer a containerized deployment, Docker can be used to easily se
 2. **Run the Docker Container**:
    After building the image, you can start the container using:
    ```shell
-   sudo docker run -d -p 4000:4000 -p 25:25 -v ./attachments:/React-TrashMail/mailserver/attachments -e REACT_APP_API_URL= -e REACT_APP_DOMAINS='["example.com"]' --name trashmail-container trashmail-app
+   sudo docker run -d -p 4000:4000 -p 25:25 -v ./attachments:/React-TrashMail/mailserver/attachments -e REACT_APP_API_URL= -e REACT_APP_DOMAINS='["example.com"]' --name trashmail-container hppanpaliya/react-trashmail:latest
    ```
    This command starts the TrashMail application and exposes it on ports 4000 and 25 for mailserver.
 
