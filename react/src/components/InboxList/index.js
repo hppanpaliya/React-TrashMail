@@ -38,9 +38,10 @@ const EmailList = () => {
   const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
+    setLoading(true);
     const fetchEmailData = async () => {
       try {
-        setLoading(true);
+        
         window.localStorage.setItem("lastEmailId", emailId);
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/emails-list/${emailId}`);
         setEmailData(response.data);
@@ -48,6 +49,7 @@ const EmailList = () => {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching email data:", error);
+        setEmailData([]);
         setLoading(false);
       }
     };
