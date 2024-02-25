@@ -42,7 +42,8 @@ const Generate = () => {
 
   const generateRandomEmail = () => {
     let randomEmail = Math.random().toString(36).substring(5);
-    randomEmail += "@myserver.pw";
+    let chosenDomain = domains[Math.floor(Math.random() * domains.length)];
+    randomEmail += `@${chosenDomain}`;
     setEmail(randomEmail);
   };
 
