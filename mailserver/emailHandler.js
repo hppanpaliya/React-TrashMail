@@ -38,16 +38,22 @@ async function saveAttachment(attachmentFolder, attachment) {
   });
 }
 
-async function saveEmailToDB(parsedEmail) {
-  console.log("parsedEmail", parsedEmail.to.value[0].address);
+async function saveEmailToDB(parsedEmail, toAddress) {
+  if (!("to" in parsedEmail)) {
+    parsedEmail.to = {
+      text: "",
+      value: [{ address: "" }]
+    }
+  }
+  console.log("parsedEmail", toAddress);
+
   parsedEmail.to.value[0].address = parsedEmail.to.value[0].address.toLowerCase();
   parsedEmail.from.value[0].address = parsedEmail.from.value[0].address.toLowerCase();
   parsedEmail.to.text = parsedEmail.to.text.toLowerCase();
-  
 
   try {
     const db = getDB();
-    const collection = db.collection(parsedEmail.to.value[0].address);
+    const collection = db.collection(toAddress);
     const attachments = parsedEmail.attachments;
     // Generate a new MongoDB ObjectId
     const objectId = new ObjectId();
@@ -76,10 +82,12 @@ async function saveEmailToDB(parsedEmail) {
   }
 }
 
-async function handleIncomingEmail(stream) {
+async function handleIncomingEmail(stream, session) {
   try {
     const parsedEmail = await simpleParser(stream);
-    await saveEmailToDB(parsedEmail);
+    for (toAddress of session.envelope.rcptTo) {
+      await saveEmailToDB(parsedEmail, toAddress.address.toLowerCase());
+    }
   } catch (error) {
     console.error("Error parsing or saving email:", error);
     throw error;

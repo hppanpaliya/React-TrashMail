@@ -4,7 +4,7 @@ const { collectionName } = require("./config");
 const { ObjectId } = require("mongodb");
 const path = require("path");
 const fs = require("fs");
-const {deleteEmailAndAttachments} = require("./emailHandler");
+const { deleteEmailAndAttachments } = require("./emailHandler");
 const e = require("express");
 
 const router = express.Router();
@@ -17,7 +17,7 @@ router.get("/emails/:emailId", async (req, res) => {
     console.log("emailId", emailId);
     const db = getDB();
     const collection = db.collection(emailId);
-    const emails = await collection.find({ "to.text": emailId }).toArray();
+    const emails = await collection.find({}).toArray();
 
     if (emails.length === 0) {
       return res.status(404).json({ message: "No emails found for the provided email ID" });
@@ -53,10 +53,7 @@ router.get("/emails-list/:emailId", async (req, res) => {
     const db = getDB();
     const collection = db.collection(emailId);
     const emails = await collection
-      .find(
-        { "to.text": emailId.toLocaleLowerCase() },
-        { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } } // Only fetch the required fields
-      )
+      .find({}, { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } }) // Only fetch the required fields
       .sort({ date: -1 }) // Sort by date in descending order
       .toArray();
     console.log("emails", emails);
