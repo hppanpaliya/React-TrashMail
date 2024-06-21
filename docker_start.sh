@@ -25,4 +25,4 @@ fi
 
 # Start the application
 cd /React-TrashMail/mailserver
-pm2-runtime start yarn -- start:docker
+PM2_HOME=/React-Trashmail/mailserver pm2-runtime start yarn -- start:docker
