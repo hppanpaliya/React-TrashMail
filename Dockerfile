@@ -10,20 +10,18 @@ RUN apt-get update && \
 # Install yarn globally
 RUN npm install -g yarn
 
-# Clone the repository
-RUN git clone https://github.com/hppanpaliya/React-TrashMail
+# Install pm2 globally
+RUN npm install -g pm2
 
-# Install dependencies for the React project
+# Copy in package.json files and run install to allow docker to cache themc
+COPY react/package.json /React-TrashMail/react/
 WORKDIR /React-TrashMail/react
 RUN yarn
-
-
-# Install dependencies for the mailserver
+COPY mailserver/package.json /React-TrashMail/mailserver/
 WORKDIR /React-TrashMail/mailserver
 RUN yarn
 
-# Install pm2 globally
-RUN npm install -g pm2
+COPY . /React-TrashMail
 
 # Define mountable volume
 VOLUME ["/React-TrashMail/mailserver/attachments"]
