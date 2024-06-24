@@ -16,7 +16,7 @@ async function startSMTPServer() {
   const server = new SMTPServer({
     authOptional: true,
     onData(stream, session, callback) {
-      handleIncomingEmail(stream)
+      handleIncomingEmail(stream, session)
         .then(() => callback())
         .catch((error) => callback(error));
     },
@@ -82,4 +82,3 @@ async function startServer() {
 }
 
 startServer();
-
