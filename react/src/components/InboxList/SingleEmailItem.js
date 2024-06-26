@@ -33,13 +33,14 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
       }
     );
 
-    if (itemRef.current) {
-      observer.observe(itemRef.current);
+    const currentRef = itemRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (itemRef.current) {
-        observer.unobserve(itemRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);

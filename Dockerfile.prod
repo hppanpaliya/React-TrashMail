@@ -13,23 +13,16 @@ RUN npm install -g yarn
 # Install pm2 globally
 RUN yarn global add pm2
 
-# Copy in package.json files and run install to allow docker to cache them
-COPY react/package.json /React-TrashMail/react/
-COPY react/yarn.lock /React-TrashMail/react/
-WORKDIR /React-TrashMail/react
-RUN yarn install
-
+# Copy in mailserver dependencies
 COPY mailserver/package.json /React-TrashMail/mailserver/
 COPY mailserver/yarn.lock /React-TrashMail/mailserver/
-WORKDIR /React-TrashMail/mailserver
-RUN yarn install
+COPY mailserver/node_modules /React-TrashMail/mailserver/node_modules
 
 # Copy the rest of the application code
 COPY . /React-TrashMail
 
-WORKDIR /React-TrashMail/react
-RUN yarn build 
-RUN rm -rf ../mailserver/build/* && mkdir -p ../mailserver/build && cp -r build/* ../mailserver/build/
+# Copy built React app to mailserver build directory
+COPY react/build /React-TrashMail/mailserver/build
 
 # Define mountable volume
 VOLUME ["/React-TrashMail/mailserver/attachments"]

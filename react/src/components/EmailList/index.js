@@ -11,6 +11,7 @@ import { useContext } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { env } from "../../env";
 
 const EmailList = () => {
   const { emailId } = useParams();
@@ -45,7 +46,7 @@ const EmailList = () => {
       try {
         setLoading(true);
         window.localStorage.setItem("lastEmailId", emailId);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/emails-list/${emailId}`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/emails-list/${emailId}`);
         setEmailData(response.data);
         console.log(response.data);
         setLoading(false);
@@ -87,7 +88,7 @@ const EmailList = () => {
 
   const handleDeleteEmail = async (email_Id) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/email/${emailId}/${email_Id}`);
+      await axios.delete(`${env.REACT_APP_API_URL}/email/${emailId}/${email_Id}`);
       // Refresh the email list after successful deletion
       setReload(!reload);
     } catch (error) {

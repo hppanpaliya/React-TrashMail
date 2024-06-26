@@ -7,6 +7,7 @@ import { useRef } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmModal from "../ConfirmModal";
+import { env } from "../../env";
 
 const AllEmailList = () => {
   const [emailData, setEmailData] = useState([]);
@@ -37,7 +38,7 @@ const AllEmailList = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/all-emails`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/all-emails`);
         setEmailData(response.data);
         console.log(response.data);
         setLoading(false);
@@ -79,7 +80,7 @@ const AllEmailList = () => {
 
   const handleDeleteEmail = async () => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/email/${emailToDelete[1]}/${emailToDelete[0]}`);
+      await axios.delete(`${env.REACT_APP_API_URL}/email/${emailToDelete[1]}/${emailToDelete[0]}`);
       // Refresh the email list after successful deletion
       setReload(!reload);
     } catch (error) {

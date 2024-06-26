@@ -5,13 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { ThemeContext } from "../../context/ThemeContext";
 import { motion } from "framer-motion";
+import { env } from "../../env";
 
 const Generate = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState(window.localStorage.getItem("lastEmailId") || "");
   const [isMobile, setIsMobile] = useState(false);
   const [width, setWidth] = useState(window.innerWidth);
-  const domains = JSON.parse(process.env.REACT_APP_DOMAINS);
+  const domains = JSON.parse(env.REACT_APP_DOMAINS);
   const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ const Generate = () => {
             }}
           >
             <Grid item xs={12} sm={5}>
-              <motion.div initial={{ scale:0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
+              <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
                 <TextField
                   label="Enter your email"
                   sx={inputStyles}
