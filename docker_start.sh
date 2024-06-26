@@ -15,9 +15,11 @@ if [ ! -f "$FIRST_RUN_FLAG" ]; then
 
     pm2-runtime stop yarn -- start
 
-    # Build the React project
+    # Set environment variables in react
     cd /React-TrashMail/react
-    yarn run build
+    
+    npx react-inject-env set
+    mv ./build/env.js ../mailserver/build/
 
     # Create the flag file to indicate completion of first run
     touch "$FIRST_RUN_FLAG"
@@ -25,4 +27,4 @@ fi
 
 # Start the application
 cd /React-TrashMail/mailserver
-PM2_HOME=/React-Trashmail/mailserver pm2-runtime start yarn -- start:docker
+PM2_HOME=/React-TrashMail/mailserver pm2-runtime start yarn -- start:docker

@@ -1,5 +1,3 @@
-I apologize for the duplicated response. Here's the corrected version of the README file:
-
 # Mail Server
 
 This is a Node.js-based mail server that provides SMTP (Simple Mail Transfer Protocol) and web server functionality. The server allows users to receive emails and store them in a MongoDB database. It also provides routes for retrieving and managing emails and their attachments.
