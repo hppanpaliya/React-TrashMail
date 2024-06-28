@@ -80,16 +80,34 @@ router.get("/all-emails", async (req, res) => {
   try {
     const db = getDB();
     const collections = await db.listCollections().toArray();
-    const allEmails = [];
+    let allEmails = [];
 
     for (const collection of collections) {
       const emails = await db
         .collection(collection.name)
-        .find({}, { projection: { "from.text": 1, subject: 1, "to.value.address": 1, "from.value.address": 1, date: 1, readStatus: 1 } })
-        .sort({ date: -1 }) // Sort by date in descending order
+        .find(
+          {},
+          {
+            projection: {
+              "from.text": 1,
+              subject: 1,
+              "to.value.address": 1,
+              "from.value.address": 1,
+              date: 1,
+              readStatus: 1,
+            },
+          }
+        )
         .toArray();
       allEmails.push(...emails);
     }
+
+    // Sort all emails by date in descending order
+    allEmails.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : new Date(0);
+      const dateB = b.date ? new Date(b.date) : new Date(0);
+      return dateB - dateA;
+    });
 
     if (allEmails.length === 0) {
       return res.status(404).json({ message: "No emails found in the database" });
