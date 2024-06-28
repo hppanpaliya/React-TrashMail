@@ -7,7 +7,7 @@ This is a Node.js-based mail server that provides SMTP (Simple Mail Transfer Pro
 Before running the mail server, ensure that you have the following prerequisites installed:
 
 - Node.js (version 14 or higher)
-- MongoDB (running on `mongodb://192.168.1.248:27017`)
+- MongoDB
 - NPM (Node Package Manager)
 
 ## Installation
