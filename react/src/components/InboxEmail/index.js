@@ -1,18 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/material";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { Letter } from "react-letter";
 import ButtonSection from "../ButtonSection";
 import InfoIcon from "@mui/icons-material/Info";
 import { ThemeContext } from "../../context/ThemeContext";
-import { useContext } from "react";
 import { motion } from "framer-motion";
-import DOMPurify from "dompurify";
 import { env } from "../../env";
 
 const InboxEmail = () => {
-  const { emailId } = useParams();
-  const { email_id } = useParams();
+  const { emailId, email_id } = useParams();
   const [emailData, setEmailData] = useState();
   const [emailAttachments, setEmailAttachments] = useState([]);
   const [emailHeaders, setEmailHeaders] = useState([]);
@@ -131,7 +129,7 @@ const InboxEmail = () => {
                     wordBreak: "break-all",
                   }}
                 >
-                  {emailData ? emailData.subject : "No Subject"}
+                  {emailData?.subject || "No Subject"}
                 </Typography>
               </motion.div>
               <motion.div variants={childVariants}>
@@ -149,30 +147,24 @@ const InboxEmail = () => {
                     flexDirection: isMobile ? "column" : "row",
                   }}
                 >
-                  <Typography variant="subtitle1">From: {emailData ? emailData.from.text : "No From"}</Typography>
+                  <Typography variant="subtitle1">From: {emailData?.from.text || "No From"}</Typography>
                   <Tooltip title="Click to copy to clipboard" placement="top">
                     <Chip
-                      label={`To: ${emailData ? emailData.to.text : "No To"}`}
-                      onClick={() => (emailData ? navigator.clipboard.writeText(emailData.to.text) : null)}
+                      label={`To: ${emailData?.to.text || "No To"}`}
+                      onClick={() => emailData?.to.text && navigator.clipboard.writeText(emailData.to.text)}
                     />
                   </Tooltip>
                 </Box>
               </motion.div>
               <motion.div variants={childVariants}>
                 <Typography variant="body1" mb={2}>
-                  Date: {emailData ? new Date(emailData.date).toLocaleString() : "No Date"}
+                  Date: {emailData?.date ? new Date(emailData.date).toLocaleString() : "No Date"}
                 </Typography>
               </motion.div>
               <motion.div variants={childVariants}>
-                <Typography
-                  variant="body1"
-                  mb={2}
-                  sx={{
-                    justifyContent: "center",
-                    wordBreak: "break-all",
-                  }}
-                  dangerouslySetInnerHTML={{ __html: emailData ? DOMPurify.sanitize(emailData.html) : "No Message" }}
-                />
+                <Box sx={{ maxWidth: "100%", overflowX: "auto" }}>
+                  <Letter html={emailData?.html || "<p>No Message</p>"} text={emailData?.text || "No Message"} />
+                </Box>
               </motion.div>
               <motion.div variants={childVariants}>
                 <Typography variant="body1">Attachments: {emailData ? emailAttachments.length : "No Attachments"}</Typography>
