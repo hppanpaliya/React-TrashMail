@@ -2,7 +2,6 @@ const { simpleParser } = require("mailparser");
 const fs = require("fs");
 const path = require("path");
 const { getDB } = require("../db");
-const { collectionName } = require("../config");
 const { ObjectId } = require("mongodb");
 
 async function saveAttachment(attachmentFolder, attachment) {
