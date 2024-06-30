@@ -1,5 +1,5 @@
 const express = require("express");
-const { getDB } = require("./db");
+const { getDB } = require("./src/db");
 const { collectionName } = require("./src/config");
 const { ObjectId } = require("mongodb");
 const path = require("path");

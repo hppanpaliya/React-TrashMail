@@ -1,7 +1,7 @@
 const { simpleParser } = require("mailparser");
 const fs = require("fs");
 const path = require("path");
-const { getDB } = require("./db");
+const { getDB } = require("./src/db");
 const { collectionName } = require("./src/config");
 const { ObjectId } = require("mongodb");
 
