@@ -26,7 +26,8 @@
     "querystring": "^0.2.1",
     "smtp-server": "^3.12.0",
     "smtpd": "^0.1.7",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "validator": "^13.12.0"
   },
   "devDependencies": {
     "prettier": "^3.3.2"

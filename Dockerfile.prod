@@ -25,7 +25,7 @@ COPY . /React-TrashMail
 COPY react/build /React-TrashMail/mailserver/src/build
 
 # Define mountable volume
-VOLUME ["/React-TrashMail/mailserver/attachments"]
+VOLUME ["/React-TrashMail/mailserver/src/attachments"]
 
 # Copy startup script
 COPY docker_start.sh /docker_start.sh

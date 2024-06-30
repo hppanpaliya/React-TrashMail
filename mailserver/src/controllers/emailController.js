@@ -9,7 +9,7 @@ async function deleteEmailAndAttachments(emailID, email_id) {
 
   const deleteResult = await collection.deleteOne({ _id: email_id });
 
-  const attachmentsPath = path.join(__dirname, `./attachments/${email_id}`);
+  const attachmentsPath = path.join(__dirname, `../attachments/${email_id}`);
   if (fs.existsSync(attachmentsPath)) {
     fs.rmdirSync(attachmentsPath, { recursive: true });
   }
@@ -133,7 +133,6 @@ const emailController = {
       email_id = new ObjectId(email_id);
 
       const emails = await collection.find({ _id: email_id }).toArray();
-      console.log("emails", emails);
 
       if (emails.length === 0) {
         return res.status(404).json({ message: "No emails found for the provided email ID" });
@@ -141,7 +140,6 @@ const emailController = {
 
       if (!emails[0]["readStatus"]) {
         const updateResult = await collection.updateOne({ _id: email_id }, { $set: { readStatus: true } });
-        console.log("updateResult", updateResult);
       }
 
       return res.json(emails);
