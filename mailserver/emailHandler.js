@@ -5,7 +5,6 @@ const { getDB } = require("./db");
 const { collectionName } = require("./config");
 const { ObjectId } = require("mongodb");
 
-
 async function saveAttachment(attachmentFolder, attachment) {
   const attachmentsDir = path.join(__dirname, "attachments", attachmentFolder);
 
@@ -42,8 +41,8 @@ async function saveEmailToDB(parsedEmail, toAddress) {
   if (!("to" in parsedEmail)) {
     parsedEmail.to = {
       text: "",
-      value: [{ address: "" }]
-    }
+      value: [{ address: "" }],
+    };
   }
   console.log("parsedEmail", toAddress);
 
@@ -104,12 +103,18 @@ async function getOldEmails(days) {
     let oldEmails = [];
 
     for (const collection of collections) {
-      const emails = await db.collection(collection.name).find({
-        date: { $lt: thresholdDate }
-      }, { projection: { _id: 1 } }).toArray(); // Only fetch the _id field
+      const emails = await db
+        .collection(collection.name)
+        .find(
+          {
+            date: { $lt: thresholdDate },
+          },
+          { projection: { _id: 1 } }
+        )
+        .toArray(); // Only fetch the _id field
 
       // Append the collection name (emailID) and email._id to the oldEmails array
-      emails.forEach(email => {
+      emails.forEach((email) => {
         oldEmails.push({ emailID: collection.name, emailId: email._id });
       });
     }
@@ -135,7 +140,6 @@ async function deleteEmailAndAttachments(emailID, email_id) {
 
   return deleteResult.deletedCount;
 }
-
 
 module.exports = {
   handleIncomingEmail,

@@ -7,10 +7,9 @@ const emailRoutes = require("./emailRoutes");
 const attachmentRoutes = require("./attachmentRoutes");
 const cors = require("cors");
 const path = require("path");
-const cron = require('node-cron');
+const cron = require("node-cron");
 const { getOldEmails } = require("./emailHandler");
 const { deleteEmailAndAttachments } = require("./emailHandler");
-
 
 async function startSMTPServer() {
   const server = new SMTPServer({
@@ -60,11 +59,10 @@ async function startWebServer() {
   });
 }
 
-
-cron.schedule('0 2 * * *', async () => {
-  console.log('Running a daily check for old emails and attachments...');
+cron.schedule("0 2 * * *", async () => {
+  console.log("Running a daily check for old emails and attachments...");
   const oldEmails = await getOldEmails(30); // Get emails older than 30 days
-  console.log('oldEmails', oldEmails);
+  console.log("oldEmails", oldEmails);
   for (const email of oldEmails) {
     await deleteEmailAndAttachments(email.emailID, email.emailId.toHexString()); // Delete each old email
   }
