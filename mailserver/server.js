@@ -1,6 +1,6 @@
 const express = require("express");
 const { SMTPServer } = require("smtp-server");
-const { handleIncomingEmail } = require("./emailHandler");
+const { handleIncomingEmail, getOldEmails, deleteEmailAndAttachments } = require("./src/services/emailService");
 const { smtpPort } = require("./src/config");
 const { connectMongoDB } = require("./src/db");
 const emailRoutes = require("./src/routes/emailRoutes");
@@ -8,8 +8,6 @@ const attachmentRoutes = require("./src/routes/attachmentRoutes");
 const cors = require("cors");
 const path = require("path");
 const cron = require("node-cron");
-const { getOldEmails } = require("./emailHandler");
-const { deleteEmailAndAttachments } = require("./emailHandler");
 
 async function startSMTPServer() {
   const server = new SMTPServer({

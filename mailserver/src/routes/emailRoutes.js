@@ -4,7 +4,7 @@ const { collectionName } = require("../config");
 const { ObjectId } = require("mongodb");
 const path = require("path");
 const fs = require("fs");
-const { deleteEmailAndAttachments } = require("../../emailHandler");
+const { deleteEmailAndAttachments } = require("../services/emailService");
 const e = require("express");
 
 const router = express.Router();
