@@ -22,7 +22,7 @@ COPY mailserver/node_modules /React-TrashMail/mailserver/node_modules
 COPY . /React-TrashMail
 
 # Copy built React app to mailserver build directory
-COPY react/build /React-TrashMail/mailserver/build
+COPY react/build /React-TrashMail/mailserver/src/build
 
 # Define mountable volume
 VOLUME ["/React-TrashMail/mailserver/attachments"]
