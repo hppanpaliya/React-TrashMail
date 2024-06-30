@@ -1,6 +1,7 @@
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const fs = require("fs");
+const path = require("path");
 
 async function deleteEmailAndAttachments(emailID, email_id) {
   const db = getDB();
