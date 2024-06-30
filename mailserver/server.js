@@ -1,13 +1,9 @@
-const express = require("express");
 const { SMTPServer } = require("smtp-server");
 const { handleIncomingEmail, getOldEmails, deleteEmailAndAttachments } = require("./src/services/emailService");
 const { smtpPort } = require("./src/config");
-const { connectMongoDB } = require("./src/db");
-const emailRoutes = require("./src/routes/emailRoutes");
-const attachmentRoutes = require("./src/routes/attachmentRoutes");
-const cors = require("cors");
-const path = require("path");
+const { connectMongoDB, closeMongoDB } = require("./src/db");
 const cron = require("node-cron");
+const createApp = require("./src/app");
 
 async function startSMTPServer() {
   const server = new SMTPServer({
@@ -28,24 +24,8 @@ async function startSMTPServer() {
 }
 
 async function startWebServer() {
-  const app = express();
+  const app = createApp();
   const port = 4000;
-
-  // Enable CORS
-  app.use(cors());
-
-  // Define routes
-
-  app.use(emailRoutes);
-  app.use(attachmentRoutes);
-  app.use(express.static(path.join(__dirname, "build")));
-
-  // Handle all other requests by serving the React app's entry point (index.html)
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "build", "index.html"));
-  });
-
-  // Start server
 
   const server = app.listen(port, () => {
     console.log("Web server listening on port", port);
