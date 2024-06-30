@@ -14,11 +14,9 @@ const Inbox = () => {
 
   useEffect(() => {
     if (lastEmail) {
-      
       navigate(`/inbox/${lastEmail}`, { replace: true }); // By using "replace" to effectively delete '/inbox' from the history stack
     }
   }, [lastEmail, navigate]);
-  
 
   return (
     <div>

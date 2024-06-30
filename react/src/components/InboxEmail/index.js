@@ -175,7 +175,9 @@ const InboxEmail = () => {
                     <Box key={i} display="flex" alignItems="center" gap={2} mb={2}>
                       <Chip
                         label={attachment.filename}
-                        onClick={() => window.open(`${env.REACT_APP_API_URL}/api/attachment/${attachment.directory}/${attachment.filename}`, "_blank")}
+                        onClick={() =>
+                          window.open(`${env.REACT_APP_API_URL}/api/attachment/${attachment.directory}/${attachment.filename}`, "_blank")
+                        }
                       />
                     </Box>
                   );

@@ -2,7 +2,7 @@ import React from "react";
 import { Typography, Box, Grid, Button } from "@mui/material";
 import Modal from "@mui/material/Modal";
 
-// Generic Confirm Modal Component 
+// Generic Confirm Modal Component
 
 const ConfirmModal = ({ open, setOpen, title, body, confirmText, cancelText, onConfirm, onCancel }) => {
   const backgroundColor = title.includes("Delete") ? "#f44336" : "#000"; // red for delete, black for others
