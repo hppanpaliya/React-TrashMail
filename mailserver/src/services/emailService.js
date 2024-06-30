@@ -5,7 +5,7 @@ const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 
 async function saveAttachment(attachmentFolder, attachment) {
-  const attachmentsDir = path.join(__dirname, "attachments", attachmentFolder);
+  const attachmentsDir = path.join(__dirname, "../attachments", attachmentFolder);
 
   if (!fs.existsSync(attachmentsDir)) {
     fs.mkdirSync(attachmentsDir, { recursive: true });
