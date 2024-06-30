@@ -1,10 +1,10 @@
 const express = require("express");
-const { getDB } = require("./src/db");
-const { collectionName } = require("./src/config");
+const { getDB } = require("../db");
+const { collectionName } = require("../config");
 const { ObjectId } = require("mongodb");
 const path = require("path");
 const fs = require("fs");
-const { deleteEmailAndAttachments } = require("./emailHandler");
+const { deleteEmailAndAttachments } = require("../../emailHandler");
 const e = require("express");
 
 const router = express.Router();
