@@ -11,8 +11,8 @@ function createApp() {
   app.use(cors());
 
   // Define routes
-  app.use(emailRoutes);
-  app.use(attachmentRoutes);
+  app.use("/api", emailRoutes);
+  app.use("/api", attachmentRoutes);
   app.use(express.static(path.join(__dirname, "build")));
 
   // Handle all other requests by serving the React app's entry point (index.html)

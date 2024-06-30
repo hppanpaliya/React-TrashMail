@@ -37,7 +37,7 @@ const InboxEmail = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`${env.REACT_APP_API_URL}/email/${emailId}/${email_id}`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_id}`);
         setEmailData(response.data[0]);
         console.log(response.data[0]);
         setEmailAttachments(response.data[0].attachments);
@@ -175,7 +175,7 @@ const InboxEmail = () => {
                     <Box key={i} display="flex" alignItems="center" gap={2} mb={2}>
                       <Chip
                         label={attachment.filename}
-                        onClick={() => window.open(`${env.REACT_APP_API_URL}/attachment/${attachment.directory}/${attachment.filename}`, "_blank")}
+                        onClick={() => window.open(`${env.REACT_APP_API_URL}/api/attachment/${attachment.directory}/${attachment.filename}`, "_blank")}
                       />
                     </Box>
                   );

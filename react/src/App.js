@@ -4,7 +4,6 @@ import Main from "./components/Main";
 import Generate from "./components/Generate";
 import Inbox from "./components/Inbox";
 import InboxEmail from "./components/InboxEmail";
-// import EmailList from "./components/EmailList";
 import AllEmailList from "./components/AllEmailList";
 import theme from "./theme";
 import darkTheme from "./theme/darkTheme.js";
@@ -49,19 +48,15 @@ const App = () => {
           <div className="App">
             <TitleBar />
             <AnimatePresence mode="wait">
-            <Routes>
-              {/* <Route path="/emails/:emailId"></Route> */}
-              <Route path="/" element={<Main />} />
-              <Route path="/emails" element={<Main />} />
-              <Route path="/generate" element={<Generate />} />
-              <Route path="/inbox" element={<Inbox />} />
-              <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
-              {/* <Route path="/inbox/:emailId/" element={<EmailList />} /> */}
-              <Route path="/inbox/:emailId/" element={<InboxList />} />
-              <Route path="/support" element={<Main />} />
-              <Route path="/all" element={<AllEmailList />} />
+              <Routes>
+                <Route path="/" element={<Main />} />
+                <Route path="/generate" element={<Generate />} />
+                <Route path="/inbox" element={<Inbox />} />
+                <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
+                <Route path="/inbox/:emailId/" element={<InboxList />} />
+                <Route path="/all" element={<AllEmailList />} />
               </Routes>
-              </AnimatePresence>
+            </AnimatePresence>
           </div>
         </Router>
       </ThemeProvider>

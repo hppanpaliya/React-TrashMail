@@ -43,7 +43,7 @@ const EmailList = () => {
     const fetchEmailData = async () => {
       try {
         window.localStorage.setItem("lastEmailId", emailId);
-        const response = await axios.get(`${env.REACT_APP_API_URL}/emails-list/${emailId}`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}`);
         setEmailData(response.data);
         console.log(response.data);
         setLoading(false);
@@ -86,7 +86,7 @@ const EmailList = () => {
 
   const handleDeleteEmail = async (email_Id) => {
     try {
-      await axios.delete(`${env.REACT_APP_API_URL}/email/${emailId}/${email_Id}`);
+      await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_Id}`);
       // Refresh the email list after successful deletion
       setReload(!reload);
     } catch (error) {
