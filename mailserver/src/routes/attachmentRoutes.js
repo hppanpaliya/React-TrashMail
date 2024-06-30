@@ -1,15 +1,10 @@
 const express = require("express");
-const path = require("path");
+const attachmentController = require("../controllers/attachmentController");
 
 const router = express.Router();
 
 // GET /attachments/:directory/:filename
 // Serve attachment files
-router.get("/attachment/:directory/:filename", (req, res) => {
-  const { directory, filename } = req.params;
-  const filePath = path.join(__dirname, "attachments", directory, filename);
-
-  res.sendFile(filePath);
-});
+router.get("/attachment/:directory/:filename", attachmentController.getAttachment);
 
 module.exports = router;
