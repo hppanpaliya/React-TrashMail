@@ -1,6 +1,54 @@
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
-const { deleteEmailAndAttachments } = require("../services/emailService");
+const fs = require("fs");
+
+async function deleteEmailAndAttachments(emailID, email_id) {
+  const db = getDB();
+  const collection = db.collection(emailID);
+  email_id = new ObjectId(email_id);
+
+  const deleteResult = await collection.deleteOne({ _id: email_id });
+
+  const attachmentsPath = path.join(__dirname, `./attachments/${email_id}`);
+  if (fs.existsSync(attachmentsPath)) {
+    fs.rmdirSync(attachmentsPath, { recursive: true });
+  }
+
+  return deleteResult.deletedCount;
+}
+
+async function getOldEmails(days) {
+  try {
+    const db = getDB();
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - days);
+
+    const collections = await db.listCollections().toArray();
+    let oldEmails = [];
+
+    for (const collection of collections) {
+      const emails = await db
+        .collection(collection.name)
+        .find(
+          {
+            date: { $lt: thresholdDate },
+          },
+          { projection: { _id: 1 } }
+        )
+        .toArray(); // Only fetch the _id field
+
+      // Append the collection name (emailID) and email._id to the oldEmails array
+      emails.forEach((email) => {
+        oldEmails.push({ emailID: collection.name, emailId: email._id });
+      });
+    }
+
+    return oldEmails;
+  } catch (error) {
+    console.error("Error retrieving old emails:", error);
+    throw error;
+  }
+}
 
 const emailController = {
   getEmailsList: async (req, res) => {
@@ -123,4 +171,4 @@ const emailController = {
   },
 };
 
-module.exports = emailController;
+module.exports = { emailController, deleteEmailAndAttachments, getOldEmails };

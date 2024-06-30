@@ -19,10 +19,10 @@ async function startWebServer() {
 
 async function startServer() {
   try {
+    setupCronJobs();
     await connectMongoDB();
     await startSMTPServer();
     await startWebServer();
-    setupCronJobs();
   } catch (error) {
     console.error("Error starting server:", error);
     process.exit(1);
