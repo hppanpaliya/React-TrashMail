@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
+const sseService = require("./sseService");
 
 async function saveAttachment(attachmentFolder, attachment) {
   const attachmentsDir = path.join(__dirname, "../attachments", attachmentFolder);
@@ -74,6 +75,15 @@ async function saveEmailToDB(parsedEmail, toAddress) {
     parsedEmail.createdAt = new Date();
     await collection.insertOne(parsedEmail);
     console.log("Email saved to MongoDB");
+
+    // Send SSE update
+    sseService.sendUpdate(toAddress, {
+      _id: parsedEmail._id,
+      subject: parsedEmail.subject,
+      from: parsedEmail.from,
+      date: parsedEmail.date,
+      readStatus: parsedEmail.readStatus,
+    });
   } catch (error) {
     console.error("Error saving email or attachments:", error);
     throw error;

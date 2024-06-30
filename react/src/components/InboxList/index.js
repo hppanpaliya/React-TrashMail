@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Grid, Typography, Tooltip } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -15,7 +15,6 @@ const EmailList = () => {
   const [emailData, setEmailData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [reload, setReload] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
   const { darkMode } = useContext(ThemeContext);
@@ -36,45 +35,47 @@ const EmailList = () => {
 
   const navigate = useNavigate();
 
-  const pollingIntervalRef = useRef(null);
-
   useEffect(() => {
-    setLoading(true);
-    const fetchEmailData = async () => {
+    let eventSource;
+
+    const fetchInitialEmails = async () => {
+      setLoading(true);
       try {
         window.localStorage.setItem("lastEmailId", emailId);
         const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}`);
         setEmailData(response.data);
-        console.log(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching email data:", error);
+        console.error("Error fetching initial email data:", error);
         setEmailData([]);
         setLoading(false);
       }
     };
 
-    const startPolling = () => {
-      // Fetch email data immediately
-      fetchEmailData();
+    const setupSSE = () => {
+      eventSource = new EventSource(`${env.REACT_APP_API_URL}/api/sse/${emailId}`);
 
-      // Start polling at the specified interval (e.g., every 5 seconds)
-      pollingIntervalRef.current = setInterval(fetchEmailData, 5000);
+      eventSource.onmessage = (event) => {
+        const newEmail = JSON.parse(event.data);
+        setEmailData((prevEmails) => [newEmail, ...prevEmails]);
+      };
+
+      eventSource.onerror = (error) => {
+        console.error("SSE error:", error);
+        eventSource.close();
+        setTimeout(setupSSE, 5000); // Attempt to reconnect after 5 seconds
+      };
     };
 
-    const stopPolling = () => {
-      // Clear the polling interval
-      clearInterval(pollingIntervalRef.current);
-    };
+    fetchInitialEmails();
+    setupSSE();
 
-    // Start polling when the component mounts or when the emailId changes
-    startPolling();
-
-    // Clean up the polling interval when the component unmounts
     return () => {
-      stopPolling();
+      if (eventSource) {
+        eventSource.close();
+      }
     };
-  }, [emailId, reload]);
+  }, [emailId]);
 
   const handleEmailClick = (email_Id) => {
     navigate(`/inbox/${emailId}/${email_Id}`);
@@ -87,8 +88,7 @@ const EmailList = () => {
   const handleDeleteEmail = async (email_Id) => {
     try {
       await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_Id}`);
-      // Refresh the email list after successful deletion
-      setReload(!reload);
+      setEmailData((prevEmails) => prevEmails.filter((email) => email._id !== email_Id));
     } catch (error) {
       console.error("Error deleting email:", error);
     }
