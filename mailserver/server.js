@@ -1,7 +1,7 @@
 const express = require("express");
 const { SMTPServer } = require("smtp-server");
 const { handleIncomingEmail } = require("./emailHandler");
-const { smtpPort } = require("./config");
+const { smtpPort } = require("./src/config");
 const { connectMongoDB } = require("./db");
 const emailRoutes = require("./emailRoutes");
 const attachmentRoutes = require("./attachmentRoutes");

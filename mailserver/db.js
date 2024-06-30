@@ -1,5 +1,5 @@
 const { MongoClient } = require("mongodb");
-const { mongoURL, dbName } = require("./config");
+const { mongoURL, dbName } = require("./src/config");
 
 let client;
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const { getDB } = require("./db");
-const { collectionName } = require("./config");
+const { collectionName } = require("./src/config");
 const { ObjectId } = require("mongodb");
 const path = require("path");
 const fs = require("fs");
