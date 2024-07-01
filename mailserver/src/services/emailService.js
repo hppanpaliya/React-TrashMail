@@ -6,14 +6,14 @@ const { ObjectId } = require("mongodb");
 const sseService = require("./sseService");
 
 async function saveAttachment(attachmentFolder, attachment) {
-  const attachmentsDir = path.join(__dirname, "../attachments", attachmentFolder);
+  const attachmentsDir = path.join(__dirname, "../..", "attachments", attachmentFolder);
 
   if (!fs.existsSync(attachmentsDir)) {
     fs.mkdirSync(attachmentsDir, { recursive: true });
   }
 
   const filename = attachment.filename;
-  const savePath = path.join(__dirname, "attachments", attachmentFolder, filename);
+  const savePath = path.join(attachmentsDir, filename);
 
   return new Promise((resolve, reject) => {
     let writeStream;
