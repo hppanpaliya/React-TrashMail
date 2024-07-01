@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Grid, Box } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import { useContext } from "react";
-import { ThemeContext } from "../context/ThemeContext";
+import { ThemeContext } from "../../context/ThemeContext";
 
 const ButtonSection = () => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);

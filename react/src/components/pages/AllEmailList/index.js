@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import ButtonSection from "../ButtonSection";
+import ButtonSection from "../../common/ButtonSection";
 import { useRef } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ConfirmModal from "../ConfirmModal";
-import { env } from "../../env";
+import ConfirmModal from "../../common/ConfirmModal";
+import { env } from "../../../env";
 
 const AllEmailList = () => {
   const [emailData, setEmailData] = useState([]);

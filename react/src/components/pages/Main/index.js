@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Grid, Box, Typography } from "@mui/material";
-import ButtonSection from "../ButtonSection";
-import { ThemeContext } from "../../context/ThemeContext";
+import ButtonSection from "../../common/ButtonSection";
+import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
 
 const Main = () => {

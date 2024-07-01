@@ -2,13 +2,13 @@ import React, { useEffect, useState, useContext } from "react";
 import { Grid, Typography, Tooltip } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import ButtonSection from "../ButtonSection";
-import SingleEmailItem from "./SingleEmailItem";
-import ConfirmModal from "../ConfirmModal";
-import NoEmailDisplay from "./NoEmailDisplay";
-import { ThemeContext } from "../../context/ThemeContext";
+import ButtonSection from "../../common/ButtonSection";
+import SingleEmailItem from "../../common/SingleEmailItem";
+import ConfirmModal from "../../common/ConfirmModal";
+import NoEmailDisplay from "../../common/NoEmailDisplay";
+import { ThemeContext } from "../../../context/ThemeContext";
 import { FileCopyOutlined } from "@mui/icons-material";
-import { env } from "../../env";
+import { env } from "../../../env";
 
 const EmailList = () => {
   const { emailId } = useParams();

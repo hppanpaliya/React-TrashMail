@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import { ThemeContext } from "../context/ThemeContext";
+import { ThemeContext } from "../../context/ThemeContext";
 
 const TitleBar = () => {
   const navigate = useNavigate();

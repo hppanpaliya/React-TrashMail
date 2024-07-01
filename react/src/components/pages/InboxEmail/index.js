@@ -3,11 +3,11 @@ import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/ma
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Letter } from "react-letter";
-import ButtonSection from "../ButtonSection";
+import ButtonSection from "../../common/ButtonSection";
 import InfoIcon from "@mui/icons-material/Info";
-import { ThemeContext } from "../../context/ThemeContext";
+import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
-import { env } from "../../env";
+import { env } from "../../../env";
 
 const InboxEmail = () => {
   const { emailId, email_id } = useParams();

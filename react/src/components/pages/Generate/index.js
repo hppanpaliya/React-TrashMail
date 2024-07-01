@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from "react";
-import ButtonSection from "../ButtonSection";
+import ButtonSection from "../../common/ButtonSection";
 import { Grid, Box, TextField, Button, InputAdornment } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { FileCopyOutlined } from "@mui/icons-material";
-import { ThemeContext } from "../../context/ThemeContext";
+import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
-import { env } from "../../env";
+import { env } from "../../../env";
 
 const Generate = () => {
   const navigate = useNavigate();
