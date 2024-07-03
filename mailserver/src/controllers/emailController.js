@@ -63,7 +63,6 @@ const emailController = {
         .find({}, { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } })
         .sort({ date: -1 })
         .toArray();
-      console.log("emails", emails);
       if (emails.length === 0) {
         return res.status(404).json({ message: "No emails found for the provided email ID" });
       }
@@ -128,7 +127,7 @@ const emailController = {
     try {
       let { email_id, emailID } = req.params;
       emailID = emailID.toLowerCase();
-      console.log("email_id", email_id);
+      console.log(`get user_email_id's emailID, ${email_id}, ${emailID}`);
       const db = getDB();
       const collection = db.collection(emailID);
       email_id = new ObjectId(email_id);
@@ -154,7 +153,7 @@ const emailController = {
     try {
       let { email_id, emailID } = req.params;
       emailID = emailID.toLowerCase();
-      console.log("email_id", email_id);
+      console.log("delete email_id", email_id);
 
       const deletedCount = await deleteEmailAndAttachments(emailID, email_id);
 

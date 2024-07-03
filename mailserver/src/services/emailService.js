@@ -44,7 +44,6 @@ async function saveEmailToDB(parsedEmail, toAddress) {
       value: [{ address: "" }],
     };
   }
-  console.log("parsedEmail", toAddress);
 
   parsedEmail.to.value[0].address = parsedEmail.to.value[0].address.toLowerCase();
   parsedEmail.from.value[0].address = parsedEmail.from.value[0].address.toLowerCase();
@@ -74,7 +73,7 @@ async function saveEmailToDB(parsedEmail, toAddress) {
     parsedEmail.readStatus = false;
     parsedEmail.createdAt = new Date();
     await collection.insertOne(parsedEmail);
-    console.log("Email saved to MongoDB");
+    console.log("Email saved to MongoDB collection:", toAddress);
 
     // Send SSE update
     sseService.sendUpdate(toAddress, {
