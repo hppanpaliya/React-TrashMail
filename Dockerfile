@@ -29,7 +29,13 @@ COPY . /React-TrashMail
 
 WORKDIR /React-TrashMail/react
 RUN yarn build 
-RUN rm -rf ../mailserver/src/build/* && mkdir -p ../mailserver/src/build/ && cp -r build/* ../mailserver/src/build/
+
+WORKDIR /React-TrashMail/mailserver
+RUN rm -rf src/build/*
+RUN mkdir -p src/build
+RUN cp -r ../react/build/* src/build/
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Define mountable volume
 VOLUME ["/React-TrashMail/mailserver/src/attachments"]

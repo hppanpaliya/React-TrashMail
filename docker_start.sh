@@ -19,7 +19,7 @@ if [ ! -f "$FIRST_RUN_FLAG" ]; then
     cd /React-TrashMail/react
     
     npx react-inject-env set
-    mv ./build/env.js ../mailserver/build/
+    mv ./build/env.js ../mailserver/src/build/
 
     # Create the flag file to indicate completion of first run
     touch "$FIRST_RUN_FLAG"
