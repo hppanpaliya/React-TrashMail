@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "React-TrashMail",
+  "name": "React-TrashMail",
   "icons": [
     {
       "src": "favicon.ico",
