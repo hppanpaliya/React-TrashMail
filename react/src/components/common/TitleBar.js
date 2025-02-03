@@ -43,7 +43,7 @@ const TitleBar = () => {
         TrashMail
       </p>
 
-      <Grid item xs={12} sm={2}>
+      <Grid item xs={12} md={2}>
         <Box
           sx={{
             display: "flex",

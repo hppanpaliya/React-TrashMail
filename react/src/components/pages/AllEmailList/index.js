@@ -96,8 +96,8 @@ const AllEmailList = () => {
     <>
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
-        <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
-        <Grid item xs={12} sm={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
+        <Grid item xs={12} md={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
+        <Grid item xs={12} md={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
           <Typography
             variant="h5"
             gutterBottom
