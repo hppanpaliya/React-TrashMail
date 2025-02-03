@@ -29,10 +29,10 @@ COPY . /React-TrashMail
 
 WORKDIR /React-TrashMail/react
 RUN yarn build 
-RUN rm -rf ../mailserver/build/* && mkdir -p ../mailserver/build && cp -r build/* ../mailserver/build/
+RUN rm -rf ../mailserver/src/build/* && mkdir -p ../mailserver/src/build/ && cp -r build/* ../mailserver/src/build/
 
 # Define mountable volume
-VOLUME ["/React-TrashMail/mailserver/attachments"]
+VOLUME ["/React-TrashMail/mailserver/src/attachments"]
 
 # Copy startup script
 COPY docker_start.sh /docker_start.sh

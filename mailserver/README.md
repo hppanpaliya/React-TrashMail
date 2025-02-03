@@ -29,7 +29,6 @@ The mail server can be configured using the `config.js` file located in the proj
 - `smtpPort`: The port number on which the SMTP server should listen.
 - `mongoURL`: The URL for connecting to the MongoDB database.
 - `dbName`: The name of the MongoDB database to be used.
-- `collectionName`: The name of the collection in the database to store the emails.
 
 ## Usage
 

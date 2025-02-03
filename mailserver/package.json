@@ -6,7 +6,9 @@
   "scripts": {
     "start": "nodemon server.js",
     "start:docker": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -24,6 +26,14 @@
     "querystring": "^0.2.1",
     "smtp-server": "^3.12.0",
     "smtpd": "^0.1.7",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "validator": "^13.12.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^9.4.0",
+    "node-mocks-http": "^1.15.0",
+    "prettier": "^3.3.2",
+    "supertest": "^7.0.0"
   }
 }

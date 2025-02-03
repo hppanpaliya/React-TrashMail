@@ -1,5 +1,5 @@
 import React from "react";
-import Generate from "../Generate";
+import Generate from "../pages/Generate";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,11 +14,9 @@ const Inbox = () => {
 
   useEffect(() => {
     if (lastEmail) {
-      
       navigate(`/inbox/${lastEmail}`, { replace: true }); // By using "replace" to effectively delete '/inbox' from the history stack
     }
   }, [lastEmail, navigate]);
-  
 
   return (
     <div>

@@ -1,19 +1,18 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Main from "./components/Main";
-import Generate from "./components/Generate";
+import Main from "./components/pages/Main";
+import Generate from "./components/pages/Generate";
 import Inbox from "./components/Inbox";
-import InboxEmail from "./components/InboxEmail";
-// import EmailList from "./components/EmailList";
-import AllEmailList from "./components/AllEmailList";
-import theme from "./theme";
-import darkTheme from "./theme/darkTheme.js";
+import InboxEmail from "./components/pages/InboxEmail";
+import AllEmailList from "./components/pages/AllEmailList";
+import theme from "./styles/theme";
+import darkTheme from "./styles/theme/darkTheme.js";
 import { ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
 import { ThemeContext } from "./context/ThemeContext";
-import TitleBar from "./components/TitleBar";
+import TitleBar from "./components/common/TitleBar";
 import { AnimatePresence } from "framer-motion";
-import InboxList from "./components/InboxList";
+import InboxList from "./components/pages/InboxList";
 const App = () => {
   const [darkMode, setDarkMode] = React.useState(false);
 
@@ -49,19 +48,15 @@ const App = () => {
           <div className="App">
             <TitleBar />
             <AnimatePresence mode="wait">
-            <Routes>
-              {/* <Route path="/emails/:emailId"></Route> */}
-              <Route path="/" element={<Main />} />
-              <Route path="/emails" element={<Main />} />
-              <Route path="/generate" element={<Generate />} />
-              <Route path="/inbox" element={<Inbox />} />
-              <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
-              {/* <Route path="/inbox/:emailId/" element={<EmailList />} /> */}
-              <Route path="/inbox/:emailId/" element={<InboxList />} />
-              <Route path="/support" element={<Main />} />
-              <Route path="/all" element={<AllEmailList />} />
+              <Routes>
+                <Route path="/" element={<Main />} />
+                <Route path="/generate" element={<Generate />} />
+                <Route path="/inbox" element={<Inbox />} />
+                <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
+                <Route path="/inbox/:emailId/" element={<InboxList />} />
+                <Route path="/all" element={<AllEmailList />} />
               </Routes>
-              </AnimatePresence>
+            </AnimatePresence>
           </div>
         </Router>
       </ThemeProvider>
