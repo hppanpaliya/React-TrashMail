@@ -1,25 +1,14 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useContext } from "react";
 import { Grid, Box, Typography } from "@mui/material";
 import ButtonSection from "../../common/ButtonSection";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
+import useWindowResize from "../../../hooks/useWindowResize";
 
 const Main = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 700);
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -28,7 +17,7 @@ const Main = () => {
         <Grid
           item
           xs={12}
-          sm={10}
+          md={10}
           sx={{
             marginTop: isMobile ? "1vh" : "6vh",
             paddingLeft: "2%",

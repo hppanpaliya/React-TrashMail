@@ -8,28 +8,18 @@ import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmModal from "../../common/ConfirmModal";
 import { env } from "../../../env";
+import useWindowResize from "../../../hooks/useWindowResize";
 
 const AllEmailList = () => {
   const [emailData, setEmailData] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useWindowResize();
   const [emailToDelete, setEmailToDelete] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [reload, setReload] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 700);
-    };
 
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   const navigate = useNavigate();
 

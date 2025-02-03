@@ -9,29 +9,19 @@ import NoEmailDisplay from "../../common/NoEmailDisplay";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { env } from "../../../env";
+import useWindowResize from "../../../hooks/useWindowResize";
 
 const EmailList = () => {
   const { emailId } = useParams();
   const [emailData, setEmailData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useWindowResize();
   const [openModal, setOpenModal] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
   const { darkMode } = useContext(ThemeContext);
   const staggerDuration = 0.05;
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 700);
-    };
 
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   const navigate = useNavigate();
 
@@ -97,8 +87,8 @@ const EmailList = () => {
     <>
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
-        <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
-        <Grid item xs={12} sm={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
+        <Grid item xs={12} md={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
+        <Grid item xs={12} md={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
           <Tooltip title="Copy Email" placement="top">
             <Typography
               variant="h5"

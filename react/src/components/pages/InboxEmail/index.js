@@ -8,6 +8,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
 import { env } from "../../../env";
+import useWindowResize from "../../../hooks/useWindowResize";
 
 const InboxEmail = () => {
   const { emailId, email_id } = useParams();
@@ -15,22 +16,9 @@ const InboxEmail = () => {
   const [emailAttachments, setEmailAttachments] = useState([]);
   const [emailHeaders, setEmailHeaders] = useState([]);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
+  const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 700);
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   let headers;
 
@@ -107,8 +95,8 @@ const InboxEmail = () => {
     <>
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
-        <Grid item xs={12} sm={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
-        <Grid item xs={12} sm={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
+        <Grid item xs={12} md={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
+        <Grid item xs={12} md={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
           <Paper
             elevation={3}
             sx={{

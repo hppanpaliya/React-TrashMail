@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button, Grid, Box } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { ThemeContext } from "../../context/ThemeContext";
+import useWindowResize from "../../hooks/useWindowResize";
 
 const ButtonSection = () => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
@@ -70,25 +71,12 @@ const ButtonSection = () => {
       : {};
   };
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 700);
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  const isMobile = useWindowResize();
 
   return (
     <Grid
       item
-      sm={2}
+      md={2}
       sx={{
         marginTop: isMobile ? "0vh" : "12vh",
         display: isMobile ? "flex" : "initial",

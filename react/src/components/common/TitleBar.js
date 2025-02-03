@@ -1,27 +1,19 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import { ThemeContext } from "../../context/ThemeContext";
+import useWindowResize from "../../hooks/useWindowResize";
 
 const TitleBar = () => {
   const navigate = useNavigate();
 
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 700);
-    };
 
-    handleResize();
 
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  
 
   return (
     <>

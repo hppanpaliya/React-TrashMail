@@ -88,7 +88,7 @@ const Generate = () => {
     <>
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
-        <Grid item xs={12} sm={10} sx={{ marginTop: "6vh" }}>
+        <Grid item xs={12} md={10} sx={{ marginTop: "6vh" }}>
           <Box
             sx={{
               display: "flex",
@@ -100,7 +100,7 @@ const Generate = () => {
               textAlign: "center",
             }}
           >
-            <Grid item xs={12} sm={5}>
+            <Grid item xs={12} md={5}>
               <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
                 <TextField
                   label="Enter your email"
