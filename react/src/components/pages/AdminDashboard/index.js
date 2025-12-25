@@ -83,6 +83,10 @@ const AdminDashboard = () => {
   const [generatedInvite, setGeneratedInvite] = useState(null);
   const [inviteRole, setInviteRole] = useState('user');
 
+  // Clear Logs State
+  const [openClearLogs, setOpenClearLogs] = useState(false);
+  const [retentionDays, setRetentionDays] = useState(30);
+
   // SSE Connection
   useEffect(() => {
     let eventSource;
@@ -160,6 +164,7 @@ const AdminDashboard = () => {
     if (tabValue === 2) fetchData('/api/auth/users', usersState);
     if (tabValue === 4) fetchData('/api/admin/system-emails', systemEmailsState);
     if (tabValue === 5) fetchData('/api/admin/received-emails', receivedEmailsState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tabValue, 
     logsState.page, logsState.rowsPerPage, logsState.search, logsState.sortBy, logsState.sortOrder,
@@ -183,6 +188,24 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       alert('Failed to generate invite');
+    }
+  };
+
+  const handleClearLogs = async () => {
+    try {
+      const response = await axios.delete(
+        `${env.REACT_APP_API_URL}/api/admin/logs`,
+        { 
+          headers: { 'x-auth-token': token },
+          data: { retentionDays: retentionDays === 'ALL' ? null : retentionDays }
+        }
+      );
+      alert(response.data.message);
+      setOpenClearLogs(false);
+      fetchData('/api/admin/logs', logsState); // Refresh logs
+    } catch (error) {
+      console.error("Error clearing logs:", error);
+      alert("Failed to clear logs");
     }
   };
 
@@ -328,7 +351,27 @@ const AdminDashboard = () => {
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
-          {renderSearch(logsState, "Search logs...")}
+          <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'flex-start' }}>
+            <Box sx={{ flexGrow: 1 }}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Search logs..."
+                value={logsState.search}
+                onChange={(e) => logsState.setSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+            <Button variant="contained" color="error" onClick={() => setOpenClearLogs(true)} sx={{ height: 56 }}>
+              Clear Logs
+            </Button>
+          </Box>
           <DataTable
             columns={logColumns}
             data={logsState.data}
@@ -482,6 +525,38 @@ const AdminDashboard = () => {
         <DialogActions>
           <Button onClick={() => setEditUser(null)}>Cancel</Button>
           <Button onClick={handleSaveUser} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Clear Logs Dialog */}
+      <Dialog open={openClearLogs} onClose={() => setOpenClearLogs(false)}>
+        <DialogTitle>Clear Audit Logs</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Select retention period. Logs older than this will be permanently deleted.
+          </Typography>
+          <TextField
+            select
+            fullWidth
+            label="Retention Period"
+            value={retentionDays}
+            onChange={(e) => setRetentionDays(e.target.value)}
+            SelectProps={{
+              native: true,
+            }}
+            sx={{ mt: 2 }}
+          >
+            <option value={30}>Older than 30 Days</option>
+            <option value={7}>Older than 7 Days</option>
+            <option value={1}>Older than 24 Hours</option>
+            <option value="ALL">Clear All Logs</option>
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenClearLogs(false)}>Cancel</Button>
+          <Button onClick={handleClearLogs} color="error" variant="contained">
+            Clear Logs
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -103,6 +103,20 @@ const auditService = {
     const conflicts = await db.collection("audit_logs").aggregate(pipeline).toArray();
 
     return { conflicts, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  clearLogs: async (retentionDays = null) => {
+    const db = getDB();
+    const filter = {};
+    
+    if (retentionDays !== null) {
+      const thresholdDate = new Date();
+      thresholdDate.setDate(thresholdDate.getDate() - parseInt(retentionDays));
+      filter.timestamp = { $lt: thresholdDate };
+    }
+    
+    const result = await db.collection("audit_logs").deleteMany(filter);
+    return result.deletedCount;
   }
 };
 

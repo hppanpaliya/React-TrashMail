@@ -187,11 +187,21 @@ const emailController = {
 
   deleteEmail: async (req, res) => {
     try {
-      let { email_id, emailID } = req.params;
-      emailID = emailID.toLowerCase();
+      let { email_id, emailId } = req.params; // Changed emailID to emailId to match route param
+      
+      // Fallback if emailId is undefined (might be passed as emailID)
+      if (!emailId && req.params.emailID) {
+        emailId = req.params.emailID;
+      }
+
+      if (!emailId) {
+        return res.status(400).json({ message: "Email ID is required" });
+      }
+
+      emailId = emailId.toLowerCase();
       console.log("delete email_id", email_id);
 
-      const deletedCount = await deleteEmailAndAttachments(emailID, email_id);
+      const deletedCount = await deleteEmailAndAttachments(emailId, email_id);
 
       if (deletedCount === 0) {
         return res.status(404).json({ message: "No email found for the provided email ID" });
@@ -202,7 +212,7 @@ const emailController = {
         await auditService.logActivity(
           new ObjectId(req.user.id), 
           'DELETE_EMAIL', 
-          { emailId: emailID, messageId: email_id }, 
+          { emailId: emailId, messageId: email_id }, 
           req.user.role
         );
       }

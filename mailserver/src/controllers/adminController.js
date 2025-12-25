@@ -231,6 +231,27 @@ const adminController = {
       console.error("Error fetching received emails:", error);
       res.status(500).json({ message: "Server error" });
     }
+  },
+
+  clearLogs: async (req, res) => {
+    try {
+      const { retentionDays } = req.body;
+      
+      const deletedCount = await auditService.clearLogs(retentionDays);
+      
+      // Log this administrative action
+      await auditService.logActivity(
+        new ObjectId(req.user.id), 
+        'CLEAR_LOGS', 
+        { retentionDays: retentionDays || 'ALL', deletedCount }, 
+        req.user.role
+      );
+
+      res.json({ message: `Successfully deleted ${deletedCount} log entries`, deletedCount });
+    } catch (error) {
+      console.error("Error clearing logs:", error);
+      res.status(500).json({ message: "Server error" });
+    }
   }
 };
 

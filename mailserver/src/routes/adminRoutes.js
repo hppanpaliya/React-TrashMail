@@ -19,6 +19,10 @@ router.get("/sse/logs", (req, res) => {
 // @desc    Get audit logs
 router.get("/logs", adminController.getLogs);
 
+// @route   DELETE api/admin/logs
+// @desc    Clear audit logs
+router.delete("/logs", adminController.clearLogs);
+
 // @route   GET api/admin/conflicts
 // @desc    Get conflicting email usage
 router.get("/conflicts", adminController.getConflicts);

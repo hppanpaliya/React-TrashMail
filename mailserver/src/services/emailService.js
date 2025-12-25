@@ -53,8 +53,8 @@ async function saveEmailToDB(parsedEmail, toAddress) {
   try {
     // Sanitize email content before saving
     if (parsedEmail.html) {
+      parsedEmail.htmlOriginal = parsedEmail.html; // Keep original version
       parsedEmail.html = sanitizeEmailHTML(parsedEmail.html);
-      parsedEmail.htmlOriginal = parsedEmail.html; // Keep sanitized version
     }
     
     if (parsedEmail.text) {

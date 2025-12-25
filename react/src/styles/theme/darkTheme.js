@@ -7,11 +7,11 @@ const darkTheme = createTheme({
   palette: {
     primary: {
       main: "#90caf9", // Light blue, you can pick your own
-      contrastText: "#fff",
+      contrastText: "#000",
     },
     secondary: {
       main: "#f48fb1", // Light pink, you can pick your own
-      contrastText: "#fff",
+      contrastText: "#000",
     },
     text: {
       primary: "#ffffff",

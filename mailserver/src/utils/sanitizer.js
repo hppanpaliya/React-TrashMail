@@ -8,26 +8,20 @@ const sanitizeEmailHTML = (html) => {
   }
 
   // Custom configuration for email content
+  // We use ADD_TAGS and ADD_ATTR to extend defaults rather than restricting to a small set,
+  // because emails can contain a wide variety of HTML for layout and styling.
   const cleanHTML = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      'p', 'br', 'strong', 'em', 'u', 'i', 'b', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 
-      'tr', 'td', 'th', 'div', 'span', 'a', 'img', 'hr'
-    ],
-    ALLOWED_ATTR: [
-      'href', 'src', 'alt', 'title', 'style', 'class', 'id', 'target',
-      'width', 'height', 'border', 'cellpadding', 'cellspacing'
+    WHOLE_DOCUMENT: true, // Preserve html, head, body
+    ADD_TAGS: ['head', 'meta', 'title', 'style', 'link', 'center', 'font', 'map', 'area', 'base'],
+    ADD_ATTR: [
+      'align', 'valign', 'bgcolor', 'color', 'face', 'size', 
+      'target', 'background', 'border', 'cellpadding', 'cellspacing',
+      'width', 'height', 'id', 'class', 'style'
     ],
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|xxx):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-    FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input', 'button'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+    FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input', 'button', 'iframe', 'frame', 'frameset', 'applet'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onmousedown', 'onmouseup', 'ondblclick', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset', 'onselect', 'onkeydown', 'onkeypress', 'onkeyup'],
     KEEP_CONTENT: false,
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false,
-    RETURN_DOM_IMPORT: false,
-    SANITIZE_DOM: true,
-    WHOLE_DOCUMENT: false,
-    IN_PLACE: false
   });
 
   return cleanHTML;
