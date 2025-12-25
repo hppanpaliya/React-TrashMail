@@ -4,6 +4,7 @@ const path = require("path");
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const sseService = require("./sseService");
+const { sanitizeEmailHTML, textToHTML } = require('../utils/sanitizer');
 
 async function saveAttachment(attachmentFolder, attachment) {
   const attachmentsDir = path.join(__dirname, "../..", "attachments", attachmentFolder);
@@ -50,8 +51,17 @@ async function saveEmailToDB(parsedEmail, toAddress) {
   parsedEmail.to.text = parsedEmail.to.text.toLowerCase();
 
   try {
+    // Sanitize email content before saving
+    if (parsedEmail.html) {
+      parsedEmail.html = sanitizeEmailHTML(parsedEmail.html);
+      parsedEmail.htmlOriginal = parsedEmail.html; // Keep sanitized version
+    }
+    
+    if (parsedEmail.text) {
+      parsedEmail.textAsHtml = textToHTML(parsedEmail.text);
+    }
     const db = getDB();
-    const collection = db.collection(toAddress);
+    const collection = db.collection('emails');
     const attachments = parsedEmail.attachments;
     // Generate a new MongoDB ObjectId
     const objectId = new ObjectId();
@@ -70,10 +80,11 @@ async function saveEmailToDB(parsedEmail, toAddress) {
       }));
     }
     parsedEmail._id = objectId;
+    parsedEmail.emailId = toAddress; // Add emailId field for single collection schema
     parsedEmail.readStatus = false;
     parsedEmail.createdAt = new Date();
     await collection.insertOne(parsedEmail);
-    console.log("Email saved to MongoDB collection:", toAddress);
+    console.log("Email saved to MongoDB collection: emails (for user " + toAddress + ")");
 
     // Send SSE update
     sseService.sendUpdate(toAddress, {

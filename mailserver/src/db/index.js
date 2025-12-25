@@ -10,6 +10,11 @@ async function connectWithRetry(retries = 5, delay = 5000) {
       client = new MongoClient(config.mongoURL);
       await client.connect();
       db = client.db(config.dbName);
+      
+      // Create index for emailId to optimize queries
+      await db.collection('emails').createIndex({ emailId: 1 });
+      await db.collection('emails').createIndex({ date: -1 }); // For sorting by date
+      
       console.log("Connected to MongoDB");
       return;
     } catch (err) {

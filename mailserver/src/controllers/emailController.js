@@ -5,14 +5,15 @@ const path = require("path");
 
 async function deleteEmailAndAttachments(emailID, email_id) {
   const db = getDB();
-  const collection = db.collection(emailID);
+  const collection = db.collection('emails');
   email_id = new ObjectId(email_id);
 
-  const deleteResult = await collection.deleteOne({ _id: email_id });
+  // Ensure we only delete the email if it belongs to the user (emailID)
+  const deleteResult = await collection.deleteOne({ _id: email_id, emailId: emailID });
 
   const attachmentsPath = path.join(__dirname, `../attachments/${email_id}`);
   if (fs.existsSync(attachmentsPath)) {
-    fs.rmdirSync(attachmentsPath, { recursive: true });
+    fs.rmSync(attachmentsPath, { recursive: true, force: true });
   }
 
   return deleteResult.deletedCount;
@@ -24,27 +25,21 @@ async function getOldEmails(days) {
     const thresholdDate = new Date();
     thresholdDate.setDate(thresholdDate.getDate() - days);
 
-    const collections = await db.listCollections().toArray();
-    let oldEmails = [];
+    const oldEmails = await db
+      .collection('emails')
+      .find(
+        {
+          date: { $lt: thresholdDate },
+        },
+        { projection: { _id: 1, emailId: 1 } }
+      )
+      .toArray();
 
-    for (const collection of collections) {
-      const emails = await db
-        .collection(collection.name)
-        .find(
-          {
-            date: { $lt: thresholdDate },
-          },
-          { projection: { _id: 1 } }
-        )
-        .toArray(); // Only fetch the _id field
-
-      // Append the collection name (emailID) and email._id to the oldEmails array
-      emails.forEach((email) => {
-        oldEmails.push({ emailID: collection.name, emailId: email._id });
-      });
-    }
-
-    return oldEmails;
+    // Map to expected format { emailID: userEmail, emailId: objectId }
+    return oldEmails.map(email => ({
+      emailID: email.emailId,
+      emailId: email._id
+    }));
   } catch (error) {
     console.error("Error retrieving old emails:", error);
     throw error;
@@ -55,15 +50,23 @@ const emailController = {
   getEmailsList: async (req, res) => {
     try {
       let { emailId } = req.params;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const skip = (page - 1) * limit;
+
       emailId = emailId.toLowerCase();
       console.log("emailId", emailId);
       const db = getDB();
-      const collection = db.collection(emailId);
+      const collection = db.collection('emails');
+      
       const emails = await collection
-        .find({}, { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } })
+        .find({ emailId: emailId }, { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } })
         .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
         .toArray();
-      if (emails.length === 0) {
+        
+      if (emails.length === 0 && page === 1) {
         return res.status(404).json({ message: "No emails found for the provided email ID" });
       }
 
@@ -82,35 +85,31 @@ const emailController = {
 
   getAllEmails: async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const skip = (page - 1) * limit;
+
       const db = getDB();
-      const collections = await db.listCollections().toArray();
-      let allEmails = [];
-
-      for (const collection of collections) {
-        const emails = await db
-          .collection(collection.name)
-          .find(
-            {},
-            {
-              projection: {
-                "from.text": 1,
-                subject: 1,
-                "to.value.address": 1,
-                "from.value.address": 1,
-                date: 1,
-                readStatus: 1,
-              },
-            }
-          )
-          .toArray();
-        allEmails.push(...emails);
-      }
-
-      allEmails.sort((a, b) => {
-        const dateA = a.date ? new Date(a.date) : new Date(0);
-        const dateB = b.date ? new Date(b.date) : new Date(0);
-        return dateB - dateA;
-      });
+      
+      const allEmails = await db
+        .collection('emails')
+        .find(
+          {},
+          {
+            projection: {
+              "from.text": 1,
+              subject: 1,
+              "to.value.address": 1,
+              "from.value.address": 1,
+              date: 1,
+              readStatus: 1,
+            },
+          }
+        )
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
 
       if (allEmails.length === 0) {
         return res.status(404).json({ message: "No emails found in the database" });
@@ -129,17 +128,18 @@ const emailController = {
       emailID = emailID.toLowerCase();
       console.log(`get user_email_id's emailID, ${email_id}, ${emailID}`);
       const db = getDB();
-      const collection = db.collection(emailID);
+      const collection = db.collection('emails');
       email_id = new ObjectId(email_id);
 
-      const emails = await collection.find({ _id: email_id }).toArray();
+      // Ensure we only fetch the email if it belongs to the user (emailID)
+      const emails = await collection.find({ _id: email_id, emailId: emailID }).toArray();
 
       if (emails.length === 0) {
         return res.status(404).json({ message: "No emails found for the provided email ID" });
       }
 
       if (!emails[0]["readStatus"]) {
-        const updateResult = await collection.updateOne({ _id: email_id }, { $set: { readStatus: true } });
+        await collection.updateOne({ _id: email_id }, { $set: { readStatus: true } });
       }
 
       return res.json(emails);
