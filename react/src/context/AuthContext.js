@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { env } from '../env';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +9,28 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
+    const fetchUser = async (authToken) => {
+      try {
+        const response = await fetch(`${env.REACT_APP_API_URL}/api/auth/me`, {
+          headers: {
+            'x-auth-token': authToken
+          }
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (token) {
       // Verify token and get user info
       fetchUser(token);
@@ -16,30 +39,8 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const fetchUser = async (authToken) => {
-    try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'x-auth-token': authToken
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        logout();
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const login = async (username, password) => {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(`${env.REACT_APP_API_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signup = async (username, password, inviteCode) => {
-    const response = await fetch('/api/auth/signup', {
+    const response = await fetch(`${env.REACT_APP_API_URL}/api/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

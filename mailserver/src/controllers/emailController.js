@@ -2,6 +2,7 @@ const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const fs = require("fs");
 const path = require("path");
+const auditService = require("../services/auditService");
 
 async function deleteEmailAndAttachments(emailID, email_id) {
   const db = getDB();
@@ -58,6 +59,16 @@ const emailController = {
       console.log("emailId", emailId);
       const db = getDB();
       const collection = db.collection('emails');
+
+      // Log Activity
+      if (req.user) {
+        await auditService.logActivity(
+          new ObjectId(req.user.id), 
+          'VIEW_INBOX', 
+          { emailId }, 
+          req.user.role
+        );
+      }
       
       const emails = await collection
         .find({ emailId: emailId }, { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } })
@@ -138,6 +149,16 @@ const emailController = {
         return res.status(404).json({ message: "No emails found for the provided email ID" });
       }
 
+      // Log Activity
+      if (req.user) {
+        await auditService.logActivity(
+          new ObjectId(req.user.id), 
+          'READ_EMAIL', 
+          { emailId: emailID, messageId: email_id }, 
+          req.user.role
+        );
+      }
+
       if (!emails[0]["readStatus"]) {
         await collection.updateOne({ _id: email_id }, { $set: { readStatus: true } });
       }
@@ -159,6 +180,16 @@ const emailController = {
 
       if (deletedCount === 0) {
         return res.status(404).json({ message: "No email found for the provided email ID" });
+      }
+
+      // Log Activity
+      if (req.user) {
+        await auditService.logActivity(
+          new ObjectId(req.user.id), 
+          'DELETE_EMAIL', 
+          { emailId: emailID, messageId: email_id }, 
+          req.user.role
+        );
       }
 
       return res.json({ message: "Email deleted successfully" });

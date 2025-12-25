@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDB } = require('../db');
 const config = require('../config');
+const auditService = require('../services/auditService');
 
 const authController = {
   signup: async (req, res) => {
@@ -33,6 +34,7 @@ const authController = {
         username,
         password: hashedPassword,
         role: invite.role || 'user',
+        allowedDomains: null, // null means use global config
         createdAt: new Date(),
       };
 
@@ -44,6 +46,9 @@ const authController = {
         { _id: invite._id },
         { $set: { used: true, usedBy: userId, usedAt: new Date() } }
       );
+
+      // Log Signup
+      await auditService.logActivity(userId, 'SIGNUP', { username }, user.role);
 
       // 6. Return JWT
       const payload = {
@@ -87,6 +92,9 @@ const authController = {
       if (!isMatch) {
         return res.status(400).json({ message: 'Invalid Credentials' });
       }
+
+      // Log Login
+      await auditService.logActivity(user._id, 'LOGIN', { ip: req.ip }, user.role || 'user');
 
       // 3. Return JWT
       const payload = {

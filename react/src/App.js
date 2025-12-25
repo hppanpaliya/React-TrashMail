@@ -7,6 +7,7 @@ import InboxEmail from "./components/pages/InboxEmail";
 import AllEmailList from "./components/pages/AllEmailList";
 import Login from "./components/pages/Login";
 import Signup from "./components/pages/Signup";
+import AdminDashboard from "./components/pages/AdminDashboard";
 import theme from "./styles/theme";
 import darkTheme from "./styles/theme/darkTheme.js";
 import { ThemeProvider } from "@mui/material/styles";
@@ -25,6 +26,22 @@ const PrivateRoute = ({ children }) => {
   }
   
   return token ? children : <Navigate to="/login" />;
+};
+
+const AdminRoute = ({ children }) => {
+  const { token, user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!token) return <Navigate to="/login" />;
+  
+  if (user && user.role !== 'admin') {
+    return <Navigate to="/" />;
+  }
+  
+  return children;
 };
 
 const AppContent = () => {
@@ -65,6 +82,14 @@ const AppContent = () => {
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  } 
+                />
                 <Route path="/" element={<PrivateRoute><Main /></PrivateRoute>} />
                 <Route path="/generate" element={<PrivateRoute><Generate /></PrivateRoute>} />
                 <Route path="/inbox" element={<PrivateRoute><Inbox /></PrivateRoute>} />

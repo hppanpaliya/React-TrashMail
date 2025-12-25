@@ -8,7 +8,9 @@
     "start:docker": "node server.js",
     "test": "jest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "create-invite": "node scripts/createInvite.js",
+    "create-invite-admin": "node scripts/createInvite.js admin"
   },
   "keywords": [],
   "author": "",

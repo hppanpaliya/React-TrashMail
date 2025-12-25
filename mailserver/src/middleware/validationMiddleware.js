@@ -11,13 +11,15 @@ const validateEmailId = [
     .normalizeEmail()
     .isLength({ max: 254 })
     .withMessage('Email too long')
-    .custom((value) => {
+    .custom((value, { req }) => {
       // Check if email domain is allowed
-      const allowedDomains = config.allowedDomains;
+      // Use user-specific allowed domains if available, otherwise global config
+      const userAllowedDomains = req.user && req.user.allowedDomains;
+      const allowedDomains = userAllowedDomains || config.allowedDomains;
       
       const domain = value.split('@')[1];
       if (!allowedDomains.includes(domain)) {
-        throw new Error('Email domain not allowed');
+        throw new Error(`Email domain '${domain}' is not allowed for your account.`);
       }
       return true;
     }),

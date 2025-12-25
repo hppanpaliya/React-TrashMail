@@ -1,6 +1,8 @@
 import React, { useContext } from "react";
-import { Box, Typography, Grid, Button } from "@mui/material";
+import { Box, Typography, Grid, Button, IconButton, Tooltip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import LogoutIcon from '@mui/icons-material/Logout';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 import { ThemeContext } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -11,7 +13,7 @@ const TitleBar = () => {
 
   const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
-  const { token, logout } = useAuth();
+  const { token, logout, user } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -21,19 +23,36 @@ const TitleBar = () => {
   return (
     <>
       {token && (
-        <Button 
-          onClick={handleLogout}
-          sx={{ 
-            position: 'absolute', 
-            top: 20, 
-            right: 20, 
-            zIndex: 1000 
-          }}
-          variant="outlined"
-          color="inherit"
-        >
-          Logout
-        </Button>
+        <Box sx={{ position: 'absolute', top: 20, right: 20, zIndex: 1000, display: 'flex', gap: 2 }}>
+          {user && user.role === 'admin' && (
+            <Tooltip title="Admin Dashboard">
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AdminPanelSettingsIcon />}
+                onClick={() => navigate('/admin')}
+                sx={{ borderRadius: 2 }}
+              >
+                Admin
+              </Button>
+            </Tooltip>
+          )}
+          <Tooltip title="Logout">
+            <Button 
+              onClick={handleLogout}
+              variant="outlined"
+              color="inherit"
+              startIcon={<LogoutIcon />}
+              sx={{ 
+                borderRadius: 2,
+                backdropFilter: 'blur(5px)',
+                background: 'rgba(255,255,255,0.1)'
+              }}
+            >
+              Logout
+            </Button>
+          </Tooltip>
+        </Box>
       )}
       <p
         style={{

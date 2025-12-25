@@ -5,6 +5,7 @@ const emailRoutes = require("./routes/emailRoutes");
 const attachmentRoutes = require("./routes/attachmentRoutes");
 const sseRoutes = require("./routes/sseRoutes");
 const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 function createApp() {
   const app = express();
@@ -17,6 +18,7 @@ function createApp() {
 
   // Define routes
   app.use("/api/auth", authRoutes);
+  app.use("/api/admin", adminRoutes);
   app.use("/api", emailRoutes);
   app.use("/api", attachmentRoutes);
   app.use("/api", sseRoutes);

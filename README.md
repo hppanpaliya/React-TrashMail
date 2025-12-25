@@ -9,6 +9,8 @@ TrashMail is a web application for generating disposable/temporary email address
 - **Secure**: 
     - **Authentication**: Invite-only signup and secure login system.
     - **RBAC**: Role-Based Access Control (User/Admin roles).
+    - **Audit Logging**: Comprehensive logging of user and admin activities.
+    - **Admin Controls**: Manage user domain access and view activity logs.
     - **Sanitization**: All inputs and email content are sanitized to prevent XSS.
     - **Rate Limiting**: Protects against abuse.
 - **Scalable**: Optimized database schema (single collection) and pagination for large inboxes.
