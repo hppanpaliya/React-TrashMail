@@ -1,6 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
+const hpp = require("hpp");
+const rateLimit = require("express-rate-limit");
 const emailRoutes = require("./routes/emailRoutes");
 const attachmentRoutes = require("./routes/attachmentRoutes");
 const sseRoutes = require("./routes/sseRoutes");
@@ -10,11 +14,40 @@ const adminRoutes = require("./routes/adminRoutes");
 function createApp() {
   const app = express();
 
+  // Security Headers
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"], // React often needs unsafe-inline for development or certain builds
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS for development
+  }));
+
   // Enable CORS
   app.use(cors());
+
+  // Rate Limiting (Global)
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Increased limit to allow normal usage
+    message: "Too many requests from this IP, please try again later.",
+    skip: (req) => req.originalUrl.includes('/sse/') // Skip rate limiting for SSE connections
+  });
+  app.use("/api", limiter);
+
+  // Data Sanitization against NoSQL query injection
+  app.use(mongoSanitize());
+
+  // Prevent Parameter Pollution
+  app.use(hpp());
   
   // Parse JSON bodies (needed for auth)
-  app.use(express.json());
+  app.use(express.json({ limit: '10kb' })); // Limit body size
 
   // Define routes
   app.use("/api/auth", authRoutes);
@@ -22,11 +55,16 @@ function createApp() {
   app.use("/api", emailRoutes);
   app.use("/api", attachmentRoutes);
   app.use("/api", sseRoutes);
-  app.use(express.static(path.join(__dirname, "build")));
+  
+  // Serve static files from the React app build directory
+  // Assuming build is in the root of mailserver or copied there
+  // Adjust path if build is in ../react/build
+  const buildPath = path.join(__dirname, "..", "build"); 
+  app.use(express.static(buildPath));
 
   // Handle all other requests by serving the React app's entry point (index.html)
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "build", "index.html"));
+    res.sendFile(path.join(buildPath, "index.html"));
   });
 
   return app;

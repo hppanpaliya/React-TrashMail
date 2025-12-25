@@ -4,8 +4,8 @@ const { getDB } = require('../db');
 const { ObjectId } = require('mongodb');
 
 const authMiddleware = async (req, res, next) => {
-  // Get token from header
-  const token = req.header('x-auth-token');
+  // Get token from header or query parameter (for SSE)
+  const token = req.header('x-auth-token') || req.query.token;
 
   // Check if not token
   if (!token) {

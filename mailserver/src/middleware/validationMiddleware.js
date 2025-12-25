@@ -19,6 +19,7 @@ const validateEmailId = [
       
       const domain = value.split('@')[1];
       if (!allowedDomains.includes(domain)) {
+        console.log(`Validation failed: Domain '${domain}' not in allowed list:`, allowedDomains);
         throw new Error(`Email domain '${domain}' is not allowed for your account.`);
       }
       return true;
@@ -39,8 +40,12 @@ const validateSignup = [
     .isAlphanumeric()
     .withMessage('Username must be alphanumeric'),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/\d/)
+    .withMessage('Password must contain at least one number')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter'),
   body('inviteCode')
     .trim()
     .notEmpty()
@@ -107,6 +112,12 @@ const emailAccessLimit = createRateLimit(
   'Too many email access attempts. Try again later.'
 );
 
+const loginLimit = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  5, // 5 login attempts per window
+  'Too many login attempts. Please try again after 15 minutes.'
+);
+
 // Validation error handler
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -127,5 +138,6 @@ module.exports = {
   sanitizeInput,
   emailGenerationLimit,
   emailAccessLimit,
+  loginLimit,
   handleValidationErrors
 };

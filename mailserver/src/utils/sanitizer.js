@@ -1,6 +1,5 @@
-const createDOMPurify = require('isomorphic-dompurify');
-
-const DOMPurify = createDOMPurify();
+const { JSDOM } = require('jsdom');
+const DOMPurify = require('dompurify')(new JSDOM('').window);
 
 // Configure DOMPurify for email content
 const sanitizeEmailHTML = (html) => {

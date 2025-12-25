@@ -94,6 +94,17 @@ async function saveEmailToDB(parsedEmail, toAddress) {
       date: parsedEmail.date,
       readStatus: parsedEmail.readStatus,
     });
+
+    // Send Admin SSE update
+    sseService.sendAdminUpdate('NEW_EMAIL', {
+      _id: parsedEmail._id,
+      emailId: toAddress,
+      subject: parsedEmail.subject,
+      from: parsedEmail.from,
+      date: parsedEmail.date,
+      readStatus: parsedEmail.readStatus,
+      accessedBy: [] // Initially no one has accessed it
+    });
   } catch (error) {
     console.error("Error saving email or attachments:", error);
     throw error;

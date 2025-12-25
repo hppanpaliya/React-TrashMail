@@ -7,15 +7,36 @@ const adminController = {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 50;
-      const { userId, action, role } = req.query;
+      const { userId, action, role, search, sortBy = 'timestamp', sortOrder = 'desc' } = req.query;
 
       const filter = {};
       if (userId) filter.userId = new ObjectId(userId);
       if (action) filter.action = action;
       if (role) filter.role = role;
+      
+      if (search) {
+        filter.$or = [
+          { 'details.username': { $regex: search, $options: 'i' } },
+          { 'details.emailId': { $regex: search, $options: 'i' } },
+          { action: { $regex: search, $options: 'i' } }
+        ];
+      }
 
-      const result = await auditService.getLogs(filter, page, limit);
-      res.json(result);
+      const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+      const db = getDB();
+      const skip = (page - 1) * limit;
+      
+      const logs = await db.collection("audit_logs")
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+        
+      const total = await db.collection("audit_logs").countDocuments(filter);
+      
+      res.json({ logs, total, page, totalPages: Math.ceil(total / limit) });
     } catch (error) {
       console.error("Error fetching logs:", error);
       res.status(500).json({ message: "Server error" });
@@ -24,8 +45,12 @@ const adminController = {
 
   getConflicts: async (req, res) => {
     try {
-      const conflicts = await auditService.getConflicts();
-      res.json(conflicts);
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const { search, sortBy = 'lastAccess', sortOrder = 'desc' } = req.query;
+
+      const result = await auditService.getConflicts(page, limit, search, sortBy, sortOrder);
+      res.json(result);
     } catch (error) {
       console.error("Error fetching conflicts:", error);
       res.status(500).json({ message: "Server error" });
@@ -98,21 +123,112 @@ const adminController = {
 
   getSystemEmails: async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const { search, sortBy = 'date', sortOrder = 'desc' } = req.query;
+      const skip = (page - 1) * limit;
+
       const db = getDB();
       const collection = db.collection('emails');
       
       const systemPrefixes = ['admin', 'spam', 'abuse', 'help', 'support', 'webmaster', 'postmaster', 'hostmaster'];
       const regexPattern = `^(${systemPrefixes.join('|')})@`;
       
+      const filter = { emailId: { $regex: regexPattern, $options: 'i' } };
+      
+      if (search) {
+        filter.$or = [
+          { subject: { $regex: search, $options: 'i' } },
+          { 'from.text': { $regex: search, $options: 'i' } },
+          { emailId: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
       const emails = await collection
-        .find({ emailId: { $regex: regexPattern, $options: 'i' } })
-        .sort({ date: -1 })
-        .limit(100)
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
         .toArray();
 
-      res.json(emails);
+      const total = await collection.countDocuments(filter);
+
+      res.json({ emails, total, page, totalPages: Math.ceil(total / limit) });
     } catch (error) {
       console.error("Error fetching system emails:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  },
+
+  getReceivedEmails: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const { search, sortBy = 'date', sortOrder = 'desc' } = req.query;
+      const skip = (page - 1) * limit;
+
+      const db = getDB();
+      const emailsCollection = db.collection('emails');
+      const auditCollection = db.collection('audit_logs');
+      const usersCollection = db.collection('users');
+
+      const filter = {};
+      if (search) {
+        filter.$or = [
+          { subject: { $regex: search, $options: 'i' } },
+          { 'from.text': { $regex: search, $options: 'i' } },
+          { emailId: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+      // 1. Fetch Emails
+      const emails = await emailsCollection
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const totalEmails = await emailsCollection.countDocuments(filter);
+
+      // 2. Enrich with Access Logs
+      const enrichedEmails = await Promise.all(emails.map(async (email) => {
+        // Find logs for this email
+        const logs = await auditCollection.find({
+          action: 'READ_EMAIL',
+          'details.messageId': email._id
+        }).toArray();
+
+        // Get unique user IDs who accessed it
+        const userIds = [...new Set(logs.map(log => log.userId))];
+
+        // Fetch usernames
+        let accessedBy = [];
+        if (userIds.length > 0) {
+          const users = await usersCollection.find({
+            _id: { $in: userIds }
+          }).project({ username: 1 }).toArray();
+          accessedBy = users.map(u => u.username);
+        }
+
+        return {
+          ...email,
+          accessedBy
+        };
+      }));
+
+      res.json({
+        emails: enrichedEmails,
+        total: totalEmails,
+        page,
+        totalPages: Math.ceil(totalEmails / limit)
+      });
+    } catch (error) {
+      console.error("Error fetching received emails:", error);
       res.status(500).json({ message: "Server error" });
     }
   }

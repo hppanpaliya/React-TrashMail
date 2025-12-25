@@ -135,15 +135,30 @@ const emailController = {
 
   getEmail: async (req, res) => {
     try {
-      let { email_id, emailID } = req.params;
-      emailID = emailID.toLowerCase();
-      console.log(`get user_email_id's emailID, ${email_id}, ${emailID}`);
+      let { email_id, emailId } = req.params; // Changed emailID to emailId to match route param
+      
+      // Fallback if emailId is undefined (might be passed as emailID)
+      if (!emailId && req.params.emailID) {
+        emailId = req.params.emailID;
+      }
+
+      if (!emailId) {
+        return res.status(400).json({ message: "Email ID is required" });
+      }
+
+      emailId = emailId.toLowerCase();
+      console.log(`get user_email_id's emailID, ${email_id}, ${emailId}`);
       const db = getDB();
       const collection = db.collection('emails');
-      email_id = new ObjectId(email_id);
+      
+      try {
+        email_id = new ObjectId(email_id);
+      } catch (err) {
+        return res.status(400).json({ message: "Invalid email_id format" });
+      }
 
-      // Ensure we only fetch the email if it belongs to the user (emailID)
-      const emails = await collection.find({ _id: email_id, emailId: emailID }).toArray();
+      // Ensure we only fetch the email if it belongs to the user (emailId)
+      const emails = await collection.find({ _id: email_id, emailId: emailId }).toArray();
 
       if (emails.length === 0) {
         return res.status(404).json({ message: "No emails found for the provided email ID" });
@@ -154,7 +169,7 @@ const emailController = {
         await auditService.logActivity(
           new ObjectId(req.user.id), 
           'READ_EMAIL', 
-          { emailId: emailID, messageId: email_id }, 
+          { emailId: emailId, messageId: email_id }, 
           req.user.role
         );
       }

@@ -1,29 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Box,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tab,
   Tabs,
   Chip,
-  CircularProgress,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   TextField,
+  InputAdornment,
   DialogActions
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { useAuth } from '../../../context/AuthContext';
 import { env } from '../../../env';
 import axios from 'axios';
+import DataTable from '../../common/DataTable';
+import { Link } from 'react-router-dom';
 
 const TabPanel = (props) => {
   const { children, value, index, ...other } = props;
@@ -45,15 +42,39 @@ const TabPanel = (props) => {
   );
 };
 
+const useTableState = (initialSortBy = 'timestamp') => {
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [loading, setLoading] = useState(false);
+
+  return {
+    data, setData,
+    total, setTotal,
+    page, setPage,
+    rowsPerPage, setRowsPerPage,
+    search, setSearch,
+    sortBy, setSortBy,
+    sortOrder, setSortOrder,
+    loading, setLoading
+  };
+};
+
 const AdminDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [logs, setLogs] = useState([]);
-  const [conflicts, setConflicts] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [systemEmails, setSystemEmails] = useState([]);
-  const [loading, setLoading] = useState(false);
   const { token } = useAuth();
 
+  // State for each tab
+  const logsState = useTableState('timestamp');
+  const conflictsState = useTableState('lastAccess');
+  const usersState = useTableState('username');
+  const systemEmailsState = useTableState('date');
+  const receivedEmailsState = useTableState('date');
+  
   // User Edit State
   const [editUser, setEditUser] = useState(null);
   const [domainInput, setDomainInput] = useState('');
@@ -62,60 +83,94 @@ const AdminDashboard = () => {
   const [generatedInvite, setGeneratedInvite] = useState(null);
   const [inviteRole, setInviteRole] = useState('user');
 
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${env.REACT_APP_API_URL}/api/admin/logs`, {
-        headers: { 'x-auth-token': token }
-      });
-      setLogs(res.data.logs);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // SSE Connection
+  useEffect(() => {
+    let eventSource;
+    if (token) {
+      eventSource = new EventSource(`${env.REACT_APP_API_URL}/api/admin/sse/logs?token=${token}`);
+      
+      eventSource.onmessage = (event) => {
+        const parsed = JSON.parse(event.data);
+        if (parsed.type === 'NEW_LOG') {
+          // Prepend new log if we are on the first page and not searching
+          if (logsState.page === 0 && !logsState.search) {
+            logsState.setData(prev => [parsed.data, ...prev].slice(0, logsState.rowsPerPage));
+            logsState.setTotal(prev => prev + 1);
+          }
+        } else if (parsed.type === 'NEW_EMAIL') {
+          // Prepend new email if we are on the first page and not searching
+          if (receivedEmailsState.page === 0 && !receivedEmailsState.search) {
+            receivedEmailsState.setData(prev => [parsed.data, ...prev].slice(0, receivedEmailsState.rowsPerPage));
+            receivedEmailsState.setTotal(prev => prev + 1);
+          }
+        }
+      };
 
-  const fetchConflicts = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${env.REACT_APP_API_URL}/api/admin/conflicts`, {
-        headers: { 'x-auth-token': token }
-      });
-      setConflicts(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      eventSource.onerror = (err) => {
+        console.error("SSE Error:", err);
+        eventSource.close();
+      };
     }
-  };
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [
+    token,
+    logsState,
+    receivedEmailsState
+  ]);
 
-  const fetchUsers = async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (endpoint, stateObj) => {
+    stateObj.setLoading(true);
     try {
-      const res = await axios.get(`${env.REACT_APP_API_URL}/api/auth/users`, {
+      const res = await axios.get(`${env.REACT_APP_API_URL}${endpoint}`, {
+        params: {
+          page: stateObj.page + 1,
+          limit: stateObj.rowsPerPage,
+          search: stateObj.search,
+          sortBy: stateObj.sortBy,
+          sortOrder: stateObj.sortOrder
+        },
         headers: { 'x-auth-token': token }
       });
-      setUsers(res.data);
+      
+      if (res.data.logs) {
+        stateObj.setData(res.data.logs);
+        stateObj.setTotal(res.data.total);
+      } else if (res.data.emails) {
+        stateObj.setData(res.data.emails);
+        stateObj.setTotal(res.data.total);
+      } else if (res.data.conflicts) {
+        stateObj.setData(res.data.conflicts);
+        stateObj.setTotal(res.data.total);
+      } else if (res.data.users) {
+        stateObj.setData(res.data.users);
+        stateObj.setTotal(res.data.total);
+      }
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      stateObj.setLoading(false);
     }
-  };
+  }, [token]);
 
-  const fetchSystemEmails = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${env.REACT_APP_API_URL}/api/admin/system-emails`, {
-        headers: { 'x-auth-token': token }
-      });
-      setSystemEmails(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    if (tabValue === 0) fetchData('/api/admin/logs', logsState);
+    if (tabValue === 1) fetchData('/api/admin/conflicts', conflictsState);
+    if (tabValue === 2) fetchData('/api/auth/users', usersState);
+    if (tabValue === 4) fetchData('/api/admin/system-emails', systemEmailsState);
+    if (tabValue === 5) fetchData('/api/admin/received-emails', receivedEmailsState);
+  }, [
+    tabValue, 
+    logsState.page, logsState.rowsPerPage, logsState.search, logsState.sortBy, logsState.sortOrder,
+    conflictsState.page, conflictsState.rowsPerPage, conflictsState.search, conflictsState.sortBy, conflictsState.sortOrder,
+    usersState.page, usersState.rowsPerPage, usersState.search, usersState.sortBy, usersState.sortOrder,
+    systemEmailsState.page, systemEmailsState.rowsPerPage, systemEmailsState.search, systemEmailsState.sortBy, systemEmailsState.sortOrder,
+    receivedEmailsState.page, receivedEmailsState.rowsPerPage, receivedEmailsState.search, receivedEmailsState.sortBy, receivedEmailsState.sortOrder
+  ]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
   };
 
   const handleGenerateInvite = async () => {
@@ -129,17 +184,6 @@ const AdminDashboard = () => {
       console.error(err);
       alert('Failed to generate invite');
     }
-  };
-
-  useEffect(() => {
-    if (tabValue === 0) fetchLogs();
-    if (tabValue === 1) fetchConflicts();
-    if (tabValue === 2) fetchUsers();
-    if (tabValue === 4) fetchSystemEmails();
-  }, [tabValue]);
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
   };
 
   const handleEditUser = (user) => {
@@ -157,12 +201,115 @@ const AdminDashboard = () => {
       );
       
       setEditUser(null);
-      fetchUsers();
+      fetchData('/api/auth/users', usersState);
     } catch (err) {
       console.error(err);
       alert('Failed to update user');
     }
   };
+
+  // Columns Definitions
+  const logColumns = [
+    { id: 'timestamp', label: 'Time', minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
+    { id: 'userId', label: 'User ID', minWidth: 100, sortable: true },
+    { id: 'role', label: 'Role', minWidth: 100, sortable: true, format: (value) => <Chip label={value} color={value === 'admin' ? 'secondary' : 'default'} size="small" /> },
+    { id: 'action', label: 'Action', minWidth: 170, sortable: true },
+    { id: 'details', label: 'Details', minWidth: 170, format: (value) => JSON.stringify(value) },
+  ];
+
+  const conflictColumns = [
+    { id: 'emailId', label: 'Email ID', minWidth: 170, sortable: true },
+    { id: 'accessCount', label: 'Access Count', minWidth: 100, sortable: true },
+    { id: 'lastAccess', label: 'Last Access', minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
+    { id: 'users', label: 'Users Involved', minWidth: 170, format: (value) => value.join(', ') },
+  ];
+
+  const userColumns = [
+    { id: 'username', label: 'Username', minWidth: 170, sortable: true },
+    { id: 'role', label: 'Role', minWidth: 100, sortable: true, format: (value) => value || 'user' },
+    { id: 'allowedDomains', label: 'Allowed Domains', minWidth: 170, format: (value) => value ? value.join(', ') : <Chip label="Global Default" size="small" /> },
+    { 
+      id: 'actions', 
+      label: 'Actions', 
+      minWidth: 100, 
+      format: (value, row) => (
+        <Button size="small" variant="outlined" onClick={() => handleEditUser(row)}>
+          Edit Domains
+        </Button>
+      )
+    },
+  ];
+
+  const emailColumns = [
+    { id: 'date', label: 'Date', minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
+    { id: 'emailId', label: 'To', minWidth: 170, sortable: true },
+    { id: 'from', label: 'From', minWidth: 170, sortable: true, format: (value) => value?.text || '' },
+    { id: 'subject', label: 'Subject', minWidth: 170, sortable: true },
+  ];
+
+  const receivedEmailColumns = [
+    { id: 'date', label: 'Date', minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
+    { 
+      id: 'emailId', 
+      label: 'To', 
+      minWidth: 170, 
+      sortable: true,
+      format: (value) => (
+        <Link to={`/inbox/${value}`} style={{ textDecoration: 'none', color: 'inherit' }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ '&:hover': { textDecoration: 'underline' } }}>
+            {value}
+          </Typography>
+        </Link>
+      )
+    },
+    { id: 'from', label: 'From', minWidth: 170, sortable: true, format: (value) => value?.text || '' },
+    { 
+      id: 'subject', 
+      label: 'Subject', 
+      minWidth: 170, 
+      sortable: true,
+      format: (value, row) => (
+        <Link to={`/inbox/${row.emailId}/${row._id}`} style={{ textDecoration: 'none', color: 'inherit' }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ '&:hover': { textDecoration: 'underline' } }}>
+            {value}
+          </Typography>
+        </Link>
+      )
+    },
+    { 
+      id: 'accessedBy', 
+      label: 'Accessed By', 
+      minWidth: 170, 
+      format: (value) => (
+        value && value.length > 0 ? (
+          value.map((user, i) => (
+            <Chip key={i} label={user} size="small" sx={{ mr: 0.5 }} />
+          ))
+        ) : (
+          <Typography variant="caption" color="text.secondary">Not Accessed</Typography>
+        )
+      )
+    }
+  ];
+
+  const renderSearch = (stateObj, placeholder) => (
+    <Box sx={{ mb: 2 }}>
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder={placeholder}
+        value={stateObj.search}
+        onChange={(e) => stateObj.setSearch(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
+    </Box>
+  );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -171,104 +318,78 @@ const AdminDashboard = () => {
       </Typography>
       
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
+        <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
           <Tab label="Audit Logs" />
           <Tab label="Conflicts" />
           <Tab label="Users" />
           <Tab label="Invites" />
           <Tab label="System Emails" />
+          <Tab label="Received Emails" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
-          {loading ? <CircularProgress /> : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Time</TableCell>
-                    <TableCell>User ID</TableCell>
-                    <TableCell>Role</TableCell>
-                    <TableCell>Action</TableCell>
-                    <TableCell>Details</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log._id}>
-                      <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                      <TableCell>{log.userId}</TableCell>
-                      <TableCell>
-                        <Chip label={log.role} color={log.role === 'admin' ? 'secondary' : 'default'} size="small" />
-                      </TableCell>
-                      <TableCell>{log.action}</TableCell>
-                      <TableCell>{JSON.stringify(log.details)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          {renderSearch(logsState, "Search logs...")}
+          <DataTable
+            columns={logColumns}
+            data={logsState.data}
+            total={logsState.total}
+            page={logsState.page}
+            rowsPerPage={logsState.rowsPerPage}
+            onPageChange={logsState.setPage}
+            onRowsPerPageChange={logsState.setRowsPerPage}
+            sortBy={logsState.sortBy}
+            sortOrder={logsState.sortOrder}
+            onSort={(prop) => {
+              const isAsc = logsState.sortBy === prop && logsState.sortOrder === 'asc';
+              logsState.setSortOrder(isAsc ? 'desc' : 'asc');
+              logsState.setSortBy(prop);
+            }}
+            loading={logsState.loading}
+          />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          {loading ? <CircularProgress /> : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Email ID</TableCell>
-                    <TableCell>Access Count</TableCell>
-                    <TableCell>Last Access</TableCell>
-                    <TableCell>Users Involved</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {conflicts.map((conflict, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{conflict.emailId}</TableCell>
-                      <TableCell>{conflict.accessCount}</TableCell>
-                      <TableCell>{new Date(conflict.lastAccess).toLocaleString()}</TableCell>
-                      <TableCell>{conflict.users.join(', ')}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          {renderSearch(conflictsState, "Search conflicts...")}
+          <DataTable
+            columns={conflictColumns}
+            data={conflictsState.data}
+            total={conflictsState.total}
+            page={conflictsState.page}
+            rowsPerPage={conflictsState.rowsPerPage}
+            onPageChange={conflictsState.setPage}
+            onRowsPerPageChange={conflictsState.setRowsPerPage}
+            sortBy={conflictsState.sortBy}
+            sortOrder={conflictsState.sortOrder}
+            onSort={(prop) => {
+              const isAsc = conflictsState.sortBy === prop && conflictsState.sortOrder === 'asc';
+              conflictsState.setSortOrder(isAsc ? 'desc' : 'asc');
+              conflictsState.setSortBy(prop);
+            }}
+            loading={conflictsState.loading}
+          />
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
-          {loading ? <CircularProgress /> : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Username</TableCell>
-                    <TableCell>Role</TableCell>
-                    <TableCell>Allowed Domains</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user._id}>
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.role || 'user'}</TableCell>
-                      <TableCell>
-                        {user.allowedDomains ? user.allowedDomains.join(', ') : <Chip label="Global Default" size="small" />}
-                      </TableCell>
-                      <TableCell>
-                        <Button size="small" variant="outlined" onClick={() => handleEditUser(user)}>
-                          Edit Domains
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          {renderSearch(usersState, "Search users...")}
+          <DataTable
+            columns={userColumns}
+            data={usersState.data}
+            total={usersState.total}
+            page={usersState.page}
+            rowsPerPage={usersState.rowsPerPage}
+            onPageChange={usersState.setPage}
+            onRowsPerPageChange={usersState.setRowsPerPage}
+            sortBy={usersState.sortBy}
+            sortOrder={usersState.sortOrder}
+            onSort={(prop) => {
+              const isAsc = usersState.sortBy === prop && usersState.sortOrder === 'asc';
+              usersState.setSortOrder(isAsc ? 'desc' : 'asc');
+              usersState.setSortBy(prop);
+            }}
+            loading={usersState.loading}
+          />
         </TabPanel>
+
         <TabPanel value={tabValue} index={3}>
           <Box sx={{ maxWidth: 400, mx: 'auto', textAlign: 'center', py: 4 }}>
             <Typography variant="h6" gutterBottom>Generate New Invite Code</Typography>
@@ -301,30 +422,45 @@ const AdminDashboard = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={4}>
-          {loading ? <CircularProgress /> : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>To</TableCell>
-                    <TableCell>From</TableCell>
-                    <TableCell>Subject</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {systemEmails.map((email) => (
-                    <TableRow key={email._id}>
-                      <TableCell>{new Date(email.date).toLocaleString()}</TableCell>
-                      <TableCell>{email.emailId}</TableCell>
-                      <TableCell>{email.from.text}</TableCell>
-                      <TableCell>{email.subject}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          {renderSearch(systemEmailsState, "Search system emails...")}
+          <DataTable
+            columns={emailColumns}
+            data={systemEmailsState.data}
+            total={systemEmailsState.total}
+            page={systemEmailsState.page}
+            rowsPerPage={systemEmailsState.rowsPerPage}
+            onPageChange={systemEmailsState.setPage}
+            onRowsPerPageChange={systemEmailsState.setRowsPerPage}
+            sortBy={systemEmailsState.sortBy}
+            sortOrder={systemEmailsState.sortOrder}
+            onSort={(prop) => {
+              const isAsc = systemEmailsState.sortBy === prop && systemEmailsState.sortOrder === 'asc';
+              systemEmailsState.setSortOrder(isAsc ? 'desc' : 'asc');
+              systemEmailsState.setSortBy(prop);
+            }}
+            loading={systemEmailsState.loading}
+          />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={5}>
+          {renderSearch(receivedEmailsState, "Search received emails...")}
+          <DataTable
+            columns={receivedEmailColumns}
+            data={receivedEmailsState.data}
+            total={receivedEmailsState.total}
+            page={receivedEmailsState.page}
+            rowsPerPage={receivedEmailsState.rowsPerPage}
+            onPageChange={receivedEmailsState.setPage}
+            onRowsPerPageChange={receivedEmailsState.setRowsPerPage}
+            sortBy={receivedEmailsState.sortBy}
+            sortOrder={receivedEmailsState.sortOrder}
+            onSort={(prop) => {
+              const isAsc = receivedEmailsState.sortBy === prop && receivedEmailsState.sortOrder === 'asc';
+              receivedEmailsState.setSortOrder(isAsc ? 'desc' : 'asc');
+              receivedEmailsState.setSortBy(prop);
+            }}
+            loading={receivedEmailsState.loading}
+          />
         </TabPanel>
       </Paper>
 

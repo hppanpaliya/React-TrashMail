@@ -34,7 +34,7 @@ router.get(
 );
 
 router.get(
-  "/email/:emailID/:email_id", 
+  "/email/:emailId/:email_id", 
   emailAccessLimit,
   validateEmailId,
   validateMongoId,
@@ -43,7 +43,7 @@ router.get(
 );
 
 router.delete(
-  "/email/:emailID/:email_id", 
+  "/email/:emailId/:email_id", 
   emailAccessLimit,
   validateEmailId,
   validateMongoId,

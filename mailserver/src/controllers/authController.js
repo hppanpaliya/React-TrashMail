@@ -84,12 +84,14 @@ const authController = {
       // 1. Check if user exists
       const user = await usersCollection.findOne({ username });
       if (!user) {
+        await auditService.logActivity(null, 'LOGIN_FAILED', { username, ip: req.ip, reason: 'User not found' }, 'unknown');
         return res.status(400).json({ message: 'Invalid Credentials' });
       }
 
       // 2. Check password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
+        await auditService.logActivity(user._id, 'LOGIN_FAILED', { username, ip: req.ip, reason: 'Invalid password' }, user.role || 'user');
         return res.status(400).json({ message: 'Invalid Credentials' });
       }
 
@@ -140,11 +142,31 @@ const authController = {
 
   getAllUsers: async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const { search, sortBy = 'username', sortOrder = 'asc' } = req.query;
+      const skip = (page - 1) * limit;
+
       const db = getDB();
       const usersCollection = db.collection('users');
 
-      const users = await usersCollection.find({}, { projection: { password: 0 } }).toArray();
-      res.json(users);
+      const filter = {};
+      if (search) {
+        filter.username = { $regex: search, $options: 'i' };
+      }
+
+      const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+      const users = await usersCollection
+        .find(filter, { projection: { password: 0 } })
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const total = await usersCollection.countDocuments(filter);
+
+      res.json({ users, total, page, totalPages: Math.ceil(total / limit) });
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');

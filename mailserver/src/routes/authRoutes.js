@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { authMiddleware, checkRole } = require('../middleware/authMiddleware');
-const { validateSignup, validateLogin, handleValidationErrors, sanitizeInput } = require('../middleware/validationMiddleware');
+const { validateSignup, validateLogin, handleValidationErrors, sanitizeInput, loginLimit } = require('../middleware/validationMiddleware');
 
 // Apply sanitization
 router.use(sanitizeInput);
@@ -12,6 +12,7 @@ router.use(sanitizeInput);
 // @access  Public
 router.post(
   '/signup',
+  loginLimit,
   validateSignup,
   handleValidationErrors,
   authController.signup
@@ -22,6 +23,7 @@ router.post(
 // @access  Public
 router.post(
   '/login',
+  loginLimit,
   validateLogin,
   handleValidationErrors,
   authController.login

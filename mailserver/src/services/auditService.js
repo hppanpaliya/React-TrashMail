@@ -1,4 +1,5 @@
 const { getDB } = require("../db");
+const sseService = require("./sseService");
 
 const auditService = {
   logActivity: async (userId, action, details = {}, role = 'user') => {
@@ -6,13 +7,19 @@ const auditService = {
       const db = getDB();
       const auditCollection = db.collection("audit_logs");
 
-      await auditCollection.insertOne({
+      const logEntry = {
         userId,
         action,
         details,
         role,
         timestamp: new Date(),
-      });
+      };
+
+      const result = await auditCollection.insertOne(logEntry);
+      
+      // Emit real-time update to admins
+      sseService.sendAdminUpdate('NEW_LOG', { ...logEntry, _id: result.insertedId });
+
     } catch (error) {
       console.error("Audit logging failed:", error);
       // Don't block the main flow if logging fails
@@ -35,8 +42,10 @@ const auditService = {
     return { logs, total, page, totalPages: Math.ceil(total / limit) };
   },
 
-  getConflicts: async () => {
+  getConflicts: async (page = 1, limit = 50, search = '', sortBy = 'lastAccess', sortOrder = 'desc') => {
     const db = getDB();
+    const skip = (page - 1) * limit;
+
     // Find emailIds that have been accessed (VIEW_INBOX) by more than one distinct user
     const pipeline = [
       { $match: { action: "VIEW_INBOX" } },
@@ -52,7 +61,48 @@ const auditService = {
       { $project: { emailId: "$_id", users: 1, accessCount: 1, lastAccess: 1, _id: 0 } }
     ];
 
-    return await db.collection("audit_logs").aggregate(pipeline).toArray();
+    if (search) {
+      pipeline.push({ $match: { emailId: { $regex: search, $options: 'i' } } });
+    }
+
+    const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+    pipeline.push({ $sort: sort });
+
+    // Count total before pagination
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await db.collection("audit_logs").aggregate(countPipeline).toArray();
+    const total = countResult.length > 0 ? countResult[0].total : 0;
+
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    // Lookup usernames
+    pipeline.push({
+      $lookup: {
+        from: "users",
+        localField: "users",
+        foreignField: "_id",
+        as: "userDetails"
+      }
+    });
+    
+    pipeline.push({
+      $addFields: {
+        users: {
+          $map: {
+            input: "$userDetails",
+            as: "u",
+            in: "$$u.username"
+          }
+        }
+      }
+    });
+    
+    pipeline.push({ $project: { userDetails: 0 } });
+
+    const conflicts = await db.collection("audit_logs").aggregate(pipeline).toArray();
+
+    return { conflicts, total, page, totalPages: Math.ceil(total / limit) };
   }
 };
 
