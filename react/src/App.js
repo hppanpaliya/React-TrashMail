@@ -1,19 +1,33 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Main from "./components/pages/Main";
 import Generate from "./components/pages/Generate";
 import Inbox from "./components/Inbox";
 import InboxEmail from "./components/pages/InboxEmail";
 import AllEmailList from "./components/pages/AllEmailList";
+import Login from "./components/pages/Login";
+import Signup from "./components/pages/Signup";
 import theme from "./styles/theme";
 import darkTheme from "./styles/theme/darkTheme.js";
 import { ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
 import { ThemeContext } from "./context/ThemeContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import TitleBar from "./components/common/TitleBar";
 import { AnimatePresence } from "framer-motion";
 import InboxList from "./components/pages/InboxList";
-const App = () => {
+
+const PrivateRoute = ({ children }) => {
+  const { token, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  return token ? children : <Navigate to="/login" />;
+};
+
+const AppContent = () => {
   const [darkMode, setDarkMode] = React.useState(false);
 
   useEffect(() => {
@@ -49,18 +63,28 @@ const App = () => {
             <TitleBar />
             <AnimatePresence mode="wait">
               <Routes>
-                <Route path="/" element={<Main />} />
-                <Route path="/generate" element={<Generate />} />
-                <Route path="/inbox" element={<Inbox />} />
-                <Route path="/inbox/:emailId/:email_id" element={<InboxEmail />} />
-                <Route path="/inbox/:emailId/" element={<InboxList />} />
-                <Route path="/all" element={<AllEmailList />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/" element={<PrivateRoute><Main /></PrivateRoute>} />
+                <Route path="/generate" element={<PrivateRoute><Generate /></PrivateRoute>} />
+                <Route path="/inbox" element={<PrivateRoute><Inbox /></PrivateRoute>} />
+                <Route path="/inbox/:emailId/:email_id" element={<PrivateRoute><InboxEmail /></PrivateRoute>} />
+                <Route path="/inbox/:emailId/" element={<PrivateRoute><InboxList /></PrivateRoute>} />
+                <Route path="/all" element={<PrivateRoute><AllEmailList /></PrivateRoute>} />
               </Routes>
             </AnimatePresence>
           </div>
         </Router>
       </ThemeProvider>
     </ThemeContext.Provider>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

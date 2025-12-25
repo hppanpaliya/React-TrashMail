@@ -1,6 +1,7 @@
 const { body, param, validationResult } = require('express-validator');
 const validator = require('validator');
 const rateLimit = require('express-rate-limit');
+const config = require('../config');
 
 // Enhanced email validation middleware
 const validateEmailId = [
@@ -12,9 +13,7 @@ const validateEmailId = [
     .withMessage('Email too long')
     .custom((value) => {
       // Check if email domain is allowed
-      const allowedDomains = process.env.ALLOWED_DOMAINS ? 
-        JSON.parse(process.env.ALLOWED_DOMAINS) : 
-        ['example.com'];
+      const allowedDomains = config.allowedDomains;
       
       const domain = value.split('@')[1];
       if (!allowedDomains.includes(domain)) {
@@ -28,6 +27,32 @@ const validateMongoId = [
   param('email_id')
     .isMongoId()
     .withMessage('Invalid email ID format'),
+];
+
+const validateSignup = [
+  body('username')
+    .trim()
+    .isLength({ min: 3, max: 30 })
+    .withMessage('Username must be between 3 and 30 characters')
+    .isAlphanumeric()
+    .withMessage('Username must be alphanumeric'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+  body('inviteCode')
+    .trim()
+    .notEmpty()
+    .withMessage('Invite code is required'),
+];
+
+const validateLogin = [
+  body('username')
+    .trim()
+    .notEmpty()
+    .withMessage('Username is required'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
 ];
 
 // Input sanitization middleware
@@ -95,6 +120,8 @@ const handleValidationErrors = (req, res, next) => {
 module.exports = {
   validateEmailId,
   validateMongoId,
+  validateSignup,
+  validateLogin,
   sanitizeInput,
   emailGenerationLimit,
   emailAccessLimit,

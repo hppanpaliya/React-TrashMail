@@ -4,14 +4,19 @@ const path = require("path");
 const emailRoutes = require("./routes/emailRoutes");
 const attachmentRoutes = require("./routes/attachmentRoutes");
 const sseRoutes = require("./routes/sseRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 function createApp() {
   const app = express();
 
   // Enable CORS
   app.use(cors());
+  
+  // Parse JSON bodies (needed for auth)
+  app.use(express.json());
 
   // Define routes
+  app.use("/api/auth", authRoutes);
   app.use("/api", emailRoutes);
   app.use("/api", attachmentRoutes);
   app.use("/api", sseRoutes);

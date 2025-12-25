@@ -24,21 +24,60 @@ Before running the mail server, ensure that you have the following prerequisites
 
 ## Configuration
 
-The mail server can be configured using the `config.js` file located in the project root directory. Modify the following configuration options according to your setup:
+The mail server is configured using environment variables. Create a `.env` file in the `mailserver` directory with the following variables:
 
-- `smtpPort`: The port number on which the SMTP server should listen.
-- `mongoURL`: The URL for connecting to the MongoDB database.
-- `dbName`: The name of the MongoDB database to be used.
+```env
+PORT=3000
+MONGO_URI=mongodb://localhost:27017
+DB_NAME=trashmail
+SMTP_PORT=2525
+DOMAIN=localhost
+ALLOWED_DOMAINS=localhost,example.com
+JWT_SECRET=your_super_secret_jwt_key
+BCRYPT_SALT_ROUNDS=10
+JWT_EXPIRY=24h
+```
+
+- `PORT`: The port the API server will listen on.
+- `MONGO_URI`: The connection string for your MongoDB instance.
+- `DB_NAME`: The name of the database to use.
+- `SMTP_PORT`: The port the SMTP server will listen on.
+- `DOMAIN`: The domain name for the email addresses (e.g., `trashmail.com`).
+- `ALLOWED_DOMAINS`: Comma-separated list of domains allowed for disposable emails.
+- `JWT_SECRET`: Secret key for signing JWT tokens.
+- `BCRYPT_SALT_ROUNDS`: Cost factor for password hashing (default: 10).
+- `JWT_EXPIRY`: Token expiration time (default: 24h).
+
+## Database Setup
+
+This project uses MongoDB. Ensure you have a MongoDB instance running.
+
+### Creating Invite Codes
+
+To allow users to sign up, you need to generate invite codes. Run the following script:
+
+```bash
+node scripts/createInvite.js [role]
+```
+- `role` (optional): The role to assign to the user who uses this invite (e.g., `admin`, `user`). Defaults to `user`.
+
+Examples:
+```bash
+node scripts/createInvite.js          # Creates a user invite
+node scripts/createInvite.js admin    # Creates an admin invite
+```
+
+This will generate a new invite code and print it to the console. Share this code with users you want to allow to register.
 
 ## Usage
 
 To start the mail server, run the following command:
 
 ```shell
-node server.js
+npm start
 ```
 
-The server will start the SMTP server on the specified port and the web server on port 4000.
+The server will start the SMTP server on the specified port and the web server on the configured PORT.
 
 ## SMTP Server
 

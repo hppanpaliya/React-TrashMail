@@ -7,6 +7,7 @@ import SingleEmailItem from "../../common/SingleEmailItem";
 import ConfirmModal from "../../common/ConfirmModal";
 import NoEmailDisplay from "../../common/NoEmailDisplay";
 import { ThemeContext } from "../../../context/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { env } from "../../../env";
 import useWindowResize from "../../../hooks/useWindowResize";
@@ -19,6 +20,7 @@ const EmailList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState(null);
   const { darkMode } = useContext(ThemeContext);
+  const { token } = useAuth();
   const staggerDuration = 0.05;
 
 
@@ -32,7 +34,9 @@ const EmailList = () => {
       setLoading(true);
       try {
         window.localStorage.setItem("lastEmailId", emailId);
-        const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}`, {
+          headers: { 'x-auth-token': token }
+        });
         setEmailData(response.data);
         setLoading(false);
       } catch (error) {
@@ -43,7 +47,7 @@ const EmailList = () => {
     };
 
     const setupSSE = () => {
-      eventSource = new EventSource(`${env.REACT_APP_API_URL}/api/sse/${emailId}`);
+      eventSource = new EventSource(`${env.REACT_APP_API_URL}/api/sse/${emailId}?token=${token}`);
 
       eventSource.onmessage = (event) => {
         const newEmail = JSON.parse(event.data);
@@ -57,15 +61,17 @@ const EmailList = () => {
       };
     };
 
-    fetchInitialEmails();
-    setupSSE();
+    if (token) {
+      fetchInitialEmails();
+      setupSSE();
+    }
 
     return () => {
       if (eventSource) {
         eventSource.close();
       }
     };
-  }, [emailId]);
+  }, [emailId, token]);
 
   const handleEmailClick = (email_Id) => {
     navigate(`/inbox/${emailId}/${email_Id}`);
@@ -77,7 +83,9 @@ const EmailList = () => {
 
   const handleDeleteEmail = async (email_Id) => {
     try {
-      await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_Id}`);
+      await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_Id}`, {
+        headers: { 'x-auth-token': token }
+      });
       setEmailData((prevEmails) => prevEmails.filter((email) => email._id !== email_Id));
     } catch (error) {
       console.error("Error deleting email:", error);

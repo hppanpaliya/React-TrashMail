@@ -1,8 +1,9 @@
 import React, { useContext } from "react";
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import { ThemeContext } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 import useWindowResize from "../../hooks/useWindowResize";
 
 const TitleBar = () => {
@@ -10,13 +11,30 @@ const TitleBar = () => {
 
   const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
+  const { token, logout } = useAuth();
 
-
-
-  
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <>
+      {token && (
+        <Button 
+          onClick={handleLogout}
+          sx={{ 
+            position: 'absolute', 
+            top: 20, 
+            right: 20, 
+            zIndex: 1000 
+          }}
+          variant="outlined"
+          color="inherit"
+        >
+          Logout
+        </Button>
+      )}
       <p
         style={{
           display: "flex",

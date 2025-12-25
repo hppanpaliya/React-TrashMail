@@ -6,6 +6,7 @@ import { Letter } from "react-letter";
 import ButtonSection from "../../common/ButtonSection";
 import InfoIcon from "@mui/icons-material/Info";
 import { ThemeContext } from "../../../context/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
 import { motion } from "framer-motion";
 import { env } from "../../../env";
 import useWindowResize from "../../../hooks/useWindowResize";
@@ -18,6 +19,7 @@ const InboxEmail = () => {
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
+  const { token } = useAuth();
 
 
   let headers;
@@ -25,7 +27,9 @@ const InboxEmail = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_id}`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_id}`, {
+          headers: { 'x-auth-token': token }
+        });
         setEmailData(response.data[0]);
         console.log(response.data[0]);
         setEmailAttachments(response.data[0].attachments);
@@ -35,8 +39,10 @@ const InboxEmail = () => {
       }
     };
 
-    fetchEmailData();
-  }, [email_id, emailId]);
+    if (token) {
+      fetchEmailData();
+    }
+  }, [email_id, emailId, token]);
 
   if (emailHeaders) {
     headers = emailHeaders.map((header, i) => {

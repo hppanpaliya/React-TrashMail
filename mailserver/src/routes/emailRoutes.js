@@ -7,11 +7,15 @@ const {
   emailAccessLimit,
   handleValidationErrors
 } = require("../middleware/validationMiddleware");
+const { authMiddleware, checkRole } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 // Apply sanitization to all routes
 router.use(sanitizeInput);
+
+// Protect all email routes
+router.use(authMiddleware);
 
 router.get(
   "/emails-list/:emailId", 
@@ -21,8 +25,10 @@ router.get(
   emailController.getEmailsList
 );
 
+// Admin only: Get all emails in the system
 router.get(
   "/all-emails", 
+  checkRole(['admin']),
   emailAccessLimit,
   emailController.getAllEmails
 );

@@ -7,6 +7,7 @@ import { useRef } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmModal from "../../common/ConfirmModal";
+import { useAuth } from "../../../context/AuthContext";
 import { env } from "../../../env";
 import useWindowResize from "../../../hooks/useWindowResize";
 
@@ -18,6 +19,7 @@ const AllEmailList = () => {
   const [emailToDelete, setEmailToDelete] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [reload, setReload] = useState(false);
+  const { token } = useAuth();
 
 
 
@@ -28,7 +30,9 @@ const AllEmailList = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`${env.REACT_APP_API_URL}/api/all-emails`);
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/all-emails`, {
+          headers: { 'x-auth-token': token }
+        });
         setEmailData(response.data);
         console.log(response.data);
         setLoading(false);
@@ -52,13 +56,15 @@ const AllEmailList = () => {
     };
 
     // Start polling when the component mounts or when the emailId changes
-    startPolling();
+    if (token) {
+      startPolling();
+    }
 
     // Clean up the polling interval when the component unmounts
     return () => {
       stopPolling();
     };
-  }, [reload]);
+  }, [reload, token]);
 
   const handleEmailClick = (email, email_Id) => {
     navigate(`/inbox/${email}/${email_Id}`);
@@ -70,7 +76,9 @@ const AllEmailList = () => {
 
   const handleDeleteEmail = async () => {
     try {
-      await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailToDelete[1]}/${emailToDelete[0]}`);
+      await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailToDelete[1]}/${emailToDelete[0]}`, {
+        headers: { 'x-auth-token': token }
+      });
       // Refresh the email list after successful deletion
       setReload(!reload);
     } catch (error) {

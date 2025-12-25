@@ -2,6 +2,18 @@
 
 TrashMail is a web application for generating disposable/temporary email addresses and viewing emails sent to those addresses. The project consists of a React frontend and a Node.js and MongoDB backend mail server.
 
+## Features
+
+- **Disposable Emails**: Generate random or custom disposable email addresses.
+- **Real-time Updates**: Receive emails instantly without refreshing the page (SSE).
+- **Secure**: 
+    - **Authentication**: Invite-only signup and secure login system.
+    - **RBAC**: Role-Based Access Control (User/Admin roles).
+    - **Sanitization**: All inputs and email content are sanitized to prevent XSS.
+    - **Rate Limiting**: Protects against abuse.
+- **Scalable**: Optimized database schema (single collection) and pagination for large inboxes.
+- **Responsive**: Works on desktop and mobile devices.
+
 ## Table of Contents
 
 - [Frontend](#frontend)
@@ -23,6 +35,7 @@ The React frontend provides the user interface for generating disposable emails,
 - Read a specific email and attachments
 - Delete emails
 - Responsive design
+- **Authentication**: Login and Signup pages.
 
 ### Tech Stack
 
@@ -30,9 +43,11 @@ The React frontend provides the user interface for generating disposable emails,
 - React Router
 - Material UI
 - Axios
+- Framer Motion
 
 ### Pages
 
+- **Login/Signup**: Secure access to the service.
 - **Home**: Explains the service and contains buttons to generate or enter an email
 - **Inbox**: Lists received emails for an address
 - **Email**: Displays the content of a specific email
@@ -148,9 +163,6 @@ Ensure you have Docker installed and running on your machine before executing th
 
 These options and environment variables are crucial for configuring the TrashMail application within the Docker environment, especially for handling backend API communication and data persistence.
 
-## Conclusion
-
-This application demonstrates a disposable email service with basic functionality like inbox and reading emails. Additional features like registering custom domains, tagging emails, search, etc. can be added.
 
 ## Support
 
