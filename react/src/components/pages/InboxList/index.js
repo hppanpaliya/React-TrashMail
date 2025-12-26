@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Grid, Typography, Tooltip, TextField, Box, MenuItem, Select, FormControl, InputLabel, IconButton, InputAdornment } from "@mui/material";
+import { Grid, Typography, Tooltip, TextField, Box, MenuItem, Select, FormControl, InputLabel, IconButton, InputAdornment, Pagination } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../../common/ButtonSection";
@@ -27,6 +27,12 @@ const EmailList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRead, setFilterRead] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
+  
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 50;
 
 
 
@@ -39,10 +45,27 @@ const EmailList = () => {
       setLoading(true);
       try {
         window.localStorage.setItem("lastEmailId", emailId);
-        const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}`, {
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}?page=${page}&limit=${itemsPerPage}`, {
           headers: { 'x-auth-token': token }
         });
         setEmailData(response.data);
+        
+        // Get total pages from response headers
+        const totalCountFromHeader = parseInt(response.headers['x-total-count']) || 0;
+        const totalPagesFromHeader = parseInt(response.headers['x-total-pages']) || 1;
+        setTotalPages(totalPagesFromHeader);
+        setTotalCount(totalCountFromHeader);
+        
+        console.log('Inbox Pagination Info:', {
+          emailId,
+          currentPage: page,
+          itemsPerPage,
+          totalCount: totalCountFromHeader,
+          totalPages: totalPagesFromHeader,
+          emailsReturned: response.data.length,
+          headers: response.headers
+        });
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching initial email data:", error);
@@ -56,7 +79,10 @@ const EmailList = () => {
 
       eventSource.onmessage = (event) => {
         const newEmail = JSON.parse(event.data);
-        setEmailData((prevEmails) => [newEmail, ...prevEmails]);
+        // Only add to current page if we're on page 1
+        if (page === 1) {
+          setEmailData((prevEmails) => [newEmail, ...prevEmails]);
+        }
       };
 
       eventSource.onerror = (error) => {
@@ -76,7 +102,7 @@ const EmailList = () => {
         eventSource.close();
       }
     };
-  }, [emailId, token]);
+  }, [emailId, token, page, itemsPerPage]);
 
   const handleEmailClick = (email_Id) => {
     navigate(`/inbox/${emailId}/${email_Id}`);
@@ -101,6 +127,11 @@ const EmailList = () => {
     setSearchTerm("");
     setFilterRead("all");
     setSortBy("date-desc");
+  };
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Filter and sort emails
@@ -269,7 +300,7 @@ const EmailList = () => {
 
             {/* Results count */}
             <Typography variant="body2" sx={{ mt: 1, color: darkMode ? "#aaa" : "#666", fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-              {displayEmails.length} of {emailData.length} emails
+              Showing {displayEmails.length} of {totalCount} total emails (Page {page} of {totalPages})
             </Typography>
           </Box>
 
@@ -289,6 +320,22 @@ const EmailList = () => {
           ) : (
             <NoEmailDisplay loading={loading} isMobile={isMobile} />
           )}
+          
+          {/* Pagination */}
+          {displayEmails.length > 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 4 }}>
+              <Pagination 
+                count={totalPages} 
+                page={page} 
+                onChange={handlePageChange}
+                color="primary"
+                size={isMobile ? "small" : "medium"}
+                showFirstButton 
+                showLastButton
+              />
+            </Box>
+          )}
+          
           <ConfirmModal
             open={openModal}
             setOpen={setOpenModal}

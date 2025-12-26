@@ -70,6 +70,9 @@ const emailController = {
         );
       }
       
+      // Get total count for pagination
+      const totalCount = await collection.countDocuments({ emailId: emailId });
+      
       const emails = await collection
         .find({ emailId: emailId }, { projection: { "from.text": 1, subject: 1, date: 1, readStatus: 1 } })
         .sort({ date: -1 })
@@ -87,6 +90,11 @@ const emailController = {
         }
       });
 
+      // Set pagination headers
+      res.setHeader('X-Total-Count', totalCount);
+      res.setHeader('X-Total-Pages', Math.ceil(totalCount / limit));
+      res.setHeader('X-Current-Page', page);
+
       return res.json(emails);
     } catch (error) {
       console.error("Error retrieving emails:", error);
@@ -101,6 +109,9 @@ const emailController = {
       const skip = (page - 1) * limit;
 
       const db = getDB();
+      
+      // Get total count for pagination
+      const totalCount = await db.collection('emails').countDocuments({});
       
       const allEmails = await db
         .collection('emails')
@@ -125,6 +136,11 @@ const emailController = {
       if (allEmails.length === 0) {
         return res.status(404).json({ message: "No emails found in the database" });
       }
+
+      // Set pagination headers
+      res.setHeader('X-Total-Count', totalCount);
+      res.setHeader('X-Total-Pages', Math.ceil(totalCount / limit));
+      res.setHeader('X-Current-Page', page);
 
       return res.json(allEmails);
     } catch (error) {

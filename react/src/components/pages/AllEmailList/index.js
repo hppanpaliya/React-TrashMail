@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, InputAdornment } from "@mui/material";
+import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, InputAdornment, Pagination } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../../common/ButtonSection";
@@ -26,6 +26,12 @@ const AllEmailList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRead, setFilterRead] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
+  
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 50;
 
 
 
@@ -36,11 +42,26 @@ const AllEmailList = () => {
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
-        const response = await axios.get(`${env.REACT_APP_API_URL}/api/all-emails`, {
+        const response = await axios.get(`${env.REACT_APP_API_URL}/api/all-emails?page=${page}&limit=${itemsPerPage}`, {
           headers: { 'x-auth-token': token }
         });
         setEmailData(response.data);
-        console.log(response.data);
+        
+        // Get total pages from response headers
+        const totalCountFromHeader = parseInt(response.headers['x-total-count']) || 0;
+        const totalPagesFromHeader = parseInt(response.headers['x-total-pages']) || 1;
+        setTotalPages(totalPagesFromHeader);
+        setTotalCount(totalCountFromHeader);
+        
+        console.log('Pagination Info:', {
+          currentPage: page,
+          itemsPerPage,
+          totalCount: totalCountFromHeader,
+          totalPages: totalPagesFromHeader,
+          emailsReturned: response.data.length,
+          headers: response.headers
+        });
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching email data:", error);
@@ -70,7 +91,7 @@ const AllEmailList = () => {
     return () => {
       stopPolling();
     };
-  }, [reload, token]);
+  }, [reload, token, page, itemsPerPage]);
 
   const handleEmailClick = (email, email_Id) => {
     navigate(`/inbox/${email}/${email_Id}`);
@@ -96,6 +117,11 @@ const AllEmailList = () => {
     setSearchTerm("");
     setFilterRead("all");
     setSortBy("date-desc");
+  };
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Filter and sort emails
@@ -280,7 +306,7 @@ const AllEmailList = () => {
 
             {/* Results count */}
             <Typography variant="body2" sx={{ mt: 1, color: "#666", fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-              {displayEmails.length} of {emailData.length} emails
+              Showing {displayEmails.length} of {totalCount} total emails (Page {page} of {totalPages})
             </Typography>
           </Box>
 
@@ -376,6 +402,21 @@ const AllEmailList = () => {
                 </Paper>
               ))
             : handleNoEmails()}
+          
+          {/* Pagination */}
+          {displayEmails.length > 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 4 }}>
+              <Pagination 
+                count={totalPages} 
+                page={page} 
+                onChange={handlePageChange}
+                color="primary"
+                size={isMobile ? "small" : "medium"}
+                showFirstButton 
+                showLastButton
+              />
+            </Box>
+          )}
         </Grid>
       </Grid>
       <ConfirmModal

@@ -29,8 +29,10 @@ function createApp() {
     crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS for development
   }));
 
-  // Enable CORS
-  app.use(cors());
+  // Enable CORS with exposed headers for pagination
+  app.use(cors({
+    exposedHeaders: ['X-Total-Count', 'X-Total-Pages', 'X-Current-Page']
+  }));
 
   // Rate Limiting (Global)
   const limiter = rateLimit({
