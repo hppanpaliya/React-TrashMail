@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const helmet = require("helmet");
-const mongoSanitize = require("express-mongo-sanitize");
+const mongoSanitize = require("./middleware/mongoSanitizeMiddleware");
 const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
 const emailRoutes = require("./routes/emailRoutes");
@@ -63,9 +64,13 @@ function createApp() {
   app.use(express.static(buildPath));
 
   // Handle all other requests by serving the React app's entry point (index.html)
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(buildPath, "index.html"));
-  });
+  // Only serve the fallback if the build directory exists (not in test environment)
+  if (fs.existsSync(path.join(buildPath, "index.html"))) {
+    // Use middleware instead of route to avoid path-to-regexp issues
+    app.use((req, res) => {
+      res.sendFile(path.join(buildPath, "index.html"));
+    });
+  }
 
   return app;
 }

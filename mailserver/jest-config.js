@@ -5,4 +5,7 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   setupFilesAfterEnv: ['./jest.setup.js'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(parse5|jsdom)/)'
+  ],
 };
