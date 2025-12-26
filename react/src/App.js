@@ -48,12 +48,13 @@ const AppContent = () => {
   const [darkMode, setDarkMode] = React.useState(false);
 
   useEffect(() => {
-    let isDarkMode = localStorage.getItem("darkMode");
-    console.log("local storage", isDarkMode);
+    const storedDarkMode = localStorage.getItem("darkMode");
+    console.log("local storage", storedDarkMode);
 
-    if (isDarkMode != null) {
+    let isDarkMode;
+    if (storedDarkMode != null) {
       // Convert the value to a boolean
-      isDarkMode = isDarkMode === "true";
+      isDarkMode = storedDarkMode === "true";
       setDarkMode(isDarkMode);
       console.log("local storage", isDarkMode);
     } else {

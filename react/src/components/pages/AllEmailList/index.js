@@ -207,14 +207,15 @@ const AllEmailList = () => {
         <Grid item xs={12} md={1} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}></Grid>
         <Grid item xs={12} md={8} sx={{ marginTop: isMobile ? "0vh" : "6vh" }}>
           <Typography
-            variant="h5"
+            variant="h4"
             gutterBottom
             sx={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               textAlign: "center",
-              mb: 2
+              mb: 2 ,
+              color: "#888"
             }}
           >
             All Emails
