@@ -11,14 +11,14 @@ const Generate = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState(window.localStorage.getItem("lastEmailId") || "");
   const [isMobile, setIsMobile] = useState(false);
-  const [width, setWidth] = useState(window.innerWidth);
+
   const domains = JSON.parse(env.REACT_APP_DOMAINS);
   const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
-      setWidth(window.innerWidth);
+      
     };
 
     handleResize();

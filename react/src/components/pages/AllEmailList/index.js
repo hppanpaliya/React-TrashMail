@@ -161,9 +161,9 @@ const AllEmailList = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "date-desc":
-          return new Date(b.date) - new Date(a.date);
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         case "date-asc":
-          return new Date(a.date) - new Date(b.date);
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
         case "subject-asc":
           return (a.subject || "").localeCompare(b.subject || "");
         case "subject-desc":
@@ -191,7 +191,7 @@ const AllEmailList = () => {
       return (
         <Box sx={{ textAlign: "center", marginTop: "10vh" }}>
           <Paper elevation={3} sx={{ p: 2, marginBottom: 2, margin: isMobile ? "2vh" : "" }}>
-            <Typography variant="p" gutterBottom>
+            <Typography variant="body1" gutterBottom>
               No Email Found
             </Typography>
           </Paper>

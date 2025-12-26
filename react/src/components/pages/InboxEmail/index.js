@@ -17,7 +17,7 @@ import useWindowResize from "../../../hooks/useWindowResize";
 
 const InboxEmail = () => {
   const { emailId, email_id } = useParams();
-  const [emailData, setEmailData] = useState();
+  const [emailData, setEmailData] = useState(null);
   const [emailAttachments, setEmailAttachments] = useState([]);
   const [emailHeaders, setEmailHeaders] = useState([]);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
