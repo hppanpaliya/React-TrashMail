@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, InputAdornment, Pagination } from "@mui/material";
+import { Grid, Typography, Paper, Box, Tooltip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, InputAdornment, Pagination } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../../common/ButtonSection";
-import { useRef } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { SearchOutlined, ClearOutlined } from "@mui/icons-material";
@@ -37,10 +36,11 @@ const AllEmailList = () => {
 
   const navigate = useNavigate();
 
-  const pollingIntervalRef = useRef(null);
-
   useEffect(() => {
+    let eventSource;
+
     const fetchEmailData = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(`${env.REACT_APP_API_URL}/api/all-emails?page=${page}&limit=${itemsPerPage}`, {
           headers: { 'x-auth-token': token }
@@ -69,27 +69,35 @@ const AllEmailList = () => {
       }
     };
 
-    const startPolling = () => {
-      // Fetch email data immediately
-      fetchEmailData();
+    const setupSSE = () => {
+      eventSource = new EventSource(`${env.REACT_APP_API_URL}/api/sse-all?token=${token}`);
 
-      // Start polling at the specified interval (e.g., every 5 seconds)
-      pollingIntervalRef.current = setInterval(fetchEmailData, 5000);
+      eventSource.onmessage = (event) => {
+        const newEmail = JSON.parse(event.data);
+        // Only add to current page if we're on page 1
+        if (page === 1) {
+          setEmailData((prevEmails) => [newEmail, ...prevEmails]);
+          // Update total count
+          setTotalCount((prevCount) => prevCount + 1);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error("SSE error:", error);
+        eventSource.close();
+        setTimeout(setupSSE, 5000); // Attempt to reconnect after 5 seconds
+      };
     };
 
-    const stopPolling = () => {
-      // Clear the polling interval
-      clearInterval(pollingIntervalRef.current);
-    };
-
-    // Start polling when the component mounts or when the emailId changes
     if (token) {
-      startPolling();
+      fetchEmailData();
+      setupSSE();
     }
 
-    // Clean up the polling interval when the component unmounts
     return () => {
-      stopPolling();
+      if (eventSource) {
+        eventSource.close();
+      }
     };
   }, [reload, token, page, itemsPerPage]);
 

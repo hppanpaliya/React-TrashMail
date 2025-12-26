@@ -91,6 +91,17 @@ async function saveEmailToDB(parsedEmail, toAddress) {
       _id: parsedEmail._id,
       subject: parsedEmail.subject,
       from: parsedEmail.from,
+      to: parsedEmail.to,
+      date: parsedEmail.date,
+      readStatus: parsedEmail.readStatus,
+    });
+
+    // Send SSE update for all emails page
+    sseService.sendAllEmailsUpdate({
+      _id: parsedEmail._id,
+      subject: parsedEmail.subject,
+      from: parsedEmail.from,
+      to: parsedEmail.to,
       date: parsedEmail.date,
       readStatus: parsedEmail.readStatus,
     });

@@ -37,4 +37,9 @@ router.get("/sse/:emailId", sseAuthMiddleware, validateEmailId, (req, res) => {
   sseService.addClient(emailId, res);
 });
 
+// SSE endpoint for all emails (authenticated users only)
+router.get("/sse-all", sseAuthMiddleware, (req, res) => {
+  sseService.addAllEmailsClient(res);
+});
+
 module.exports = router;

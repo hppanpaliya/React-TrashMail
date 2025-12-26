@@ -5,6 +5,7 @@ class SSEService extends EventEmitter {
     super();
     this.clients = new Map();
     this.adminClients = new Set();
+    this.allEmailsClients = new Set();
   }
 
   addClient(emailId, res) {
@@ -25,6 +26,13 @@ class SSEService extends EventEmitter {
     this.adminClients.add(res);
     this.setupConnection(res, () => {
       this.adminClients.delete(res);
+    });
+  }
+
+  addAllEmailsClient(res) {
+    this.allEmailsClients.add(res);
+    this.setupConnection(res, () => {
+      this.allEmailsClients.delete(res);
     });
   }
 
@@ -58,6 +66,22 @@ class SSEService extends EventEmitter {
       client.write(`data: ${JSON.stringify({ type, data })}\n\n`);
     });
   }
+
+  sendAllEmailsUpdate(data) {
+    this.allEmailsClients.forEach((client) => {
+      client.write(`data: ${JSON.stringify(data)}\n\n`);
+    });
+  }
+
+  getClientCount() {
+    let total = 0;
+    this.clients.forEach((clientSet) => {
+      total += clientSet.size;
+    });
+    return total;
+  }
 }
+
+module.exports = new SSEService();
 
 module.exports = new SSEService();
