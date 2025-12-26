@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton } from "@mui/material";
+import { Grid, Typography, Paper, Box, Chip, Tooltip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, InputAdornment } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../../common/ButtonSection";
 import { useRef } from "react";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { SearchOutlined, ClearOutlined } from "@mui/icons-material";
 import ConfirmModal from "../../common/ConfirmModal";
 import { useAuth } from "../../../context/AuthContext";
 import { env } from "../../../env";
@@ -20,6 +21,11 @@ const AllEmailList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [reload, setReload] = useState(false);
   const { token } = useAuth();
+
+  // Search, Filter, Sort states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRead, setFilterRead] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
 
 
 
@@ -86,6 +92,66 @@ const AllEmailList = () => {
     }
   };
 
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setFilterRead("all");
+    setSortBy("date-desc");
+  };
+
+  // Filter and sort emails
+  const getFilteredAndSortedEmails = () => {
+    let filtered = [...emailData];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((email) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          email.subject?.toLowerCase().includes(searchLower) ||
+          email.from?.text?.toLowerCase().includes(searchLower) ||
+          email.to?.value[0]?.address?.toLowerCase().includes(searchLower) ||
+          email.text?.toLowerCase().includes(searchLower) ||
+          email.html?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    // Apply read/unread filter
+    if (filterRead === "read") {
+      filtered = filtered.filter((email) => email.readStatus === true);
+    } else if (filterRead === "unread") {
+      filtered = filtered.filter((email) => email.readStatus === false || !email.readStatus);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "date-desc":
+          return new Date(b.date) - new Date(a.date);
+        case "date-asc":
+          return new Date(a.date) - new Date(b.date);
+        case "subject-asc":
+          return (a.subject || "").localeCompare(b.subject || "");
+        case "subject-desc":
+          return (b.subject || "").localeCompare(a.subject || "");
+        case "from-asc":
+          return (a.from?.text || "").localeCompare(b.from?.text || "");
+        case "from-desc":
+          return (b.from?.text || "").localeCompare(a.from?.text || "");
+        case "to-asc":
+          return (a.to?.value[0]?.address || "").localeCompare(b.to?.value[0]?.address || "");
+        case "to-desc":
+          return (b.to?.value[0]?.address || "").localeCompare(a.to?.value[0]?.address || "");
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  };
+
+  const displayEmails = getFilteredAndSortedEmails();
+
   const handleNoEmails = () => {
     if (emailData.length === 0) {
       return (
@@ -114,10 +180,96 @@ const AllEmailList = () => {
               justifyContent: "center",
               alignItems: "center",
               textAlign: "center",
+              mb: 2
             }}
-          ></Typography>
-          {emailData.length > 0
-            ? emailData.map((email) => (
+          >
+            All Emails
+          </Typography>
+
+          {/* Search, Filter, Sort Controls */}
+          <Box sx={{ mb: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              {/* Search */}
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search emails..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchOutlined />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              {/* Filter by Read Status */}
+              <Grid item xs={6} sm={3} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Filter</InputLabel>
+                  <Select
+                    value={filterRead}
+                    label="Filter"
+                    onChange={(e) => setFilterRead(e.target.value)}
+                  >
+                    <MenuItem value="all">All Emails</MenuItem>
+                    <MenuItem value="read">Read</MenuItem>
+                    <MenuItem value="unread">Unread</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Sort By */}
+              <Grid item xs={6} sm={3} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Sort By</InputLabel>
+                  <Select
+                    value={sortBy}
+                    label="Sort By"
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <MenuItem value="date-desc">Newest First</MenuItem>
+                    <MenuItem value="date-asc">Oldest First</MenuItem>
+                    <MenuItem value="subject-asc">Subject (A-Z)</MenuItem>
+                    <MenuItem value="subject-desc">Subject (Z-A)</MenuItem>
+                    <MenuItem value="from-asc">From (A-Z)</MenuItem>
+                    <MenuItem value="from-desc">From (Z-A)</MenuItem>
+                    <MenuItem value="to-asc">To (A-Z)</MenuItem>
+                    <MenuItem value="to-desc">To (Z-A)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Clear Filters */}
+              <Grid item xs={12} sm={12} md={2}>
+                <Tooltip title="Clear all filters">
+                  <IconButton
+                    onClick={handleClearFilters}
+                    sx={{ 
+                      width: '100%',
+                      border: '1px solid',
+                      borderColor: 'rgba(0,0,0,0.23)',
+                      borderRadius: 1
+                    }}
+                  >
+                    <ClearOutlined />
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+            </Grid>
+
+            {/* Results count */}
+            <Typography variant="body2" sx={{ mt: 1, color: "#666" }}>
+              {displayEmails.length} of {emailData.length} emails
+            </Typography>
+          </Box>
+
+          {displayEmails.length > 0
+            ? displayEmails.map((email) => (
                 <Paper
                   elevation={3}
                   sx={{
