@@ -34,7 +34,7 @@ const TabPanel = (props) => {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
           {children}
         </Box>
       )}
@@ -335,13 +335,28 @@ const AdminDashboard = () => {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom component="div" sx={{ color: 'text.primary' }}>
+    <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 }, px: { xs: 1, sm: 3 } }}>
+      <Typography variant="h4" gutterBottom component="div" sx={{ color: 'text.primary', fontSize: { xs: '1.5rem', sm: '2.125rem' }, mb: { xs: 2, sm: 3 } }}>
         Admin Dashboard
       </Typography>
       
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
+      <Paper sx={{ width: '100%', mb: 2, overflow: 'hidden' }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          indicatorColor="primary" 
+          textColor="primary" 
+          variant="scrollable" 
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          sx={{
+            '& .MuiTab-root': {
+              minWidth: { xs: 80, sm: 120 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              py: { xs: 1.5, sm: 2 }
+            }
+          }}
+        >
           <Tab label="Audit Logs" />
           <Tab label="Conflicts" />
           <Tab label="Users" />
@@ -351,7 +366,7 @@ const AdminDashboard = () => {
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2, alignItems: { xs: 'stretch', sm: 'flex-start' } }}>
             <Box sx={{ flexGrow: 1 }}>
               <TextField
                 fullWidth
@@ -366,9 +381,10 @@ const AdminDashboard = () => {
                     </InputAdornment>
                   ),
                 }}
+                size="small"
               />
             </Box>
-            <Button variant="contained" color="error" onClick={() => setOpenClearLogs(true)} sx={{ height: 56 }}>
+            <Button variant="contained" color="error" onClick={() => setOpenClearLogs(true)} sx={{ height: { xs: 40, sm: 56 }, minWidth: { xs: '100%', sm: 'auto' } }}>
               Clear Logs
             </Button>
           </Box>
@@ -434,7 +450,7 @@ const AdminDashboard = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          <Box sx={{ maxWidth: 400, mx: 'auto', textAlign: 'center', py: 4 }}>
+          <Box sx={{ maxWidth: 400, mx: 'auto', textAlign: 'center', py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 0 } }}>
             <Typography variant="h6" gutterBottom>Generate New Invite Code</Typography>
             <TextField
               select
@@ -507,9 +523,9 @@ const AdminDashboard = () => {
         </TabPanel>
       </Paper>
 
-      <Dialog open={!!editUser} onClose={() => setEditUser(null)}>
-        <DialogTitle>Edit User Domains</DialogTitle>
-        <DialogContent>
+      <Dialog open={!!editUser} onClose={() => setEditUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { m: { xs: 2, sm: 3 } } }}>
+        <DialogTitle sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>Edit User Domains</DialogTitle>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography variant="body2" sx={{ mb: 2 }}>
             Enter comma-separated domains (e.g., "example.com, test.com"). Leave empty to use global defaults.
           </Typography>
@@ -529,9 +545,9 @@ const AdminDashboard = () => {
       </Dialog>
 
       {/* Clear Logs Dialog */}
-      <Dialog open={openClearLogs} onClose={() => setOpenClearLogs(false)}>
-        <DialogTitle>Clear Audit Logs</DialogTitle>
-        <DialogContent>
+      <Dialog open={openClearLogs} onClose={() => setOpenClearLogs(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { m: { xs: 2, sm: 3 } } }}>
+        <DialogTitle sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>Clear Audit Logs</DialogTitle>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography gutterBottom>
             Select retention period. Logs older than this will be permanently deleted.
           </Typography>

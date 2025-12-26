@@ -23,17 +23,30 @@ const TitleBar = () => {
   return (
     <>
       {token && (
-        <Box sx={{ position: 'absolute', top: 20, right: 20, zIndex: 1000, display: 'flex', gap: 2 }}>
+        <Box sx={{ 
+          position: 'absolute', 
+          top: { xs: 10, sm: 20 }, 
+          right: { xs: 10, sm: 20 }, 
+          zIndex: 1000, 
+          display: 'flex', 
+          gap: { xs: 1, sm: 2 },
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end'
+        }}>
           {user && user.role === 'admin' && (
             <Tooltip title="Admin Dashboard">
               <Button
                 variant="contained"
                 color="secondary"
-                startIcon={<AdminPanelSettingsIcon />}
                 onClick={() => navigate('/admin')}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 2,
+                  minWidth: { xs: 'auto', sm: 'auto' },
+                  px: { xs: 1, sm: 2 }
+                }}
               >
-                Admin
+                <AdminPanelSettingsIcon sx={{ mr: { xs: 0, sm: 1 } }} />
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Admin</Box>
               </Button>
             </Tooltip>
           )}
@@ -42,14 +55,16 @@ const TitleBar = () => {
               onClick={handleLogout}
               variant="outlined"
               color="inherit"
-              startIcon={<LogoutIcon />}
               sx={{ 
                 borderRadius: 2,
                 backdropFilter: 'blur(5px)',
-                background: 'rgba(255,255,255,0.1)'
+                background: 'rgba(255,255,255,0.1)',
+                minWidth: { xs: 'auto', sm: 'auto' },
+                px: { xs: 1, sm: 2 }
               }}
             >
-              Logout
+              <LogoutIcon sx={{ mr: { xs: 0, sm: 1 } }} />
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Logout</Box>
             </Button>
           </Tooltip>
         </Box>
