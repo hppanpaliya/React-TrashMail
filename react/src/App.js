@@ -20,27 +20,27 @@ import InboxList from "./components/pages/InboxList";
 
 const PrivateRoute = ({ children }) => {
   const { token, loading } = useAuth();
-  
+
   if (loading) {
     return <div>Loading...</div>;
   }
-  
+
   return token ? children : <Navigate to="/login" />;
 };
 
 const AdminRoute = ({ children }) => {
   const { token, user, loading } = useAuth();
-  
+
   if (loading) {
     return <div>Loading...</div>;
   }
-  
+
   if (!token) return <Navigate to="/login" />;
-  
-  if (user && user.role !== 'admin') {
+
+  if (user && user.role !== "admin") {
     return <Navigate to="/" />;
   }
-  
+
   return children;
 };
 
@@ -83,20 +83,62 @@ const AppContent = () => {
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route 
-                  path="/admin" 
+                <Route
+                  path="/admin"
                   element={
                     <AdminRoute>
                       <AdminDashboard />
                     </AdminRoute>
-                  } 
+                  }
                 />
-                <Route path="/" element={<PrivateRoute><Main /></PrivateRoute>} />
-                <Route path="/generate" element={<PrivateRoute><Generate /></PrivateRoute>} />
-                <Route path="/inbox" element={<PrivateRoute><Inbox /></PrivateRoute>} />
-                <Route path="/inbox/:emailId/:email_id" element={<PrivateRoute><InboxEmail /></PrivateRoute>} />
-                <Route path="/inbox/:emailId/" element={<PrivateRoute><InboxList /></PrivateRoute>} />
-                <Route path="/all" element={<PrivateRoute><AllEmailList /></PrivateRoute>} />
+                <Route
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <Main />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/generate"
+                  element={
+                    <PrivateRoute>
+                      <Generate />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/inbox"
+                  element={
+                    <PrivateRoute>
+                      <Inbox />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/inbox/:emailId/:email_id"
+                  element={
+                    <PrivateRoute>
+                      <InboxEmail />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/inbox/:emailId/"
+                  element={
+                    <PrivateRoute>
+                      <InboxList />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/all"
+                  element={
+                    <PrivateRoute>
+                      <AllEmailList />
+                    </PrivateRoute>
+                  }
+                />
               </Routes>
             </AnimatePresence>
           </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -10,8 +10,8 @@ import {
   Paper,
   TableSortLabel,
   CircularProgress,
-  Typography
-} from '@mui/material';
+  Typography,
+} from "@mui/material";
 
 const DataTable = ({
   columns,
@@ -25,7 +25,7 @@ const DataTable = ({
   sortOrder,
   onSort,
   loading,
-  noDataMessage = "No records found"
+  noDataMessage = "No records found",
 }) => {
   const handleChangePage = (event, newPage) => {
     onPageChange(newPage);
@@ -41,8 +41,8 @@ const DataTable = ({
   };
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: { xs: 'calc(100vh - 300px)', sm: 'calc(100vh - 200px)' } }}>
+    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+      <TableContainer sx={{ maxHeight: { xs: "calc(100vh - 300px)", sm: "calc(100vh - 200px)" } }}>
         <Table stickyHeader aria-label="sticky table" size="small">
           <TableHead>
             <TableRow>
@@ -52,16 +52,16 @@ const DataTable = ({
                   align={column.align}
                   style={{ minWidth: column.minWidth }}
                   sortDirection={sortBy === column.id ? sortOrder : false}
-                  sx={{ 
-                    whiteSpace: 'nowrap',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    py: { xs: 1, sm: 1.5 }
+                  sx={{
+                    whiteSpace: "nowrap",
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    py: { xs: 1, sm: 1.5 },
                   }}
                 >
                   {column.sortable ? (
                     <TableSortLabel
                       active={sortBy === column.id}
-                      direction={sortBy === column.id ? sortOrder : 'asc'}
+                      direction={sortBy === column.id ? sortOrder : "asc"}
                       onClick={createSortHandler(column.id)}
                     >
                       {column.label}
@@ -83,7 +83,7 @@ const DataTable = ({
             ) : data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
                     {noDataMessage}
                   </Typography>
                 </TableCell>
@@ -95,14 +95,14 @@ const DataTable = ({
                     {columns.map((column) => {
                       const value = row[column.id];
                       return (
-                        <TableCell 
-                          key={column.id} 
+                        <TableCell
+                          key={column.id}
                           align={column.align}
                           sx={{
-                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
                             py: { xs: 0.75, sm: 1.5 },
                             px: { xs: 1, sm: 2 },
-                            whiteSpace: { xs: 'nowrap', sm: 'normal' }
+                            whiteSpace: { xs: "nowrap", sm: "normal" },
                           }}
                         >
                           {column.format ? column.format(value, row) : value}
@@ -125,17 +125,17 @@ const DataTable = ({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         sx={{
-          '& .MuiTablePagination-toolbar': {
+          "& .MuiTablePagination-toolbar": {
             minHeight: { xs: 48, sm: 64 },
-            fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
           },
-          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-            fontSize: { xs: '0.75rem', sm: '0.875rem' },
-            mb: 0
+          "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": {
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            mb: 0,
           },
-          '& .MuiTablePagination-select': {
-            fontSize: { xs: '0.75rem', sm: '0.875rem' }
-          }
+          "& .MuiTablePagination-select": {
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+          },
         }}
       />
     </Paper>

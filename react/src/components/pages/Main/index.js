@@ -9,7 +9,6 @@ const Main = () => {
   const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
 
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <Grid container spacing={2} sx={{ height: "100%" }}>

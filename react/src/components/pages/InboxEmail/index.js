@@ -28,14 +28,13 @@ const InboxEmail = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-
   let headers;
 
   useEffect(() => {
     const fetchEmailData = async () => {
       try {
         const response = await axios.get(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_id}`, {
-          headers: { 'x-auth-token': token }
+          headers: { "x-auth-token": token },
         });
         setEmailData(response.data[0]);
         console.log(response.data[0]);
@@ -81,7 +80,7 @@ const InboxEmail = () => {
   const handleDeleteEmail = async () => {
     try {
       await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_id}`, {
-        headers: { 'x-auth-token': token }
+        headers: { "x-auth-token": token },
       });
       navigate(`/inbox/${emailId}`);
     } catch (error) {
@@ -132,11 +131,7 @@ const InboxEmail = () => {
               {/* Header Section with Back Button */}
               <motion.div variants={childVariants}>
                 <Box sx={{ p: 2, pb: 0 }}>
-                  <IconButton 
-                    onClick={() => navigate(`/inbox/${emailId}`)}
-                    sx={{ mb: 1 }}
-                    size="small"
-                  >
+                  <IconButton onClick={() => navigate(`/inbox/${emailId}`)} sx={{ mb: 1 }} size="small">
                     <ArrowBackIcon />
                   </IconButton>
                 </Box>
@@ -163,10 +158,18 @@ const InboxEmail = () => {
               <motion.div variants={childVariants}>
                 <Box sx={{ px: { xs: 2, sm: 2 }, pb: 2 }}>
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: { xs: "0.8rem", sm: "0.875rem" }, wordBreak: "break-word" }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5, fontSize: { xs: "0.8rem", sm: "0.875rem" }, wordBreak: "break-word" }}
+                    >
                       <strong>From:</strong> {emailData?.from.text || "No From"}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: { xs: "0.8rem", sm: "0.875rem" }, wordBreak: "break-word" }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5, fontSize: { xs: "0.8rem", sm: "0.875rem" }, wordBreak: "break-word" }}
+                    >
                       <strong>To:</strong> {emailData?.to.text || "No To"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
@@ -180,44 +183,28 @@ const InboxEmail = () => {
 
               {/* Action Toolbar */}
               <motion.div variants={childVariants}>
-                <Box 
-                  sx={{ 
-                    px: { xs: 1, sm: 2 }, 
+                <Box
+                  sx={{
+                    px: { xs: 1, sm: 2 },
                     py: 1.5,
                     display: "flex",
                     flexDirection: isMobile ? "column" : "row",
                     justifyContent: "space-between",
                     alignItems: isMobile ? "stretch" : "center",
                     gap: isMobile ? 1.5 : 2,
-                    bgcolor: darkMode ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)"
+                    bgcolor: darkMode ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
                   }}
                 >
                   {/* View Mode Buttons */}
-                  <ButtonGroup 
-                    variant="outlined" 
-                    size={isMobile ? "small" : "medium"}
-                    fullWidth={isMobile}
-                    sx={{ flexShrink: 0 }}
-                  >
-                    <Button 
-                      variant={viewMode === "html" ? "contained" : "outlined"} 
-                      onClick={() => setViewMode("html")}
-                    >
+                  <ButtonGroup variant="outlined" size={isMobile ? "small" : "medium"} fullWidth={isMobile} sx={{ flexShrink: 0 }}>
+                    <Button variant={viewMode === "html" ? "contained" : "outlined"} onClick={() => setViewMode("html")}>
                       HTML
                     </Button>
-                    <Button 
-                      variant={viewMode === "text" ? "contained" : "outlined"} 
-                      onClick={() => setViewMode("text")}
-                      disabled={!emailData?.text}
-                    >
+                    <Button variant={viewMode === "text" ? "contained" : "outlined"} onClick={() => setViewMode("text")} disabled={!emailData?.text}>
                       Text
                     </Button>
                     {emailData?.htmlOriginal && (
-                      <Button 
-                        variant={viewMode === "original" ? "contained" : "outlined"} 
-                        onClick={() => setViewMode("original")}
-                        color="warning"
-                      >
+                      <Button variant={viewMode === "original" ? "contained" : "outlined"} onClick={() => setViewMode("original")} color="warning">
                         Original
                       </Button>
                     )}
@@ -226,17 +213,13 @@ const InboxEmail = () => {
                   {/* Action Buttons */}
                   <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                     <Tooltip title="Security Information">
-                      <IconButton 
-                        onClick={handleTooltip}
-                        size={isMobile ? "small" : "medium"}
-                        color={isTooltipOpen ? "primary" : "default"}
-                      >
+                      <IconButton onClick={handleTooltip} size={isMobile ? "small" : "medium"} color={isTooltipOpen ? "primary" : "default"}>
                         <InfoIcon />
                       </IconButton>
                     </Tooltip>
-                    <Button 
-                      variant="outlined" 
-                      color="error" 
+                    <Button
+                      variant="outlined"
+                      color="error"
                       size={isMobile ? "small" : "medium"}
                       startIcon={<DeleteIcon />}
                       onClick={() => setOpenDeleteModal(true)}
@@ -250,7 +233,6 @@ const InboxEmail = () => {
 
               <Divider />
 
-
               {/* Security Headers (Collapsible) */}
               {isTooltipOpen && (
                 <motion.div variants={childVariants}>
@@ -258,9 +240,7 @@ const InboxEmail = () => {
                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                       Email Headers
                     </Typography>
-                    <Box sx={{ maxHeight: "200px", overflow: "auto" }}>
-                      {headers}
-                    </Box>
+                    <Box sx={{ maxHeight: "200px", overflow: "auto" }}>{headers}</Box>
                   </Box>
                   <Divider />
                 </motion.div>
@@ -270,20 +250,33 @@ const InboxEmail = () => {
               <motion.div variants={childVariants}>
                 <Box sx={{ p: { xs: 1.5, sm: 2 }, minHeight: "200px" }}>
                   {viewMode === "text" ? (
-                    <Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", maxHeight: "600px", overflow: "auto", borderRadius: 1 }}>
-                      <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word", fontFamily: "monospace", margin: 0, fontSize: isMobile ? "12px" : "14px" }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: { xs: 1.5, sm: 2 },
+                        bgcolor: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                        maxHeight: "600px",
+                        overflow: "auto",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <pre
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          wordWrap: "break-word",
+                          fontFamily: "monospace",
+                          margin: 0,
+                          fontSize: isMobile ? "12px" : "14px",
+                        }}
+                      >
                         {emailData?.text || "No Text Content"}
                       </pre>
                     </Paper>
                   ) : (
                     <Box sx={{ maxWidth: "100%", overflowX: "auto" }}>
-                      <Letter 
-                        html={
-                          viewMode === "original" 
-                            ? (emailData?.htmlOriginal || emailData?.html) 
-                            : (emailData?.html || "<p>No Message</p>")
-                        } 
-                        text={emailData?.text || "No Message"} 
+                      <Letter
+                        html={viewMode === "original" ? emailData?.htmlOriginal || emailData?.html : emailData?.html || "<p>No Message</p>"}
+                        text={emailData?.text || "No Message"}
                       />
                     </Box>
                   )}
@@ -296,7 +289,10 @@ const InboxEmail = () => {
                   <Divider />
                   <motion.div variants={childVariants}>
                     <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 2 }}>
-                      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 1, fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 1.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 1, fontSize: { xs: "0.875rem", sm: "1rem" } }}
+                      >
                         <AttachFileIcon fontSize="small" />
                         Attachments ({emailAttachments.length})
                       </Typography>

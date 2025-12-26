@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Grid, Typography, Tooltip, TextField, Box, MenuItem, Select, FormControl, InputLabel, IconButton, InputAdornment, Pagination } from "@mui/material";
+import {
+  Grid,
+  Typography,
+  Tooltip,
+  TextField,
+  Box,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  IconButton,
+  InputAdornment,
+  Pagination,
+} from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ButtonSection from "../../common/ButtonSection";
@@ -22,19 +35,17 @@ const EmailList = () => {
   const { darkMode } = useContext(ThemeContext);
   const { token } = useAuth();
   const staggerDuration = 0.05;
-  
+
   // Search, Filter, Sort states
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRead, setFilterRead] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
-  
+
   // Pagination states
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 50;
-
-
 
   const navigate = useNavigate();
 
@@ -46,26 +57,26 @@ const EmailList = () => {
       try {
         window.localStorage.setItem("lastEmailId", emailId);
         const response = await axios.get(`${env.REACT_APP_API_URL}/api/emails-list/${emailId}?page=${page}&limit=${itemsPerPage}`, {
-          headers: { 'x-auth-token': token }
+          headers: { "x-auth-token": token },
         });
         setEmailData(response.data);
-        
+
         // Get total pages from response headers
-        const totalCountFromHeader = parseInt(response.headers['x-total-count']) || 0;
-        const totalPagesFromHeader = parseInt(response.headers['x-total-pages']) || 1;
+        const totalCountFromHeader = parseInt(response.headers["x-total-count"]) || 0;
+        const totalPagesFromHeader = parseInt(response.headers["x-total-pages"]) || 1;
         setTotalPages(totalPagesFromHeader);
         setTotalCount(totalCountFromHeader);
-        
-        console.log('Inbox Pagination Info:', {
+
+        console.log("Inbox Pagination Info:", {
           emailId,
           currentPage: page,
           itemsPerPage,
           totalCount: totalCountFromHeader,
           totalPages: totalPagesFromHeader,
           emailsReturned: response.data.length,
-          headers: response.headers
+          headers: response.headers,
         });
-        
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching initial email data:", error);
@@ -115,7 +126,7 @@ const EmailList = () => {
   const handleDeleteEmail = async (email_Id) => {
     try {
       await axios.delete(`${env.REACT_APP_API_URL}/api/email/${emailId}/${email_Id}`, {
-        headers: { 'x-auth-token': token }
+        headers: { "x-auth-token": token },
       });
       setEmailData((prevEmails) => prevEmails.filter((email) => email._id !== email_Id));
     } catch (error) {
@@ -131,7 +142,7 @@ const EmailList = () => {
 
   const handlePageChange = (event, value) => {
     setPage(value);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Filter and sort emails
@@ -227,9 +238,9 @@ const EmailList = () => {
                     ),
                   }}
                   sx={{
-                    '& .MuiInputBase-input': {
-                      fontSize: { xs: '0.875rem', sm: '1rem' }
-                    }
+                    "& .MuiInputBase-input": {
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    },
                   }}
                 />
               </Grid>
@@ -237,20 +248,26 @@ const EmailList = () => {
               {/* Filter by Read Status */}
               <Grid item xs={6} sm={3} md={3}>
                 <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Filter</InputLabel>
+                  <InputLabel sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>Filter</InputLabel>
                   <Select
                     value={filterRead}
                     label="Filter"
                     onChange={(e) => setFilterRead(e.target.value)}
                     sx={{
-                      '& .MuiSelect-select': {
-                        fontSize: { xs: '0.875rem', sm: '1rem' }
-                      }
+                      "& .MuiSelect-select": {
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
+                      },
                     }}
                   >
-                    <MenuItem value="all" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>All Emails</MenuItem>
-                    <MenuItem value="read" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Read</MenuItem>
-                    <MenuItem value="unread" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Unread</MenuItem>
+                    <MenuItem value="all" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      All Emails
+                    </MenuItem>
+                    <MenuItem value="read" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      Read
+                    </MenuItem>
+                    <MenuItem value="unread" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      Unread
+                    </MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -258,23 +275,35 @@ const EmailList = () => {
               {/* Sort By */}
               <Grid item xs={6} sm={3} md={3}>
                 <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Sort By</InputLabel>
+                  <InputLabel sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>Sort By</InputLabel>
                   <Select
                     value={sortBy}
                     label="Sort By"
                     onChange={(e) => setSortBy(e.target.value)}
                     sx={{
-                      '& .MuiSelect-select': {
-                        fontSize: { xs: '0.875rem', sm: '1rem' }
-                      }
+                      "& .MuiSelect-select": {
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
+                      },
                     }}
                   >
-                    <MenuItem value="date-desc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Newest First</MenuItem>
-                    <MenuItem value="date-asc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Oldest First</MenuItem>
-                    <MenuItem value="subject-asc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Subject (A-Z)</MenuItem>
-                    <MenuItem value="subject-desc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Subject (Z-A)</MenuItem>
-                    <MenuItem value="from-asc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>From (A-Z)</MenuItem>
-                    <MenuItem value="from-desc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>From (Z-A)</MenuItem>
+                    <MenuItem value="date-desc" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      Newest First
+                    </MenuItem>
+                    <MenuItem value="date-asc" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      Oldest First
+                    </MenuItem>
+                    <MenuItem value="subject-asc" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      Subject (A-Z)
+                    </MenuItem>
+                    <MenuItem value="subject-desc" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      Subject (Z-A)
+                    </MenuItem>
+                    <MenuItem value="from-asc" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      From (A-Z)
+                    </MenuItem>
+                    <MenuItem value="from-desc" sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}>
+                      From (Z-A)
+                    </MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -284,22 +313,22 @@ const EmailList = () => {
                 <Tooltip title="Clear all filters">
                   <IconButton
                     onClick={handleClearFilters}
-                    sx={{ 
-                      width: '100%',
-                      border: '1px solid',
-                      borderColor: darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.23)',
+                    sx={{
+                      width: "100%",
+                      border: "1px solid",
+                      borderColor: darkMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.23)",
                       borderRadius: 1,
-                      py: { xs: 0.5, sm: 1 }
+                      py: { xs: 0.5, sm: 1 },
                     }}
                   >
-                    <ClearOutlined sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
+                    <ClearOutlined sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
                   </IconButton>
                 </Tooltip>
               </Grid>
             </Grid>
 
             {/* Results count */}
-            <Typography variant="body2" sx={{ mt: 1, color: darkMode ? "#aaa" : "#666", fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+            <Typography variant="body2" sx={{ mt: 1, color: darkMode ? "#aaa" : "#666", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
               Showing {displayEmails.length} of {totalCount} total emails (Page {page} of {totalPages})
             </Typography>
           </Box>
@@ -320,22 +349,22 @@ const EmailList = () => {
           ) : (
             <NoEmailDisplay loading={loading} isMobile={isMobile} />
           )}
-          
+
           {/* Pagination */}
           {displayEmails.length > 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 4 }}>
-              <Pagination 
-                count={totalPages} 
-                page={page} 
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 4 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
                 onChange={handlePageChange}
                 color="primary"
                 size={isMobile ? "small" : "medium"}
-                showFirstButton 
+                showFirstButton
                 showLastButton
               />
             </Box>
           )}
-          
+
           <ConfirmModal
             open={openModal}
             setOpen={setOpenModal}

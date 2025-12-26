@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
 import { Box, Typography, Grid, Button, Tooltip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import LogoutIcon from '@mui/icons-material/Logout';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LogoutIcon from "@mui/icons-material/Logout";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 import { ThemeContext } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -17,54 +17,60 @@ const TitleBar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
     <>
       {token && (
-        <Box sx={{ 
-          position: 'absolute', 
-          top: { xs: 10, sm: 20 }, 
-          right: { xs: 10, sm: 20 }, 
-          zIndex: 1000, 
-          display: 'flex', 
-          gap: { xs: 1, sm: 2 },
-          flexWrap: 'wrap',
-          justifyContent: 'flex-end'
-        }}>
-          {user && user.role === 'admin' && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: { xs: 10, sm: 20 },
+            right: { xs: 10, sm: 20 },
+            zIndex: 1000,
+            display: "flex",
+            gap: { xs: 1, sm: 2 },
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+          }}
+        >
+          {user && user.role === "admin" && (
             <Tooltip title="Admin Dashboard">
               <Button
                 variant="contained"
                 color="secondary"
-                onClick={() => navigate('/admin')}
-                sx={{ 
+                onClick={() => navigate("/admin")}
+                sx={{
                   borderRadius: 2,
-                  minWidth: { xs: 'auto', sm: 'auto' },
-                  px: { xs: 1, sm: 2 }
+                  minWidth: { xs: "auto", sm: "auto" },
+                  px: { xs: 1, sm: 2 },
                 }}
               >
                 <AdminPanelSettingsIcon sx={{ mr: { xs: 0, sm: 1 } }} />
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Admin</Box>
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  Admin
+                </Box>
               </Button>
             </Tooltip>
           )}
           <Tooltip title="Logout">
-            <Button 
+            <Button
               onClick={handleLogout}
               variant="outlined"
               color="inherit"
-              sx={{ 
+              sx={{
                 borderRadius: 2,
-                backdropFilter: 'blur(5px)',
-                background: 'rgba(255,255,255,0.1)',
-                minWidth: { xs: 'auto', sm: 'auto' },
-                px: { xs: 1, sm: 2 }
+                backdropFilter: "blur(5px)",
+                background: "rgba(255,255,255,0.1)",
+                minWidth: { xs: "auto", sm: "auto" },
+                px: { xs: 1, sm: 2 },
               }}
             >
               <LogoutIcon sx={{ mr: { xs: 0, sm: 1 } }} />
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Logout</Box>
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                Logout
+              </Box>
             </Button>
           </Tooltip>
         </Box>

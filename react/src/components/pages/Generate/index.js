@@ -18,7 +18,6 @@ const Generate = () => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
-      
     };
 
     handleResize();

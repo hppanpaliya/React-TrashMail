@@ -1,44 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Paper,
-  InputAdornment,
-  IconButton
-} from '@mui/material';
-import { motion } from 'framer-motion';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { Container, Box, Typography, TextField, Button, Alert, Paper, InputAdornment, IconButton } from "@mui/material";
+import { motion } from "framer-motion";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
 const Signup = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { signup, user, loading } = useAuth();
   const navigate = useNavigate();
 
   // Redirect to home if user is already logged in
   useEffect(() => {
     if (!loading && user) {
-      navigate('/');
+      navigate("/");
     }
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     const result = await signup(username, password, inviteCode);
     if (result.success) {
-      navigate('/');
+      navigate("/");
     } else {
       setError(result.message);
     }
@@ -46,48 +36,43 @@ const Signup = () => {
 
   return (
     <Container component="main" maxWidth="xs" sx={{ px: { xs: 2, sm: 3 } }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <Box
           sx={{
             marginTop: { xs: 4, sm: 8 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
           }}
         >
-          <Paper 
-            elevation={6} 
-            sx={{ 
-              p: { xs: 2, sm: 4 }, 
-              width: '100%', 
+          <Paper
+            elevation={6}
+            sx={{
+              p: { xs: 2, sm: 4 },
+              width: "100%",
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
+              background: "rgba(255, 255, 255, 0.05)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
-              <Box sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: '50%', bgcolor: 'secondary.main', mb: { xs: 1.5, sm: 2 } }}>
-                <PersonAddIcon sx={{ color: 'white', fontSize: { xs: 24, sm: 30 } }} />
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: { xs: 2, sm: 3 } }}>
+              <Box sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: "50%", bgcolor: "secondary.main", mb: { xs: 1.5, sm: 2 } }}>
+                <PersonAddIcon sx={{ color: "white", fontSize: { xs: 24, sm: 30 } }} />
               </Box>
-              <Typography component="h1" variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+              <Typography component="h1" variant="h5" fontWeight="bold" sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
                 Create Account
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
                 Join TrashMail with your invite code
               </Typography>
             </Box>
 
             {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-              >
-                <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                  {error}
+                </Alert>
               </motion.div>
             )}
 
@@ -105,7 +90,7 @@ const Signup = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 sx={{ mb: 2 }}
                 InputProps={{
-                  sx: { borderRadius: 2 }
+                  sx: { borderRadius: 2 },
                 }}
               />
               <TextField
@@ -114,7 +99,7 @@ const Signup = () => {
                 fullWidth
                 name="password"
                 label="Password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 id="password"
                 autoComplete="new-password"
                 value={password}
@@ -123,11 +108,7 @@ const Signup = () => {
                   sx: { borderRadius: 2 },
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
+                      <IconButton aria-label="toggle password visibility" onClick={() => setShowPassword(!showPassword)} edge="end">
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
@@ -145,7 +126,7 @@ const Signup = () => {
                 onChange={(e) => setInviteCode(e.target.value)}
                 sx={{ mb: 2 }}
                 InputProps={{
-                  sx: { borderRadius: 2 }
+                  sx: { borderRadius: 2 },
                 }}
               />
               <Button
@@ -154,13 +135,13 @@ const Signup = () => {
                 variant="contained"
                 color="secondary"
                 size="large"
-                sx={{ mt: 3, mb: 2, borderRadius: 2, py: 1.5, fontSize: '1rem' }}
+                sx={{ mt: 3, mb: 2, borderRadius: 2, py: 1.5, fontSize: "1rem" }}
               >
                 Sign Up
               </Button>
-              <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Link to="/login" style={{ textDecoration: 'none' }}>
-                  <Typography variant="body2" color="primary" sx={{ '&:hover': { textDecoration: 'underline' } }}>
+              <Box sx={{ textAlign: "center", mt: 2 }}>
+                <Link to="/login" style={{ textDecoration: "none" }}>
+                  <Typography variant="body2" color="primary" sx={{ "&:hover": { textDecoration: "underline" } }}>
                     Already have an account? Sign In
                   </Typography>
                 </Link>
