@@ -44,7 +44,7 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="xs" sx={{ px: { xs: 2, sm: 3 } }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -52,7 +52,7 @@ const Login = () => {
       >
         <Box
           sx={{
-            marginTop: 8,
+            marginTop: { xs: 4, sm: 8 },
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -61,7 +61,7 @@ const Login = () => {
           <Paper 
             elevation={6} 
             sx={{ 
-              p: 4, 
+              p: { xs: 2, sm: 4 }, 
               width: '100%', 
               borderRadius: 4,
               background: 'rgba(255, 255, 255, 0.05)',
@@ -69,14 +69,14 @@ const Login = () => {
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-              <Box sx={{ p: 2, borderRadius: '50%', bgcolor: 'primary.main', mb: 2 }}>
-                <LoginIcon sx={{ color: 'white', fontSize: 30 }} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
+              <Box sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: '50%', bgcolor: 'primary.main', mb: { xs: 1.5, sm: 2 } }}>
+                <LoginIcon sx={{ color: 'white', fontSize: { xs: 24, sm: 30 } }} />
               </Box>
-              <Typography component="h1" variant="h5" fontWeight="bold">
+              <Typography component="h1" variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 Welcome Back
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                 Sign in to access your disposable emails
               </Typography>
             </Box>

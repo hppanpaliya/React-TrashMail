@@ -36,9 +36,10 @@ const Main = () => {
                 variant="h2"
                 sx={{
                   fontFamily: "Abhaya Libre SemiBold",
-                  fontSize: "1.3rem",
+                  fontSize: { xs: "1rem", sm: "1.1rem", md: "1.3rem" },
                   color: darkMode ? "#fff" : "#000",
                   opacity: "0.6",
+                  px: { xs: 2, sm: 0 },
                 }}
               >
                 The Ultimate Solution for Disposable Email Addresses
@@ -53,12 +54,13 @@ const Main = () => {
                 sx={{
                   margin: "0",
                   boxSizing: "border-box",
-                  fontSize: isMobile ? "2.5rem" : "46.5pt",
+                  fontSize: { xs: "2rem", sm: "2.5rem", md: "46.5pt" },
                   fontFamily: "Abril Fatface",
                   color: darkMode ? "#fff" : "#000",
-                  letterSpacing: "-1.24px",
+                  letterSpacing: { xs: "-0.5px", sm: "-1.24px" },
                   textOverflow: "ellipsis",
                   overflow: "hidden",
+                  px: { xs: 2, sm: 0 },
                 }}
               >
                 Welcome
@@ -72,10 +74,12 @@ const Main = () => {
                 variant="h2"
                 sx={{
                   fontFamily: "Abhaya Libre SemiBold",
-                  fontSize: "1.3rem",
+                  fontSize: { xs: "0.9rem", sm: "1.1rem", md: "1.3rem" },
                   color: darkMode ? "#fff" : "#000",
                   opacity: "0.6",
                   maxWidth: isMobile ? "100%" : "36.5%",
+                  px: { xs: 2, sm: 0 },
+                  lineHeight: { xs: 1.4, sm: 1.5 },
                 }}
               >
                 TrashMail is your go-to platform for creating temporary and disposable email addresses. With our cutting-edge technology, you can

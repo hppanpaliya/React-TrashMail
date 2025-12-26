@@ -16,11 +16,11 @@ const ButtonSection = () => {
 
   const buttonStyles = {
     borderColor: "#000",
-    fontSize: "1.3rem",
-    paddingTop: "1.35rem",
-    paddingBottom: "1.35rem",
-    paddingLeft: "2rem",
-    paddingRight: "2rem",
+    fontSize: { xs: "0.9rem", sm: "1.1rem", md: "1.3rem" },
+    paddingTop: { xs: "0.75rem", sm: "1rem", md: "1.35rem" },
+    paddingBottom: { xs: "0.75rem", sm: "1rem", md: "1.35rem" },
+    paddingLeft: { xs: "1rem", sm: "1.5rem", md: "2rem" },
+    paddingRight: { xs: "1rem", sm: "1.5rem", md: "2rem" },
     borderRadius: "10px",
     width: "70%",
     height: "70%",
@@ -32,14 +32,16 @@ const ButtonSection = () => {
 
   const buttonStylesMobile = {
     borderColor: "#000",
-    fontSize: "1.3rem",
-    paddingTop: "1.35rem",
-    paddingBottom: "1.35rem",
-    paddingLeft: "2rem",
-    paddingRight: "2rem",
+    fontSize: "0.9rem",
+    paddingTop: "0.75rem",
+    paddingBottom: "0.75rem",
+    paddingLeft: "0.5rem",
+    paddingRight: "0.5rem",
     borderRadius: "10px",
-    width: "70%",
-    height: "70%",
+    width: "90%",
+    maxWidth: "120px",
+    height: "auto",
+    minHeight: "50px",
     textTransform: "capitalize",
     fontFamily: "Actor",
     fontWeight: "400",
@@ -78,12 +80,14 @@ const ButtonSection = () => {
       item
       md={2}
       sx={{
-        marginTop: isMobile ? "0vh" : "12vh",
+        marginTop: isMobile ? "1vh" : "12vh",
         display: isMobile ? "flex" : "initial",
         flexDirection: isMobile ? "row" : "column",
-        justifyContent: isMobile ? "center" : "initial",
+        justifyContent: isMobile ? "space-around" : "initial",
         alignItems: isMobile ? "center" : "initial",
         width: isMobile ? "100%" : "initial",
+        px: { xs: 1, sm: 0 },
+        gap: isMobile ? 1 : 0,
       }}
     >
       <Box
@@ -91,8 +95,9 @@ const ButtonSection = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          height: "12vh",
+          height: isMobile ? "auto" : "12vh",
           width: isMobile ? "33%" : "100%",
+          py: isMobile ? 1 : 0,
         }}
       >
         <Button
@@ -109,8 +114,9 @@ const ButtonSection = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          height: "12vh",
+          height: isMobile ? "auto" : "12vh",
           width: isMobile ? "33%" : "100%",
+          py: isMobile ? 1 : 0,
         }}
       >
         <Button
@@ -127,8 +133,9 @@ const ButtonSection = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          height: "12vh",
+          height: isMobile ? "auto" : "12vh",
           width: isMobile ? "33%" : "100%",
+          py: isMobile ? 1 : 0,
         }}
       >
         <Button

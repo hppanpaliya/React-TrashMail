@@ -63,20 +63,20 @@ const Generate = () => {
 
   const inputStyles = {
     marginRight: isMobile ? 0 : "2rem",
-    width: isMobile ? width - 100 : "80%",
+    width: isMobile ? "100%" : "80%",
     marginBottom: isMobile ? "1rem" : 0,
   };
 
   const buttonStyles = {
     color: darkMode ? "#FFF" : "#000",
     borderColor: "#000",
-    fontSize: "1rem",
-    paddingTop: isMobile ? "1rem" : "1.35rem",
-    paddingBottom: isMobile ? "1rem" : "1.35rem",
+    fontSize: { xs: "0.875rem", sm: "1rem" },
+    paddingTop: isMobile ? "0.875rem" : "1.35rem",
+    paddingBottom: isMobile ? "0.875rem" : "1.35rem",
     paddingLeft: isMobile ? "1rem" : "3rem",
     paddingRight: isMobile ? "1rem" : "3rem",
     borderRadius: "10px",
-    width: isMobile ? width - 100 : "70%",
+    width: isMobile ? "100%" : "70%",
     maxHeight: "3.6rem",
     textTransform: "capitalize",
     fontFamily: "Actor",
@@ -88,16 +88,17 @@ const Generate = () => {
     <>
       <Grid container spacing={2} sx={{ height: "100%" }}>
         <ButtonSection />
-        <Grid item xs={12} md={10} sx={{ marginTop: "6vh" }}>
+        <Grid item xs={12} md={10} sx={{ marginTop: { xs: "2vh", sm: "6vh" } }}>
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               marginLeft: isMobile ? "0" : "10%",
-              marginTop: "5%",
+              marginTop: { xs: "2%", sm: "5%" },
               flexDirection: isMobile ? "column" : "row",
               alignContent: "center",
               textAlign: "center",
+              px: { xs: 2, sm: 0 },
             }}
           >
             <Grid item xs={12} md={5}>

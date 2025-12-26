@@ -178,7 +178,7 @@ const EmailList = () => {
           </Tooltip>
 
           {/* Search, Filter, Sort Controls */}
-          <Box sx={{ mb: 3, mt: 2 }}>
+          <Box sx={{ mb: 3, mt: 2, px: { xs: 1, sm: 0 } }}>
             <Grid container spacing={2} alignItems="center">
               {/* Search */}
               <Grid item xs={12} sm={6} md={4}>
@@ -195,21 +195,31 @@ const EmailList = () => {
                       </InputAdornment>
                     ),
                   }}
+                  sx={{
+                    '& .MuiInputBase-input': {
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                    }
+                  }}
                 />
               </Grid>
 
               {/* Filter by Read Status */}
               <Grid item xs={6} sm={3} md={3}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Filter</InputLabel>
+                  <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Filter</InputLabel>
                   <Select
                     value={filterRead}
                     label="Filter"
                     onChange={(e) => setFilterRead(e.target.value)}
+                    sx={{
+                      '& .MuiSelect-select': {
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }
+                    }}
                   >
-                    <MenuItem value="all">All Emails</MenuItem>
-                    <MenuItem value="read">Read</MenuItem>
-                    <MenuItem value="unread">Unread</MenuItem>
+                    <MenuItem value="all" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>All Emails</MenuItem>
+                    <MenuItem value="read" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Read</MenuItem>
+                    <MenuItem value="unread" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Unread</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -217,18 +227,23 @@ const EmailList = () => {
               {/* Sort By */}
               <Grid item xs={6} sm={3} md={3}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Sort By</InputLabel>
+                  <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Sort By</InputLabel>
                   <Select
                     value={sortBy}
                     label="Sort By"
                     onChange={(e) => setSortBy(e.target.value)}
+                    sx={{
+                      '& .MuiSelect-select': {
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }
+                    }}
                   >
-                    <MenuItem value="date-desc">Newest First</MenuItem>
-                    <MenuItem value="date-asc">Oldest First</MenuItem>
-                    <MenuItem value="subject-asc">Subject (A-Z)</MenuItem>
-                    <MenuItem value="subject-desc">Subject (Z-A)</MenuItem>
-                    <MenuItem value="from-asc">From (A-Z)</MenuItem>
-                    <MenuItem value="from-desc">From (Z-A)</MenuItem>
+                    <MenuItem value="date-desc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Newest First</MenuItem>
+                    <MenuItem value="date-asc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Oldest First</MenuItem>
+                    <MenuItem value="subject-asc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Subject (A-Z)</MenuItem>
+                    <MenuItem value="subject-desc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Subject (Z-A)</MenuItem>
+                    <MenuItem value="from-asc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>From (A-Z)</MenuItem>
+                    <MenuItem value="from-desc" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>From (Z-A)</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -242,17 +257,18 @@ const EmailList = () => {
                       width: '100%',
                       border: '1px solid',
                       borderColor: darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.23)',
-                      borderRadius: 1
+                      borderRadius: 1,
+                      py: { xs: 0.5, sm: 1 }
                     }}
                   >
-                    <ClearOutlined />
+                    <ClearOutlined sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
                   </IconButton>
                 </Tooltip>
               </Grid>
             </Grid>
 
             {/* Results count */}
-            <Typography variant="body2" sx={{ mt: 1, color: darkMode ? "#aaa" : "#666" }}>
+            <Typography variant="body2" sx={{ mt: 1, color: darkMode ? "#aaa" : "#666", fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
               {displayEmails.length} of {emailData.length} emails
             </Typography>
           </Box>

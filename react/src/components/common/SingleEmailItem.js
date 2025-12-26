@@ -78,7 +78,8 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            wordBreak: "break-all",
+            wordBreak: "break-word",
+            fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
           }}
         >
           {email.subject}
@@ -122,7 +123,8 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              wordBreak: "break-all",
+              wordBreak: "break-word",
+              fontSize: { xs: "0.875rem", sm: "1rem" },
             }}
           >
             From: {email.from.text}
@@ -135,7 +137,8 @@ const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToD
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              wordBreak: "break-all",
+              wordBreak: "break-word",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
             }}
           >
             Date: {new Date(email.date).toLocaleString() + " EST"}

@@ -21,11 +21,12 @@ const ConfirmModal = ({ open, setOpen, title, body, confirmText, cancelText, onC
     >
       <Box
         sx={{
-          width: 400,
+          width: { xs: '90%', sm: 400 },
+          maxWidth: '400px',
           bgcolor: "background.paper",
           border: "2px solid #000",
           boxShadow: 24,
-          p: 4,
+          p: { xs: 2, sm: 4 },
         }}
       >
         <Typography
