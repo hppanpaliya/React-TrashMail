@@ -390,14 +390,25 @@ const AllEmailList = () => {
                         justifyContent: "space-between",
                         alignItems: "center",
                         wordBreak: "break-word",
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
+                      }}
+                    >
+                      To: {email.to.value[0].address}
+                    </Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        wordBreak: "break-word",
                         fontSize: { xs: "0.75rem", sm: "0.875rem" },
                       }}
                     >
                       Date: {new Date(email.date).toLocaleString() + " EST"}
                     </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Chip label={email.to.value[0].address} sx={{ fontSize: { xs: "0.75rem", sm: "0.8125rem" } }} />
                   </Box>
                 </Paper>
               ))
