@@ -8,15 +8,37 @@ const path = require("path");
 const fs = require("fs");
 const { Readable } = require("stream");
 const { handleIncomingEmail } = require("../../services/emailService");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 let mongoServer;
 let app;
+let authToken;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   config.mongoURL = mongoServer.getUri();
   await connectMongoDB();
   app = createApp();
+  
+  // Create a test user and get auth token
+  const db = getDB();
+  const hashedPassword = await bcrypt.hash("testpassword", 10);
+  const testUser = {
+    username: "testuser",
+    password: hashedPassword,
+    role: "admin",
+    allowedDomains: ["myserver.pw", "example.com"], // Add test domains
+    createdAt: new Date(),
+  };
+  const result = await db.collection("users").insertOne(testUser);
+  
+  // Generate JWT token
+  authToken = jwt.sign(
+    { id: result.insertedId.toString(), username: testUser.username, role: testUser.role },
+    config.jwtSecret,
+    { expiresIn: "24h" }
+  );
 });
 
 afterAll(async () => {
@@ -27,12 +49,12 @@ afterAll(async () => {
 describe("API Routes", () => {
   beforeEach(async () => {
     const db = getDB();
-    await db.collection("test@example.com").deleteMany({});
-    await db.collection("other@example.com").deleteMany({});
+    await db.collection("emails").deleteMany({});
   });
 
-  const insertEmails = async (db, emails, collection) => {
-    await db.collection(collection).insertMany(emails);
+  const insertEmails = async (db, emails, emailId) => {
+    const emailsWithId = emails.map(email => ({ ...email, emailId }));
+    await db.collection("emails").insertMany(emailsWithId);
   };
 
   const sendTestEmail = async (testEmail) => {
@@ -53,8 +75,9 @@ describe("API Routes", () => {
     };
 
     await handleIncomingEmail(emailStream, session);
+    await new Promise(resolve => setTimeout(resolve, 100));
     const db = getDB();
-    return db.collection(testEmail.to).findOne({ subject: testEmail.subject });
+    return db.collection("emails").findOne({ subject: testEmail.subject, emailId: testEmail.to });
   };
 
   test("GET /api/all-emails should return emails for all users", async () => {
@@ -62,7 +85,9 @@ describe("API Routes", () => {
     await insertEmails(db, [{ from: { text: "sender@example.com" }, subject: "Test Email 1", date: new Date() }], "test@example.com");
     await insertEmails(db, [{ from: { text: "sender@example.com" }, subject: "Test Email 2", date: new Date() }], "other@example.com");
 
-    const response = await request(app).get("/api/all-emails");
+    const response = await request(app)
+      .get("/api/all-emails")
+      .set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
@@ -76,7 +101,9 @@ describe("API Routes", () => {
     ];
     await insertEmails(db, emails, "harshal@myserver.pw");
 
-    const response = await request(app).get("/api/emails-list/harshal@myserver.pw");
+    const response = await request(app)
+      .get("/api/emails-list/harshal@myserver.pw")
+      .set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
@@ -93,35 +120,46 @@ describe("API Routes", () => {
     };
 
     const savedEmail = await sendTestEmail(testEmail);
+    
+    if (!savedEmail) {
+      throw new Error("Email was not saved to database");
+    }
 
-    let response = await request(app).get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`);
-    response = await request(app).get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`);
+    let response = await request(app)
+      .get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`)
+      .set("Authorization", `Bearer ${authToken}`);
+    response = await request(app)
+      .get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`)
+      .set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body[0].subject).toBe("Test Email");
     expect(response.body[0].readStatus).toBe(true);
 
     const db = getDB();
-    const updatedEmail = await db.collection(testEmail.to).findOne({ _id: savedEmail._id });
+    const updatedEmail = await db.collection("emails").findOne({ _id: savedEmail._id, emailId: testEmail.to });
     expect(updatedEmail.readStatus).toBe(true);
 
-    await db.collection(testEmail.to).deleteOne({ _id: savedEmail._id });
+    await db.collection("emails").deleteOne({ _id: savedEmail._id });
   });
 
   test("DELETE /api/email/:emailID/:email_id should delete an email", async () => {
     const db = getDB();
-    const insertResult = await db.collection("harshal@myserver.pw").insertOne({
+    const insertResult = await db.collection("emails").insertOne({
+      emailId: "harshal@myserver.pw",
       subject: "Test Email",
       from: { text: "SendTestEmail <noreply@sendtestemail.com>" },
       date: new Date(),
     });
 
-    const response = await request(app).delete(`/api/email/harshal@myserver.pw/${insertResult.insertedId.toString()}`);
+    const response = await request(app)
+      .delete(`/api/email/harshal@myserver.pw/${insertResult.insertedId.toString()}`)
+      .set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.message).toBe("Email deleted successfully");
 
-    const deletedEmail = await db.collection("harshal@myserver.pw").findOne({ _id: insertResult.insertedId });
+    const deletedEmail = await db.collection("emails").findOne({ _id: insertResult.insertedId });
     expect(deletedEmail).toBeNull();
   });
 
@@ -164,20 +202,25 @@ describe("API Routes", () => {
     };
 
     await handleIncomingEmail(emailStream, session);
+    
+    // Wait for email processing
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     const db = getDB();
-    const savedEmail = await db.collection(testEmail.to).findOne({ subject: testEmail.subject });
+    const savedEmail = await db.collection("emails").findOne({ subject: testEmail.subject, emailId: testEmail.to });
 
     expect(savedEmail).toBeTruthy();
     expect(savedEmail.attachments.length).toBe(1);
     const [attachment] = savedEmail.attachments;
 
-    const response = await request(app).get(`/api/attachment/${attachment.directory}/${attachment.filename}`);
+    const response = await request(app)
+      .get(`/api/attachment/${attachment.directory}/${attachment.filename}`)
+      .set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.text).toBe("This is a test attachment content.");
 
-    await db.collection(testEmail.to).deleteOne({ _id: savedEmail._id });
+    await db.collection("emails").deleteOne({ _id: savedEmail._id });
     const attachmentPath = path.join(__dirname, "../../attachments", attachment.directory, attachment.filename);
     if (fs.existsSync(attachmentPath)) {
       fs.unlinkSync(attachmentPath);

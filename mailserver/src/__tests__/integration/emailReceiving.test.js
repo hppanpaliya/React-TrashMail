@@ -41,7 +41,7 @@ describe("Email Receiving and Storage", () => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const db = getDB();
-    const emails = await db.collection("harshal@myserver.pw").find({}).toArray();
+    const emails = await db.collection("emails").find({ emailId: "harshal@myserver.pw" }).toArray();
 
     expect(emails.length).toBe(1);
     expect(emails[0].subject).toBe("SendTestEmail.com - Testing Email ID: test123");

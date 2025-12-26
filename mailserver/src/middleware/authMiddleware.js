@@ -5,7 +5,14 @@ const { ObjectId } = require('mongodb');
 
 const authMiddleware = async (req, res, next) => {
   // Get token from header or query parameter (for SSE)
-  const token = req.header('x-auth-token') || req.query.token;
+  // Support both 'Authorization: Bearer TOKEN' and 'x-auth-token: TOKEN' formats
+  let token = req.header('x-auth-token') || req.query.token;
+  
+  // Check for Bearer token in Authorization header
+  const authHeader = req.header('Authorization');
+  if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7); // Remove 'Bearer ' prefix
+  }
 
   // Check if not token
   if (!token) {
@@ -18,7 +25,7 @@ const authMiddleware = async (req, res, next) => {
     
     // Fetch full user from DB to get latest roles and allowedDomains
     const db = getDB();
-    const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.user.id) });
+    const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.id || decoded.user?.id) });
     
     if (!user) {
       return res.status(401).json({ message: 'User not found' });

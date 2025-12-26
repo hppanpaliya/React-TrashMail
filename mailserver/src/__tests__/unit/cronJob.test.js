@@ -23,9 +23,9 @@ describe("Cron Job", () => {
     const oldDate = new Date();
     oldDate.setDate(oldDate.getDate() - (config.emailRetentionDays + 1));
 
-    await db.collection("test@example.com").insertMany([
-      { from: { text: "sender@example.com" }, subject: "Old Email", date: oldDate },
-      { from: { text: "sender@example.com" }, subject: "New Email", date: new Date() },
+    await db.collection("emails").insertMany([
+      { emailId: "test@example.com", from: { text: "sender@example.com" }, subject: "Old Email", date: oldDate },
+      { emailId: "test@example.com", from: { text: "sender@example.com" }, subject: "New Email", date: new Date() },
     ]);
 
     const oldEmails = await getOldEmails(config.emailRetentionDays);
@@ -35,7 +35,7 @@ describe("Cron Job", () => {
       await deleteEmailAndAttachments(email.emailID, email.emailId.toHexString());
     }
 
-    const remainingEmails = await db.collection("test@example.com").find({}).toArray();
+    const remainingEmails = await db.collection("emails").find({ emailId: "test@example.com" }).toArray();
     expect(remainingEmails.length).toBe(1);
     expect(remainingEmails[0].subject).toBe("New Email");
   });
