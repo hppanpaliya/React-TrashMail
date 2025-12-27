@@ -43,4 +43,12 @@ router.get("/system-emails", adminController.getSystemEmails);
 // @desc    Get all received emails with access info
 router.get("/received-emails", adminController.getReceivedEmails);
 
+// @route   GET api/admin/top-emails
+// @desc    Get top emails by received count
+router.get("/top-emails", adminController.getTopEmails);
+
+// @route   GET api/admin/emails-with-attachments
+// @desc    Get emails with attachments and their sizes
+router.get("/emails-with-attachments", adminController.getEmailsWithAttachments);
+
 module.exports = router;

@@ -1,4 +1,5 @@
 const path = require("path");
+const mime = require("mime-types");
 
 const attachmentController = {
   getAttachment: (req, res) => {
@@ -16,6 +17,13 @@ const attachmentController = {
       return res.status(403).json({ error: "Access denied" });
     }
 
+    // Set content type based on file extension
+    const contentType = mime.lookup(filename) || 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    
+    // Force download
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
     res.sendFile(filePath, (err) => {
       if (err) {
         console.error("Error sending file:", err);

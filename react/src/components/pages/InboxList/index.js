@@ -173,9 +173,9 @@ const EmailList = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "date-desc":
-          return new Date(b.date) - new Date(a.date);
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         case "date-asc":
-          return new Date(a.date) - new Date(b.date);
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
         case "subject-asc":
           return (a.subject || "").localeCompare(b.subject || "");
         case "subject-desc":

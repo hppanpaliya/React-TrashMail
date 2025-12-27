@@ -12,7 +12,7 @@
     "@testing-library/user-event": "^14.6.1",
     "axios": "^1.13.2",
     "dompurify": "^3.3.1",
-    "framer-motion": "^12.23.26",
+    "framer-motion": "^11.2.12",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-letter": "^0.4.0",

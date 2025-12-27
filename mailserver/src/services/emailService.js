@@ -5,6 +5,7 @@ const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const sseService = require("./sseService");
 const { sanitizeEmailHTML, textToHTML } = require('../utils/sanitizer');
+const { Readable } = require('stream');
 
 async function saveAttachment(attachmentFolder, attachment) {
   const attachmentsDir = path.join(__dirname, "../..", "attachments", attachmentFolder);
@@ -30,6 +31,12 @@ async function saveAttachment(attachmentFolder, attachment) {
       writeStream = fs.createWriteStream(savePath, { encoding: "utf8" });
       writeStream.write(attachment.content);
       writeStream.end();
+      writeStream.on("finish", resolve);
+      writeStream.on("error", reject);
+    } else if (attachment.content instanceof Readable) {
+      // Handle attachment content as a Readable stream
+      writeStream = fs.createWriteStream(savePath);
+      attachment.content.pipe(writeStream);
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);
     } else {
@@ -62,19 +69,19 @@ async function saveEmailToDB(parsedEmail, toAddress) {
     }
     const db = getDB();
     const collection = db.collection('emails');
-    const attachments = parsedEmail.attachments;
+    const originalAttachments = parsedEmail.originalAttachments;
     // Generate a new MongoDB ObjectId
     const objectId = new ObjectId();
     // Use the ObjectId as the attachment folder name
     let attachmentFolder = objectId.toHexString();
-    if (attachments && attachments.length > 0) {
+    if (originalAttachments && originalAttachments.length > 0) {
       console.log("Saving attachments to the file system");
-      for (const attachment of attachments) {
+      for (const attachment of originalAttachments) {
         await saveAttachment(attachmentFolder, attachment);
       }
     }
-    if (attachments && attachments.length > 0) {
-      parsedEmail.attachments = attachments.map((attachment) => ({
+    if (originalAttachments && originalAttachments.length > 0) {
+      parsedEmail.attachments = originalAttachments.map((attachment) => ({
         filename: attachment.filename,
         directory: attachmentFolder,
       }));
@@ -125,6 +132,7 @@ async function saveEmailToDB(parsedEmail, toAddress) {
 async function handleIncomingEmail(stream, session) {
   try {
     const parsedEmail = await simpleParser(stream);
+    parsedEmail.originalAttachments = parsedEmail.attachments;
     for (toAddress of session.envelope.rcptTo) {
       await saveEmailToDB(parsedEmail, toAddress.address.toLowerCase());
     }

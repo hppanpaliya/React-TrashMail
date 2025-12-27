@@ -252,6 +252,115 @@ const adminController = {
       console.error("Error clearing logs:", error);
       res.status(500).json({ message: "Server error" });
     }
+  },
+
+  getTopEmails: async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 20;
+      const db = getDB();
+      const collection = db.collection('emails');
+
+      // Aggregate emails by emailId and count them
+      const topEmails = await collection.aggregate([
+        {
+          $group: {
+            _id: "$emailId",
+            count: { $sum: 1 },
+            lastEmailDate: { $max: "$date" }
+          }
+        },
+        {
+          $sort: { count: -1 }
+        },
+        {
+          $limit: limit
+        }
+      ]).toArray();
+
+      res.json({
+        emails: topEmails,
+        total: topEmails.length,
+        page: 1,
+        totalPages: 1
+      });
+    } catch (error) {
+      console.error("Error fetching top emails:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  },
+
+  getEmailsWithAttachments: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const { search, sortBy = 'date', sortOrder = 'desc' } = req.query;
+      const skip = (page - 1) * limit;
+
+      const db = getDB();
+      const collection = db.collection('emails');
+
+      const filter = {
+        attachments: { $exists: true, $ne: [] }
+      };
+
+      if (search) {
+        filter.$or = [
+          { subject: { $regex: search, $options: 'i' } },
+          { 'from.text': { $regex: search, $options: 'i' } },
+          { emailId: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+      // Get emails with attachments
+      const emails = await collection
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const total = await collection.countDocuments(filter);
+
+      // Calculate attachment sizes
+      const fs = require('fs');
+      const path = require('path');
+      const attachmentsDir = path.join(__dirname, '../../attachments');
+
+      const emailsWithSizes = emails.map(email => {
+        let totalSize = 0;
+        if (email.attachments && email.attachments.length > 0) {
+          email.attachments.forEach(attachment => {
+            const attachmentPath = path.join(attachmentsDir, attachment.directory, attachment.filename);
+            try {
+              if (fs.existsSync(attachmentPath)) {
+                const stats = fs.statSync(attachmentPath);
+                totalSize += stats.size;
+              }
+            } catch (err) {
+              console.error(`Error getting size for ${attachmentPath}:`, err);
+            }
+          });
+        }
+
+        return {
+          ...email,
+          attachmentCount: email.attachments ? email.attachments.length : 0,
+          totalAttachmentSize: totalSize
+        };
+      });
+
+      res.json({
+        emails: emailsWithSizes,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      });
+    } catch (error) {
+      console.error("Error fetching emails with attachments:", error);
+      res.status(500).json({ message: "Server error" });
+    }
   }
 };
 

@@ -14,6 +14,13 @@ import {
   TextField,
   InputAdornment,
   DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useAuth } from "../../../context/AuthContext";
@@ -72,6 +79,8 @@ const AdminDashboard = () => {
   const usersState = useTableState("username");
   const systemEmailsState = useTableState("date");
   const receivedEmailsState = useTableState("date");
+  const topEmailsState = useTableState("count");
+  const attachmentsState = useTableState("date");
 
   // User Edit State
   const [editUser, setEditUser] = useState(null);
@@ -145,6 +154,10 @@ const AdminDashboard = () => {
         } else if (res.data.users) {
           stateObj.setData(res.data.users);
           stateObj.setTotal(res.data.total);
+        } else if (res.data.emails && !res.data.total) {
+          // For top-emails endpoint
+          stateObj.setData(res.data.emails);
+          stateObj.setTotal(res.data.total || res.data.emails.length);
         }
       } catch (err) {
         console.error(err);
@@ -161,6 +174,8 @@ const AdminDashboard = () => {
     if (tabValue === 2) fetchData("/api/auth/users", usersState);
     if (tabValue === 4) fetchData("/api/admin/system-emails", systemEmailsState);
     if (tabValue === 5) fetchData("/api/admin/received-emails", receivedEmailsState);
+    if (tabValue === 6) fetchData("/api/admin/top-emails", topEmailsState);
+    if (tabValue === 7) fetchData("/api/admin/emails-with-attachments", attachmentsState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tabValue,
@@ -189,6 +204,11 @@ const AdminDashboard = () => {
     receivedEmailsState.search,
     receivedEmailsState.sortBy,
     receivedEmailsState.sortOrder,
+    attachmentsState.page,
+    attachmentsState.rowsPerPage,
+    attachmentsState.search,
+    attachmentsState.sortBy,
+    attachmentsState.sortOrder,
   ]);
 
   const handleTabChange = (event, newValue) => {
@@ -225,6 +245,25 @@ const AdminDashboard = () => {
     setDomainInput(user.allowedDomains ? user.allowedDomains.join(", ") : "");
   };
 
+  const handleDeleteEmail = async (email) => {
+    if (!window.confirm(`Are you sure you want to delete this email: "${email.subject}"?`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${env.REACT_APP_API_URL}/api/email/${email.emailId}/${email._id}`, {
+        headers: { "x-auth-token": token },
+      });
+
+      // Refresh the attachments data
+      fetchData("/api/admin/emails-with-attachments", attachmentsState);
+      alert("Email deleted successfully");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete email");
+    }
+  };
+
   const handleSaveUser = async () => {
     try {
       const domains = domainInput.trim() === "" ? null : domainInput.split(",").map((d) => d.trim());
@@ -259,7 +298,19 @@ const AdminDashboard = () => {
   ];
 
   const conflictColumns = [
-    { id: "emailId", label: "Email ID", minWidth: 170, sortable: true },
+    {
+      id: "emailId",
+      label: "Email ID",
+      minWidth: 170,
+      sortable: true,
+      format: (value) => (
+        <Link to={`/inbox/${value}`} style={{ textDecoration: "none", color: "inherit" }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ "&:hover": { textDecoration: "underline" } }}>
+            {value}
+          </Typography>
+        </Link>
+      ),
+    },
     { id: "accessCount", label: "Access Count", minWidth: 100, sortable: true },
     { id: "lastAccess", label: "Last Access", minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
     { id: "users", label: "Users Involved", minWidth: 170, format: (value) => value.join(", ") },
@@ -288,9 +339,33 @@ const AdminDashboard = () => {
 
   const emailColumns = [
     { id: "date", label: "Date", minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
-    { id: "emailId", label: "To", minWidth: 170, sortable: true },
+    {
+      id: "emailId",
+      label: "To",
+      minWidth: 170,
+      sortable: true,
+      format: (value) => (
+        <Link to={`/inbox/${value}`} style={{ textDecoration: "none", color: "inherit" }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ "&:hover": { textDecoration: "underline" } }}>
+            {value}
+          </Typography>
+        </Link>
+      ),
+    },
     { id: "from", label: "From", minWidth: 170, sortable: true, format: (value) => value?.text || "" },
-    { id: "subject", label: "Subject", minWidth: 170, sortable: true },
+    {
+      id: "subject",
+      label: "Subject",
+      minWidth: 170,
+      sortable: true,
+      format: (value, row) => (
+        <Link to={`/inbox/${row.emailId}/${row._id}`} style={{ textDecoration: "none", color: "inherit" }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ "&:hover": { textDecoration: "underline" } }}>
+            {value}
+          </Typography>
+        </Link>
+      ),
+    },
   ];
 
   const receivedEmailColumns = [
@@ -334,6 +409,83 @@ const AdminDashboard = () => {
             Not Accessed
           </Typography>
         ),
+    },
+  ];
+
+  const topEmailColumns = [
+    {
+      id: "_id",
+      label: "Email Address",
+      minWidth: 200,
+      sortable: true,
+      format: (value) => (
+        <Link to={`/inbox/${value}`} style={{ textDecoration: "none", color: "inherit" }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ "&:hover": { textDecoration: "underline" } }}>
+            {value}
+          </Typography>
+        </Link>
+      ),
+    },
+    { id: "count", label: "Email Count", minWidth: 120, sortable: true },
+    { id: "lastEmailDate", label: "Last Email", minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
+  ];
+
+  const attachmentColumns = [
+    { id: "date", label: "Date", minWidth: 170, sortable: true, format: (value) => new Date(value).toLocaleString() },
+    {
+      id: "emailId",
+      label: "To",
+      minWidth: 170,
+      sortable: true,
+      format: (value) => (
+        <Link to={`/inbox/${value}`} style={{ textDecoration: "none", color: "inherit" }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ "&:hover": { textDecoration: "underline" } }}>
+            {value}
+          </Typography>
+        </Link>
+      ),
+    },
+    { id: "from", label: "From", minWidth: 170, sortable: true, format: (value) => value?.text || "" },
+    {
+      id: "subject",
+      label: "Subject",
+      minWidth: 170,
+      sortable: true,
+      format: (value, row) => (
+        <Link to={`/inbox/${row.emailId}/${row._id}`} style={{ textDecoration: "none", color: "inherit" }} target="_blank">
+          <Typography color="primary" variant="body2" sx={{ "&:hover": { textDecoration: "underline" } }}>
+            {value}
+          </Typography>
+        </Link>
+      ),
+    },
+    { id: "attachmentCount", label: "Attachments", minWidth: 120, sortable: true },
+    {
+      id: "totalAttachmentSize",
+      label: "Total Size",
+      minWidth: 120,
+      sortable: true,
+      format: (value) => {
+        if (value === 0) return "0 B";
+        const units = ["B", "KB", "MB", "GB"];
+        let size = value;
+        let unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.length - 1) {
+          size /= 1024;
+          unitIndex++;
+        }
+        return `${size.toFixed(1)} ${units[unitIndex]}`;
+      },
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      minWidth: 100,
+      format: (value, row) => (
+        <Button size="small" variant="outlined" color="error" onClick={() => handleDeleteEmail(row)}>
+          Delete
+        </Button>
+      ),
     },
   ];
 
@@ -390,6 +542,8 @@ const AdminDashboard = () => {
           <Tab label="Invites" />
           <Tab label="System Emails" />
           <Tab label="Received Emails" />
+          <Tab label="Top Emails" />
+          <Tab label="Attachments" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
@@ -555,6 +709,75 @@ const AdminDashboard = () => {
               receivedEmailsState.setSortBy(prop);
             }}
             loading={receivedEmailsState.loading}
+          />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={6}>
+          <Paper sx={{ width: "100%", overflow: "hidden" }}>
+            <TableContainer sx={{ maxHeight: { xs: "calc(100vh - 300px)", sm: "calc(100vh - 200px)" } }}>
+              <Table stickyHeader aria-label="top emails table" size="small">
+                <TableHead>
+                  <TableRow>
+                    {topEmailColumns.map((column) => (
+                      <TableCell key={column.id} align={column.align} style={{ minWidth: column.minWidth, fontWeight: "bold" }}>
+                        {column.label}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {topEmailsState.loading ? (
+                    <TableRow>
+                      <TableCell colSpan={topEmailColumns.length} align="center" sx={{ py: 4 }}>
+                        <CircularProgress size={24} />
+                      </TableCell>
+                    </TableRow>
+                  ) : topEmailsState.data.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={topEmailColumns.length} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No emails found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    topEmailsState.data.map((row, index) => (
+                      <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                        {topEmailColumns.map((column) => {
+                          const value = row[column.id];
+                          return (
+                            <TableCell key={column.id} align={column.align}>
+                              {column.format ? column.format(value, row) : value}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={7}>
+          {renderSearch(attachmentsState, "Search emails with attachments...")}
+          <DataTable
+            columns={attachmentColumns}
+            data={attachmentsState.data}
+            total={attachmentsState.total}
+            page={attachmentsState.page}
+            rowsPerPage={attachmentsState.rowsPerPage}
+            onPageChange={attachmentsState.setPage}
+            onRowsPerPageChange={attachmentsState.setRowsPerPage}
+            sortBy={attachmentsState.sortBy}
+            sortOrder={attachmentsState.sortOrder}
+            onSort={(prop) => {
+              const isAsc = attachmentsState.sortBy === prop && attachmentsState.sortOrder === "asc";
+              attachmentsState.setSortOrder(isAsc ? "desc" : "asc");
+              attachmentsState.setSortBy(prop);
+            }}
+            loading={attachmentsState.loading}
           />
         </TabPanel>
       </Paper>

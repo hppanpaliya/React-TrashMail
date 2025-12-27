@@ -25,7 +25,7 @@ const InboxEmail = () => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const isMobile = useWindowResize();
   const { darkMode } = useContext(ThemeContext);
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const navigate = useNavigate();
 
   let headers;
@@ -42,13 +42,19 @@ const InboxEmail = () => {
         setEmailHeaders(response.data[0].headerLines);
       } catch (error) {
         console.error("Error fetching email data:", error);
+        // Check if the error is due to authentication (401 Unauthorized)
+        if (error.response && error.response.status === 401) {
+          // Token is invalid or missing; log out the user
+          logout();
+          navigate("/login");
+        }
       }
     };
 
     if (token) {
       fetchEmailData();
     }
-  }, [email_id, emailId, token]);
+  }, [email_id, emailId, token, navigate, logout]);
 
   if (emailHeaders) {
     headers = emailHeaders.map((header, i) => {
@@ -302,7 +308,10 @@ const InboxEmail = () => {
                             key={i}
                             label={attachment.filename}
                             onClick={() =>
-                              window.open(`${env.REACT_APP_API_URL}/api/attachment/${attachment.directory}/${attachment.filename}`, "_blank")
+                              window.open(
+                                `${env.REACT_APP_API_URL}/api/attachment/${attachment.directory}/${attachment.filename}?token=${token}`,
+                                "_blank"
+                              )
                             }
                             icon={<AttachFileIcon />}
                             clickable
