@@ -4,13 +4,15 @@ This is the React frontend for the TrashMail application.
 
 ## Environment Variables
 
-Create a `.env` file in the `react` directory and add the following variable:
+Create a `.env` file in the `react` directory and add the following variables:
 
 ```env
-REACT_APP_API_URL=http://localhost:3000
+REACT_APP_API_URL=http://localhost:4000
+REACT_APP_DOMAINS=["example.com"]
 ```
 
-- `REACT_APP_API_URL`: The URL of the backend API server.
+- `REACT_APP_API_URL`: The URL of the backend API server (default: http://localhost:4000).
+- `REACT_APP_DOMAINS`: Array of allowed email domains for the service.
 
 ## Installation
 

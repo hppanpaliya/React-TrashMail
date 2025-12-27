@@ -1,11 +1,12 @@
 # Start with the official MongoDB image
 FROM mongo:latest
 
+RUN apt-get update
+
 # Install Node.js and Git
-RUN apt-get update && \
-    apt-get install -y curl gnupg git && \
-    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
+RUN apt-get install -y curl gnupg git
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
+RUN apt-get install -y nodejs
 
 # Install yarn globally
 RUN npm install -g yarn
@@ -29,6 +30,7 @@ COPY . /React-TrashMail
 
 WORKDIR /React-TrashMail/react
 RUN yarn build 
+RUN rm -rf /React-TrashMail/react/node_modules/
 
 WORKDIR /React-TrashMail/mailserver
 RUN rm -rf src/build/*
