@@ -12,7 +12,7 @@ SMTP_PORT=2525
 # RECIPIENTS & SENDER
 ########################################
 FROM="sender@test.com"
-TO="test@domain.com"
+TO="test@harsh.al,test@react-mail.com,admin@harsh.al,admin@react-mail.com"
 SUBJECT="Complex Local Test Email"
 
 ########################################

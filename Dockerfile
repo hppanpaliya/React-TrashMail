@@ -25,8 +25,22 @@ COPY mailserver/yarn.lock /React-TrashMail/mailserver/
 WORKDIR /React-TrashMail/mailserver
 RUN yarn install
 
-# Copy the rest of the application code
-COPY . /React-TrashMail
+# Copy application code individually
+# Copy React application files
+COPY react/src /React-TrashMail/react/src
+COPY react/public /React-TrashMail/react/public
+COPY react/jsconfig.json /React-TrashMail/react/jsconfig.json
+
+# Copy mailserver application files
+COPY mailserver/server.js /React-TrashMail/mailserver/
+COPY mailserver/src /React-TrashMail/mailserver/src
+COPY mailserver/scripts /React-TrashMail/mailserver/scripts
+COPY mailserver/jest-config.js /React-TrashMail/mailserver/
+COPY mailserver/jest-setup.js /React-TrashMail/mailserver/
+
+# Copy root level files
+COPY README.md /React-TrashMail/
+COPY test_email.sh /React-TrashMail/
 
 WORKDIR /React-TrashMail/react
 RUN yarn build 
@@ -37,6 +51,7 @@ RUN rm -rf src/build/*
 RUN mkdir -p src/build
 RUN cp -r ../react/build/* src/build/
 
+RUN rm -rf /React-TrashMail/react/node_modules
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Define mountable volume

@@ -257,6 +257,63 @@ Ensure you have Docker installed and running on your machine before executing th
 
 These options and environment variables are crucial for configuring the TrashMail application within the Docker environment, especially for handling backend API communication and data persistence.
 
+### Docker Troubleshooting
+
+#### Container Status Shows "unhealthy"
+
+Check container logs:
+```shell
+docker logs trashmail-container
+```
+
+#### "invalid ELF header" or bcrypt errors
+
+This occurs when node_modules from your host machine are present during build. Solutions:
+
+1. **Clean build** (recommended):
+   ```shell
+   # Remove local node_modules before building
+   rm -rf mailserver/node_modules react/node_modules
+   docker build -t trashmail-app .
+   ```
+
+2. **Add .dockerignore file**:
+   Create a `.dockerignore` file in the project root:
+   ```
+   node_modules
+   npm-debug.log
+   .git
+   .env
+   ```
+
+#### Check Container Health
+```shell
+# View running containers and their status
+docker ps
+
+# Access container shell for debugging
+docker exec -it trashmail-container /bin/bash
+
+# View real-time logs
+docker logs -f trashmail-container
+```
+
+#### Restart Container
+```shell
+docker restart trashmail-container
+```
+
+#### Clean Restart
+```shell
+# Stop and remove container
+docker stop trashmail-container
+docker rm trashmail-container
+
+# Rebuild image and run
+docker build -t trashmail-app .
+docker run -d -p 4000:4000 -p 2525:25 [...options...] trashmail-app
+```
+
 
 ## Support
 

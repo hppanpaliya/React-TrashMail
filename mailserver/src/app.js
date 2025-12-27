@@ -60,15 +60,10 @@ function createApp() {
   app.use("/api", sseRoutes);
   
   // Serve static files from the React app build directory
-  // Assuming build is in the root of mailserver or copied there
-  // Adjust path if build is in ../react/build
-  const buildPath = path.join(__dirname, "..", "build"); 
+  const buildPath = path.join(__dirname, ".", "build"); 
   app.use(express.static(buildPath));
 
-  // Handle all other requests by serving the React app's entry point (index.html)
-  // Only serve the fallback if the build directory exists (not in test environment)
   if (fs.existsSync(path.join(buildPath, "index.html"))) {
-    // Use middleware instead of route to avoid path-to-regexp issues
     app.use((req, res) => {
       res.sendFile(path.join(buildPath, "index.html"));
     });
