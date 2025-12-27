@@ -1,11 +1,12 @@
 # Start with the official MongoDB image
 FROM mongo:latest
 
+RUN apt-get update
+
 # Install Node.js and Git
-RUN apt-get update && \
-    apt-get install -y curl gnupg git && \
-    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
+RUN apt-get install -y curl gnupg git
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
+RUN apt-get install -y nodejs
 
 # Install yarn globally
 RUN npm install -g yarn
@@ -13,16 +14,43 @@ RUN npm install -g yarn
 # Install pm2 globally
 RUN yarn global add pm2
 
-# Copy in mailserver dependencies
+# Copy in package.json files and run install to allow docker to cache them
+COPY react/package.json /React-TrashMail/react/
+COPY react/yarn.lock /React-TrashMail/react/
+WORKDIR /React-TrashMail/react
+
 COPY mailserver/package.json /React-TrashMail/mailserver/
 COPY mailserver/yarn.lock /React-TrashMail/mailserver/
-COPY mailserver/node_modules /React-TrashMail/mailserver/node_modules
+WORKDIR /React-TrashMail/mailserver
+RUN yarn install
 
-# Copy the rest of the application code
-COPY . /React-TrashMail
+# Copy application code individually
+# Copy React application files
+COPY react/src /React-TrashMail/react/src
+COPY react/public /React-TrashMail/react/public
+COPY react/jsconfig.json /React-TrashMail/react/jsconfig.json
+COPY react/build /React-TrashMail/react/build
 
-# Copy built React app to mailserver build directory
-COPY react/build /React-TrashMail/mailserver/src/build
+# Copy mailserver application files
+COPY mailserver/server.js /React-TrashMail/mailserver/
+COPY mailserver/src /React-TrashMail/mailserver/src
+COPY mailserver/scripts /React-TrashMail/mailserver/scripts
+COPY mailserver/jest-config.js /React-TrashMail/mailserver/
+COPY mailserver/jest-setup.js /React-TrashMail/mailserver/
+
+# Copy root level files
+COPY README.md /React-TrashMail/
+COPY test_email.sh /React-TrashMail/
+
+
+
+WORKDIR /React-TrashMail/mailserver
+RUN rm -rf src/build/*
+RUN mkdir -p src/build
+RUN cp -r ../react/build/* src/build/
+
+RUN rm -rf /React-TrashMail/react/node_modules
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Define mountable volume
 VOLUME ["/React-TrashMail/mailserver/src/attachments"]
