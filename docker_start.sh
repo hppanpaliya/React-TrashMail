@@ -37,6 +37,8 @@ BCRYPT_SALT_ROUNDS=${BCRYPT_SALT_ROUNDS:-10}
 EMAIL_RETENTION_DAYS=${EMAIL_RETENTION_DAYS:-30}
 EOF
 
+cd /React-TrashMail/mailserver && npm run create-invite-admin
+
 # Start the application
 cd /React-TrashMail/mailserver
 PM2_HOME=/React-TrashMail/mailserver pm2-runtime start yarn -- start:docker
