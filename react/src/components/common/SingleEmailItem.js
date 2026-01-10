@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Paper, Typography, Box, Tooltip, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FiberNewOutlinedIcon from "@mui/icons-material/FiberNewOutlined";
 import { motion } from "framer-motion";
 
-const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToDelete, index, staggerDuration, isMobile }) => {
+const SingleEmailItem = ({ email, handleEmailClick, handleOpenModal, setEmailToDelete, staggerDuration, isMobile }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollDirection, setScrollDirection] = useState("down");
   const prevScrollPos = useRef(window.scrollY);

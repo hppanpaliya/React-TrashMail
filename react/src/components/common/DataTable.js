@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Table,
   TableBody,
@@ -36,7 +35,7 @@ const DataTable = ({
     onPageChange(0);
   };
 
-  const createSortHandler = (property) => (event) => {
+  const createSortHandler = (property) => () => {
     onSort(property);
   };
 

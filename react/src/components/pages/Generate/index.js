@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import ButtonSection from "../../common/ButtonSection";
-import { Grid, Box, TextField, Button, InputAdornment, Select, MenuItem, FormControl, InputLabel, Typography } from "@mui/material";
+import { Grid, Box, TextField, Button, Select, MenuItem, FormControl, InputLabel, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { FileCopyOutlined } from "@mui/icons-material";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
 import { env } from "../../../env";
@@ -25,6 +24,7 @@ const parseDomains = (envVar) => {
 
   return domains
     .map((d) => {
+      // eslint-disable-next-line no-useless-escape
       return d.replace(/[\[\]"']/g, "").trim();
     })
     .filter((d) => d.length > 0);

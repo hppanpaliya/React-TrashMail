@@ -1,4 +1,3 @@
-import React from "react";
 import { Typography, Box, Grid, Button } from "@mui/material";
 import Modal from "@mui/material/Modal";
 

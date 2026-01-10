@@ -1,19 +1,18 @@
-import React from "react";
 import Generate from "../pages/Generate";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Inbox = () => {
   const [lastEmail, setLastEmail] = useState();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setLastEmail(localStorage.getItem("lastEmailId"));
-    console.log(lastEmail);
-  }, [lastEmail]);
+  }, []);
 
   useEffect(() => {
     if (lastEmail) {
+      console.log(lastEmail);
       navigate(`/inbox/${lastEmail}`, { replace: true }); // By using "replace" to effectively delete '/inbox' from the history stack
     }
   }, [lastEmail, navigate]);

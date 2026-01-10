@@ -9,49 +9,14 @@ env:
   DOCKER_REPOSITORY: hppanpaliya/react-trashmail
 
 jobs:
-  build-react:
-    name: Build React app (once)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install React dependencies
-        run: yarn install --frozen-lockfile
-        working-directory: ./react
-
-      - name: Build React app
-        run: yarn build
-        working-directory: ./react
-
-      - name: Upload React build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-build
-          path: react/build
-          if-no-files-found: error
-          retention-days: 1
-
   build-and-push-amd64:
     name: Build & push (linux/amd64) - native
     runs-on: ubuntu-latest
-    needs: build-react
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download React build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: react-build
-          path: react/build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -66,28 +31,20 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.prod
+          file: Dockerfile
           platforms: linux/amd64
           push: true
           tags: |
             ${{ env.DOCKER_REPOSITORY }}:${{ github.sha }}-amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   build-and-push-arm64:
     name: Build & push (linux/arm64) - native ARM runner
     runs-on: ubuntu-24.04-arm
-    needs: build-react
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download React build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: react-build
-          path: react/build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -102,13 +59,11 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.prod
+          file: Dockerfile
           platforms: linux/arm64
           push: true
           tags: |
             ${{ env.DOCKER_REPOSITORY }}:${{ github.sha }}-arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   merge:
     name: Create multi-arch manifest (latest + sha)

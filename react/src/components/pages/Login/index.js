@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { Container, Box, Typography, TextField, Button, Alert, Paper, InputAdornment, IconButton } from "@mui/material";
@@ -34,7 +34,7 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs" sx={{ px: { xs: 2, sm: 3 } }}>
+    <Container component="main" maxWidth="xs" sx={{ px: { xs: 3, sm: 3 } }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <Box
           sx={{
@@ -120,7 +120,7 @@ const Login = () => {
               <Box sx={{ textAlign: "center", mt: 2 }}>
                 <Link to="/signup" style={{ textDecoration: "none" }}>
                   <Typography variant="body2" color="primary" sx={{ "&:hover": { textDecoration: "underline" } }}>
-                    Don't have an account? Sign Up
+                    Don&apos;t have an account? Sign Up
                   </Typography>
                 </Link>
               </Box>

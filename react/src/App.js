@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Main from "./components/pages/Main";
 import Generate from "./components/pages/Generate";
@@ -45,9 +45,9 @@ const AdminRoute = ({ children }) => {
 };
 
 const AppContent = () => {
-  const [darkMode, setDarkMode] = React.useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
     console.log("local storage", storedDarkMode);
 

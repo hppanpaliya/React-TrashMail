@@ -145,19 +145,19 @@ const AdminDashboard = () => {
         if (res.data.logs) {
           stateObj.setData(res.data.logs);
           stateObj.setTotal(res.data.total);
-        } else if (res.data.emails) {
+        } else if (res.data.emails && res.data.total) {
           stateObj.setData(res.data.emails);
           stateObj.setTotal(res.data.total);
+        } else if (res.data.emails && !res.data.total) {
+          // For top-emails endpoint
+          stateObj.setData(res.data.emails);
+          stateObj.setTotal(res.data.total || res.data.emails.length);
         } else if (res.data.conflicts) {
           stateObj.setData(res.data.conflicts);
           stateObj.setTotal(res.data.total);
         } else if (res.data.users) {
           stateObj.setData(res.data.users);
           stateObj.setTotal(res.data.total);
-        } else if (res.data.emails && !res.data.total) {
-          // For top-emails endpoint
-          stateObj.setData(res.data.emails);
-          stateObj.setTotal(res.data.total || res.data.emails.length);
         }
       } catch (err) {
         console.error(err);
@@ -179,6 +179,7 @@ const AdminDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tabValue,
+    fetchData,
     logsState.page,
     logsState.rowsPerPage,
     logsState.search,
@@ -209,6 +210,13 @@ const AdminDashboard = () => {
     attachmentsState.search,
     attachmentsState.sortBy,
     attachmentsState.sortOrder,
+    // attachmentsState,
+    // conflictsState,
+    // logsState,
+    // receivedEmailsState,
+    // systemEmailsState,
+    // topEmailsState,
+    // usersState,
   ]);
 
   const handleTabChange = (event, newValue) => {
@@ -791,7 +799,7 @@ const AdminDashboard = () => {
         <DialogTitle sx={{ fontSize: { xs: "1.125rem", sm: "1.25rem" } }}>Edit User Domains</DialogTitle>
         <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Enter comma-separated domains (e.g., "example.com, test.com"). Use * for all domains. Leave empty to use global defaults, "" for no domains.
+            Enter comma-separated domains (e.g., &quot;example.com, test.com&quot;). Use * for all domains. Leave empty to use global defaults, &quot;&quot; for no domains.
           </Typography>
           <TextField
             autoFocus
