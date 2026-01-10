@@ -60,10 +60,10 @@ const adminController = {
   updateUserDomains: async (req, res) => {
     try {
       const { userId } = req.params;
-      const { allowedDomains } = req.body; // Array of strings or null
+      const { allowedDomains } = req.body; // Array of strings, "*" for all, or null for default or "" for none
 
-      if (allowedDomains !== null && !Array.isArray(allowedDomains)) {
-        return res.status(400).json({ message: "allowedDomains must be an array or null" });
+      if (allowedDomains !== null && allowedDomains !== "*" && !Array.isArray(allowedDomains)) {
+        return res.status(400).json({ message: "allowedDomains must be an array, '*' for all domains, or null for default or \"\" for none" });
       }
 
       const db = getDB();

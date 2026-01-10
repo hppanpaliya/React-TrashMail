@@ -15,7 +15,21 @@ const validateEmailId = [
       // Check if email domain is allowed
       // Use user-specific allowed domains if available, otherwise global config
       const userAllowedDomains = req.user && req.user.allowedDomains;
-      const allowedDomains = userAllowedDomains || config.allowedDomains;
+      let allowedDomains = config.allowedDomains;
+      
+      if (userAllowedDomains === "*") {
+        // Allow all domains
+        return true;
+      } else if (Array.isArray(userAllowedDomains)) {
+        if (userAllowedDomains.length === 0) {
+          // Empty array means no domains allowed
+          throw new Error(`No email domains are allowed for your account.`);
+        }
+        allowedDomains = userAllowedDomains;
+      } else if (userAllowedDomains) {
+        // If it's a string but not "*", treat as single domain
+        allowedDomains = [userAllowedDomains];
+      }
       
       const domain = value.split('@')[1];
       if (!allowedDomains.includes(domain)) {

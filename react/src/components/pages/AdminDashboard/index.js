@@ -242,7 +242,7 @@ const AdminDashboard = () => {
 
   const handleEditUser = (user) => {
     setEditUser(user);
-    setDomainInput(user.allowedDomains ? user.allowedDomains.join(", ") : "");
+    setDomainInput(user.allowedDomains === "*" ? "*" : user.allowedDomains ? user.allowedDomains.join(", ") : "");
   };
 
   const handleDeleteEmail = async (email) => {
@@ -266,7 +266,12 @@ const AdminDashboard = () => {
 
   const handleSaveUser = async () => {
     try {
-      const domains = domainInput.trim() === "" ? null : domainInput.split(",").map((d) => d.trim());
+      let domains;
+      if (domainInput.trim() === "*") {
+        domains = "*";
+      } else {
+        domains = domainInput.trim() === "" ? null : domainInput.split(",").map((d) => d.trim());
+      }
 
       await axios.put(
         `${env.REACT_APP_API_URL}/api/admin/users/${editUser._id}/domains`,
@@ -323,7 +328,7 @@ const AdminDashboard = () => {
       id: "allowedDomains",
       label: "Allowed Domains",
       minWidth: 170,
-      format: (value) => (value ? value.join(", ") : <Chip label="Global Default" size="small" />),
+      format: (value) => (value === "*" ? <Chip label="All Domains" size="small" color="primary" /> : value ? value.join(", ") : <Chip label="Global Default" size="small" />),
     },
     {
       id: "actions",
@@ -786,7 +791,7 @@ const AdminDashboard = () => {
         <DialogTitle sx={{ fontSize: { xs: "1.125rem", sm: "1.25rem" } }}>Edit User Domains</DialogTitle>
         <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Enter comma-separated domains (e.g., "example.com, test.com"). Leave empty to use global defaults.
+            Enter comma-separated domains (e.g., "example.com, test.com"). Use * for all domains. Leave empty to use global defaults, "" for no domains.
           </Typography>
           <TextField
             autoFocus
