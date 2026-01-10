@@ -220,7 +220,7 @@ const EmailList = () => {
           </Tooltip>
 
           {/* Search, Filter, Sort Controls */}
-          <Box sx={{ mb: 3, mt: 2, px: { xs: 1, sm: 0 } }}>
+          <Box sx={{ mb: 3, mt: 2, px: { xs: 1, sm: 1, md: 0 } }}>
             <Grid container spacing={2} alignItems="center">
               {/* Search */}
               <Grid item xs={12} sm={6} md={4}>

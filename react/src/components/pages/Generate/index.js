@@ -1,23 +1,60 @@
 import React, { useEffect, useState, useContext } from "react";
 import ButtonSection from "../../common/ButtonSection";
-import { Grid, Box, TextField, Button, InputAdornment } from "@mui/material";
+import { Grid, Box, TextField, Button, InputAdornment, Select, MenuItem, FormControl, InputLabel, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { FileCopyOutlined } from "@mui/icons-material";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { motion } from "framer-motion";
 import { env } from "../../../env";
 
+const parseDomains = (envVar) => {
+  if (!envVar) return ["example.com"];
+
+  let domains = [];
+
+  try {
+    const parsed = JSON.parse(envVar);
+    if (Array.isArray(parsed)) {
+      domains = parsed.flatMap((item) => (typeof item === "string" ? item.split(",").map((d) => d.trim()) : []));
+    } else {
+      domains = [String(parsed)];
+    }
+  } catch (e) {
+    domains = envVar.split(",").map((d) => d.trim());
+  }
+
+  return domains
+    .map((d) => {
+      return d.replace(/[\[\]"']/g, "").trim();
+    })
+    .filter((d) => d.length > 0);
+};
+
 const Generate = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState(window.localStorage.getItem("lastEmailId") || "");
+  const domains = parseDomains(env.REACT_APP_DOMAINS);
+
+  const getInitialState = () => {
+    const lastEmail = window.localStorage.getItem("lastEmailId");
+    if (lastEmail && lastEmail.includes("@")) {
+      const parts = lastEmail.split("@");
+      const domain = parts.pop();
+      const user = parts.join("@");
+      if (domains.includes(domain)) {
+        return { user, domain };
+      }
+    }
+    return { user: "", domain: domains[0] };
+  };
+
+  const [emailDetails, setEmailDetails] = useState(getInitialState());
   const [isMobile, setIsMobile] = useState(false);
 
-  const domains = JSON.parse(env.REACT_APP_DOMAINS);
   const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 600);
+      setIsMobile(window.innerWidth < 900);
     };
 
     handleResize();
@@ -29,58 +66,71 @@ const Generate = () => {
   }, []);
 
   const copyToClipboard = () => {
-    if (email === "") {
-      alert("Please enter an email address");
+    const fullEmail = `${emailDetails.user}@${emailDetails.domain}`;
+    if (!emailDetails.user) {
+      alert("Please enter a username");
       return;
     }
-    navigator.clipboard.writeText(email);
+    navigator.clipboard.writeText(fullEmail);
   };
 
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
+  const handleUserChange = (e) => {
+    // Prevent entering '@' in the username field
+    const sanitizedUser = e.target.value.replace(/@/g, "");
+    setEmailDetails({ ...emailDetails, user: sanitizedUser });
+  };
+
+  const handleDomainChange = (e) => {
+    setEmailDetails({ ...emailDetails, domain: e.target.value });
   };
 
   const generateRandomEmail = () => {
-    let randomEmail = Math.random().toString(36).substring(5);
+    let randomUser = Math.random().toString(36).substring(5);
     let chosenDomain = domains[Math.floor(Math.random() * domains.length)];
-    randomEmail += `@${chosenDomain}`;
-    setEmail(randomEmail);
+    setEmailDetails({ user: randomUser, domain: chosenDomain });
   };
 
   const handleInboxRedirect = () => {
-    if (email === "") {
-      alert("Please enter an email address");
+    if (!emailDetails.user) {
+      alert("Please enter a username");
       return;
     }
-    const domainMatch = domains.some((domain) => email.endsWith(domain));
-    if (domainMatch) {
-      navigate("/inbox/" + email);
-    } else {
-      alert("Email address does not end with a valid domain. Valid domains are: " + domains.join(", "));
-    }
+    const fullEmail = `${emailDetails.user}@${emailDetails.domain}`;
+    navigate("/inbox/" + fullEmail);
   };
 
-  const inputStyles = {
-    marginRight: isMobile ? 0 : "2rem",
-    width: isMobile ? "100%" : "80%",
+  const inputContainerStyles = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: isMobile ? "column" : "row",
+    gap: "0.5rem",
+    width: "100%",
     marginBottom: isMobile ? "1rem" : 0,
+  };
+
+  const textFieldStyles = {
+    width: isMobile ? "100%" : "auto",
+    flex: isMobile ? "none" : 1,
+  };
+
+  const selectStyles = {
+    width: isMobile ? "100%" : "auto",
+    minWidth: isMobile ? "100%" : "200px",
+    textAlign: "left",
   };
 
   const buttonStyles = {
     color: darkMode ? "#FFF" : "#000",
     borderColor: "#000",
     fontSize: { xs: "0.875rem", sm: "1rem" },
-    paddingTop: isMobile ? "0.875rem" : "1.35rem",
-    paddingBottom: isMobile ? "0.875rem" : "1.35rem",
-    paddingLeft: isMobile ? "1rem" : "3rem",
-    paddingRight: isMobile ? "1rem" : "3rem",
+    padding: "0.75rem 1.5rem",
     borderRadius: "10px",
-    width: isMobile ? "100%" : "70%",
-    maxHeight: "3.6rem",
+    width: "100%",
     textTransform: "capitalize",
     fontFamily: "Actor",
     fontWeight: "400",
-    marginBottom: isMobile ? "1rem" : 0,
+    height: "100%",
   };
 
   return (
@@ -91,57 +141,90 @@ const Generate = () => {
           <Box
             sx={{
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              marginLeft: isMobile ? "0" : "10%",
+              justifyContent: "center",
               marginTop: { xs: "2%", sm: "5%" },
-              flexDirection: isMobile ? "column" : "row",
-              alignContent: "center",
-              textAlign: "center",
-              px: { xs: 2, sm: 0 },
+              gap: 4,
+              boxSizing: "border-box", // Ensure padding doesn't increase width
+              px: { xs: 2, sm: 2, md: 0 },
             }}
           >
-            <Grid item xs={12} md={5}>
+            {/* Input Section */}
+            <Box sx={{ width: isMobile ? "100%" : "60%", maxWidth: "800px" }}>
               <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
-                <TextField
-                  label="Enter your email"
-                  sx={inputStyles}
-                  onChange={handleEmailChange}
-                  value={email}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleInboxRedirect();
-                    }
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Button variant="text" onClick={copyToClipboard} sx={{ color: darkMode ? "#FFF" : "#000" }}>
-                          <FileCopyOutlined />
-                        </Button>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                <Box sx={inputContainerStyles}>
+                  <TextField
+                    label="Username"
+                    sx={textFieldStyles}
+                    onChange={handleUserChange}
+                    value={emailDetails.user}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleInboxRedirect();
+                      }
+                    }}
+                  />
+                  <Typography variant="h6" sx={{ color: darkMode ? "#FFF" : "#000" }}>
+                    @
+                  </Typography>
+                  <FormControl sx={selectStyles}>
+                    <InputLabel id="domain-select-label">Domain</InputLabel>
+                    <Select
+                      labelId="domain-select-label"
+                      value={emailDetails.domain}
+                      label="Domain"
+                      onChange={handleDomainChange}
+                      sx={{ color: darkMode ? "#FFF" : "#000" }}
+                    >
+                      {domains.map((domain) => (
+                        <MenuItem key={domain} value={domain}>
+                          {domain}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
               </motion.div>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <motion.div initial={{ scale: 0.3 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Button variant="outlined" sx={buttonStyles} onClick={() => handleInboxRedirect()}>
-                    Access Account
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <motion.div initial={{ scale: 0.3 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Button variant="outlined" sx={buttonStyles} onClick={generateRandomEmail}>
-                    Random
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </Grid>
+            </Box>
+            
+            {/* Button Section */}
+            <Box sx={{ width: isMobile ? "100%" : "60%", maxWidth: "800px" }}>
+              <Box sx={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 2, width: "100%" }}>
+                {/* Access Account Button */}
+                <Box sx={{ flex: 1 }}>
+                   <motion.div initial={{ scale: 0.3 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="outlined" sx={buttonStyles} onClick={() => handleInboxRedirect()}>
+                        Access Account
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+                </Box>
+
+                {/* Random & Copy Buttons Container */}
+                <Box sx={{ flex: 1, display: "flex", gap: 2 }}>
+                   <Box sx={{ flex: 1 }}>
+                      <motion.div initial={{ scale: 0.3 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button variant="outlined" sx={buttonStyles} onClick={generateRandomEmail}>
+                            Random
+                          </Button>
+                        </motion.div>
+                      </motion.div>
+                   </Box>
+                   <Box sx={{ flex: 1 }}>
+                      <motion.div initial={{ scale: 0.3 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button variant="outlined" sx={buttonStyles} onClick={copyToClipboard}>
+                            Copy
+                          </Button>
+                        </motion.div>
+                      </motion.div>
+                   </Box>
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Grid>
       </Grid>

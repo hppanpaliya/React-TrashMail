@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const useWindowResize = (breakpoint = 900) => {
+const useWindowResize = (breakpoint = 899) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
