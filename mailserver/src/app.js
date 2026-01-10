@@ -14,8 +14,14 @@ const adminRoutes = require("./routes/adminRoutes");
 
 function createApp() {
   const app = express();
-  // If behind a proxy (e.g., Heroku, Nginx), trust the proxy
-  app.set('trust proxy', true);
+  // Configure proxy trust based on your deployment:
+  // - 0 or false: Direct connection (local development, no proxy)
+  // - 1: Behind one proxy (e.g., Nginx only)
+  // - 2: Behind two proxies (e.g., Cloudflare + Nginx)
+  // - N: Behind N proxies
+  // IMPORTANT: Setting this incorrectly allows rate limit bypass!
+  const trustProxy = process.env.TRUST_PROXY || '0';
+  app.set('trust proxy', trustProxy === 'false' ? false : parseInt(trustProxy, 10) || 0);
 
   // Security Headers
   app.use(helmet({
@@ -41,7 +47,6 @@ function createApp() {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 1000, // Increased limit to allow normal usage
     message: "Too many requests from this IP, please try again later.",
-    validate: {xForwardedForHeader: false}, // Disable validation since we're handling proxy correctly
     skip: (req) => req.originalUrl.includes('/sse/') // Skip rate limiting for SSE connections
   });
   app.use("/api", limiter);

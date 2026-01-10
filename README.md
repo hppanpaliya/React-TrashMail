@@ -163,7 +163,19 @@ JWT_SECRET=your_super_secret_jwt_key
 BCRYPT_SALT_ROUNDS=10
 JWT_EXPIRY=24h
 EMAIL_RETENTION_DAYS=30
+# TRUST_PROXY: Configure based on your deployment
+# 0 = No proxy (local development)
+# 1 = Behind one proxy (e.g., Nginx)
+# 2 = Behind two proxies (e.g., Cloudflare + Nginx)
+TRUST_PROXY=0
 ```
+
+**IMPORTANT - TRUST_PROXY Security:**
+- Set `TRUST_PROXY=0` for local development (no reverse proxy)
+- Set `TRUST_PROXY=1` if behind one proxy (e.g., Nginx only)
+- Set `TRUST_PROXY=2` if behind Cloudflare + Nginx
+- **Incorrect values allow attackers to bypass rate limiting!**
+- Count your proxy hops: Client → Cloudflare (1) → Nginx (2) → Docker → App
 
 ### Running
 
