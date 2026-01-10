@@ -55,8 +55,9 @@ RUN rm -rf /React-TrashMail/react/node_modules
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Define mountable volume
-VOLUME ["/React-TrashMail/mailserver/src/attachments"]
-
+VOLUME ["/React-TrashMail/mailserver/attachments"]
+# Set default environment variables
+ENV TRUST_PROXY=2
 # Copy startup script
 COPY docker_start.sh /docker_start.sh
 RUN chmod +x /docker_start.sh
