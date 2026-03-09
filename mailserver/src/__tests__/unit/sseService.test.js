@@ -20,6 +20,9 @@ describe("SSE Service", () => {
     sseService.sendUpdate("test@example.com", testData);
 
     expect(mockResponse.write).toHaveBeenCalledWith(`data: ${JSON.stringify(testData)}\n\n`);
+
+    // close the mocked connection so heartbeat interval is cleaned up
+    mockResponse.emit("close");
   });
 
   test("should remove client on connection close", () => {

@@ -1,8 +1,8 @@
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const fs = require("fs");
-const path = require("path");
 const auditService = require("../services/auditService");
+const { resolveAttachmentPath } = require("../utils/attachments");
 
 async function deleteEmailAndAttachments(emailID, email_id) {
   const db = getDB();
@@ -12,7 +12,7 @@ async function deleteEmailAndAttachments(emailID, email_id) {
   // Ensure we only delete the email if it belongs to the user (emailID)
   const deleteResult = await collection.deleteOne({ _id: email_id, emailId: emailID });
 
-  const attachmentsPath = path.join(__dirname, `../attachments/${email_id}`);
+  const attachmentsPath = resolveAttachmentPath(email_id.toHexString());
   if (fs.existsSync(attachmentsPath)) {
     fs.rmSync(attachmentsPath, { recursive: true, force: true });
   }

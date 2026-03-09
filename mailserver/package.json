@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon server.js",
     "start:docker": "node server.js",
-    "test": "jest",
+    "test": "jest --config jest-config.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "create-invite": "node scripts/createInvite.js",

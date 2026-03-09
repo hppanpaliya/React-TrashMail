@@ -134,9 +134,9 @@ const AppContent = () => {
                 <Route
                   path="/all"
                   element={
-                    <PrivateRoute>
+                    <AdminRoute>
                       <AllEmailList />
-                    </PrivateRoute>
+                    </AdminRoute>
                   }
                 />
               </Routes>

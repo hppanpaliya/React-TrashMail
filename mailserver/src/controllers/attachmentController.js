@@ -1,28 +1,24 @@
 const path = require("path");
-const mime = require("mime-types");
+const { resolveAttachmentPath } = require("../utils/attachments");
 
 const attachmentController = {
   getAttachment: (req, res) => {
     const { directory, filename } = req.params;
-    
-    // Security: Prevent directory traversal
-    const safeDirectory = path.normalize(directory).replace(/^(\.\.[\/\\])+/, '');
-    const safeFilename = path.normalize(filename).replace(/^(\.\.[\/\\])+/, '');
-    
-    const attachmentsRoot = path.join(__dirname, "../..", "attachments");
-    const filePath = path.join(attachmentsRoot, safeDirectory, safeFilename);
 
-    // Ensure the resolved path is still within the attachments root
-    if (!filePath.startsWith(attachmentsRoot)) {
+    let filePath;
+    try {
+      filePath = resolveAttachmentPath(directory, filename);
+    } catch (error) {
       return res.status(403).json({ error: "Access denied" });
     }
 
+    const downloadName = path.basename(filename).replace(/"/g, "");
+
     // Set content type based on file extension
-    const contentType = mime.lookup(filename) || 'application/octet-stream';
-    res.setHeader('Content-Type', contentType);
+    res.type(downloadName);
     
     // Force download
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
     
     res.sendFile(filePath, (err) => {
       if (err) {

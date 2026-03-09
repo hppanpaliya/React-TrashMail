@@ -117,7 +117,6 @@ The Node.js backend provides the mail server functionality for receiving emails 
 - `GET /auth/admin` - Check admin access
 
 #### Emails
-- `GET /emails/:emailId` - Get emails for an address (with pagination, search, filter, sort)
 - `GET /emails-list/:emailId` - Get email list summary
 - `GET /all-emails` - Get all emails (admin only)
 - `GET /email/:emailId/:email_id` - Get specific email
@@ -131,7 +130,7 @@ The Node.js backend provides the mail server functionality for receiving emails 
 - `GET /sse-all` - Real-time updates for all emails (admin)
 
 #### Admin Routes
-- `GET /admin/users` - Get all users
+- `GET /auth/users` - Get all users
 - `PUT /admin/users/:userId/domains` - Update user domain access
 - `POST /admin/invites` - Generate new invite codes
 - `GET /admin/logs` - Get audit logs
@@ -150,18 +149,23 @@ npm install
 
 ### Configuration
 
-Create a `.env` file in the `mailserver` directory with the following variables:
+Copy `.env.example` to `.env` in the `mailserver` directory and update values as needed:
+
+```shell
+cp .env.example .env
+```
+
+Supported variables:
 
 ```env
 PORT=4000
 MONGO_URI=mongodb://localhost:27017
-DB_NAME=trashmail
-SMTP_PORT=2525
-DOMAIN=localhost
-ALLOWED_DOMAINS=localhost,example.com
+DB_NAME=myemails
+SMTP_PORT=25
+ALLOWED_DOMAINS=example.com
 JWT_SECRET=your_super_secret_jwt_key
 BCRYPT_SALT_ROUNDS=10
-JWT_EXPIRY=24h
+JWT_EXPIRY=5d
 EMAIL_RETENTION_DAYS=30
 # TRUST_PROXY: Configure based on your deployment
 # 0 = No proxy (local development)
@@ -183,7 +187,7 @@ TRUST_PROXY=0
 node server.js
 ```
 
-The backend will run on port 4000, SMTP on port 2525
+The backend will run on port 4000, SMTP on port 25
 
 ## Testing
 
@@ -257,11 +261,11 @@ Ensure you have Docker installed and running on your machine before executing th
 | `-e REACT_APP_DOMAINS='["example.com", "example.org"]'`    | Specifies the domains for the email service. Set to desired domains.                                                                  | Required |
 | `-e PORT=4000`                                             | Backend API server port                                                                                                               | 4000 |
 | `-e MONGO_URI=mongodb://localhost:27017`                   | MongoDB connection string                                                                                                             | mongodb://localhost:27017 |
-| `-e DB_NAME=trashmail`                                     | Database name                                                                                                                         | trashmail |
-| `-e SMTP_PORT=2525`                                        | SMTP server port                                                                                                                      | 2525 |
+| `-e DB_NAME=myemails`                                      | Database name                                                                                                                         | myemails |
+| `-e SMTP_PORT=25`                                          | SMTP server port                                                                                                                      | 25 |
 | `-e ALLOWED_DOMAINS=example.com,test.org`                  | Comma-separated list of allowed email domains                                                                                          | example.com |
 | `-e JWT_SECRET=your-secret-key`                            | **Required** - Secret key for JWT token signing. **Must be changed in production!**                                                   | your-secret-key-change-this-in-prod |
-| `-e JWT_EXPIRY=24h`                                        | JWT token expiration time                                                                                                             | 24h |
+| `-e JWT_EXPIRY=5d`                                         | JWT token expiration time                                                                                                             | 5d |
 | `-e BCRYPT_SALT_ROUNDS=10`                                 | Bcrypt salt rounds for password hashing                                                                                               | 10 |
 | `-e EMAIL_RETENTION_DAYS=30`                               | Number of days to retain emails before automatic cleanup                                                                              | 30 |
 | `-v ./attachments:/React-TrashMail/mailserver/attachments` | Volume mount for attachments. Maps a local directory to a container directory.                                                        | Required |

@@ -6,7 +6,7 @@ This is a Node.js-based mail server that provides SMTP (Simple Mail Transfer Pro
 
 Before running the mail server, ensure that you have the following prerequisites installed:
 
-- Node.js (version 14 or higher)
+- Node.js (version 20 or higher)
 - MongoDB
 - NPM (Node Package Manager)
 
@@ -24,30 +24,34 @@ Before running the mail server, ensure that you have the following prerequisites
 
 ## Configuration
 
-The mail server is configured using environment variables. Create a `.env` file in the `mailserver` directory with the following variables:
+The mail server is configured using environment variables. Copy `.env.example` to `.env` in the `mailserver` directory and update values:
+
+```shell
+cp .env.example .env
+```
+
+Supported variables:
 
 ```env
 PORT=4000
 MONGO_URI=mongodb://localhost:27017
-DB_NAME=trashmail
-SMTP_PORT=2525
-DOMAIN=localhost
-ALLOWED_DOMAINS=localhost,example.com
+DB_NAME=myemails
+SMTP_PORT=25
+ALLOWED_DOMAINS=example.com
 JWT_SECRET=your_super_secret_jwt_key
 BCRYPT_SALT_ROUNDS=10
-JWT_EXPIRY=24h
+JWT_EXPIRY=5d
 EMAIL_RETENTION_DAYS=30
 ```
 
 - `PORT`: The port the API server will listen on (default: 4000).
 - `MONGO_URI`: The connection string for your MongoDB instance (default: mongodb://localhost:27017).
-- `DB_NAME`: The name of the database to use (default: trashmail).
-- `SMTP_PORT`: The port the SMTP server will listen on (default: 2525).
-- `DOMAIN`: The domain name for the email addresses (e.g., `trashmail.com`).
+- `DB_NAME`: The name of the database to use (default: myemails).
+- `SMTP_PORT`: The port the SMTP server will listen on (default: 25).
 - `ALLOWED_DOMAINS`: Comma-separated list of domains allowed for disposable emails.
 - `JWT_SECRET`: Secret key for signing JWT tokens (required for production).
 - `BCRYPT_SALT_ROUNDS`: Cost factor for password hashing (default: 10).
-- `JWT_EXPIRY`: Token expiration time (default: 24h).
+- `JWT_EXPIRY`: Token expiration time (default: 5d).
 - `EMAIL_RETENTION_DAYS`: Number of days to retain emails (default: 30).
 
 ## Database Setup
@@ -91,7 +95,7 @@ npm test
 
 ## SMTP Server
 
-The SMTP server is responsible for handling incoming emails. It listens for incoming connections and processes the email data. The `handleIncomingEmail` function in `emailHandler.js` parses the email using the `mailparser` library and saves it to the MongoDB database using the `saveEmailToDB` function.
+The SMTP server is responsible for handling incoming emails. It listens for incoming connections and processes the email data. The `handleIncomingEmail` function in `src/services/emailService.js` parses the email using `mailparser` and persists sanitized content and attachments.
 
 ## Web Server
 
@@ -107,7 +111,6 @@ The following routes are available:
 - `GET /auth/users` - Get all users (admin only)
 
 #### Email Routes
-- `GET /emails/:emailId` - Retrieves emails for a specific email ID with pagination, search, filter, and sort
 - `GET /emails-list/:emailId` - Retrieves a list of emails (limited fields) for a specific email ID
 - `GET /all-emails` - Retrieves all emails stored in the database (admin only)
 - `GET /email/:emailID/:email_id` - Retrieves a specific email by its email ID and email UID
@@ -132,7 +135,7 @@ The following routes are available:
 
 ## Database
 
-The mail server uses a MongoDB database to store emails. The `db.js` file handles the database connection and provides functions for connecting to the database, retrieving the database instance, and closing the connection.
+The mail server uses MongoDB to store users, invites, emails, and audit logs. Database connection setup and index creation are handled in `src/db/index.js`.
 
 ## Attachment Storage
 

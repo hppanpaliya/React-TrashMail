@@ -1,21 +1,21 @@
 const { simpleParser } = require("mailparser");
 const fs = require("fs");
-const path = require("path");
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const sseService = require("./sseService");
 const { sanitizeEmailHTML, textToHTML } = require('../utils/sanitizer');
 const { Readable } = require('stream');
+const { resolveAttachmentPath, sanitizeAttachmentFilename } = require("../utils/attachments");
 
 async function saveAttachment(attachmentFolder, attachment) {
-  const attachmentsDir = path.join(__dirname, "../..", "attachments", attachmentFolder);
+  const attachmentsDir = resolveAttachmentPath(attachmentFolder);
 
   if (!fs.existsSync(attachmentsDir)) {
     fs.mkdirSync(attachmentsDir, { recursive: true });
   }
 
-  const filename = attachment.filename;
-  const savePath = path.join(attachmentsDir, filename);
+  const filename = sanitizeAttachmentFilename(attachment.filename);
+  const savePath = resolveAttachmentPath(attachmentFolder, filename);
 
   return new Promise((resolve, reject) => {
     let writeStream;
@@ -24,20 +24,20 @@ async function saveAttachment(attachmentFolder, attachment) {
       writeStream = fs.createWriteStream(savePath);
       writeStream.write(attachment.content);
       writeStream.end();
-      writeStream.on("finish", resolve);
+      writeStream.on("finish", () => resolve(filename));
       writeStream.on("error", reject);
     } else if (typeof attachment.content === "string") {
       // Handle attachment content as a string
       writeStream = fs.createWriteStream(savePath, { encoding: "utf8" });
       writeStream.write(attachment.content);
       writeStream.end();
-      writeStream.on("finish", resolve);
+      writeStream.on("finish", () => resolve(filename));
       writeStream.on("error", reject);
     } else if (attachment.content instanceof Readable) {
       // Handle attachment content as a Readable stream
       writeStream = fs.createWriteStream(savePath);
       attachment.content.pipe(writeStream);
-      writeStream.on("finish", resolve);
+      writeStream.on("finish", () => resolve(filename));
       writeStream.on("error", reject);
     } else {
       reject(new Error("Unsupported attachment content type"));
@@ -74,18 +74,20 @@ async function saveEmailToDB(parsedEmail, toAddress) {
     const objectId = new ObjectId();
     // Use the ObjectId as the attachment folder name
     let attachmentFolder = objectId.toHexString();
+    let savedAttachments = [];
+
     if (originalAttachments && originalAttachments.length > 0) {
       console.log("Saving attachments to the file system");
       for (const attachment of originalAttachments) {
-        await saveAttachment(attachmentFolder, attachment);
+        const savedFilename = await saveAttachment(attachmentFolder, attachment);
+        savedAttachments.push({
+          filename: savedFilename,
+          directory: attachmentFolder,
+        });
       }
+      parsedEmail.attachments = savedAttachments;
     }
-    if (originalAttachments && originalAttachments.length > 0) {
-      parsedEmail.attachments = originalAttachments.map((attachment) => ({
-        filename: attachment.filename,
-        directory: attachmentFolder,
-      }));
-    }
+
     parsedEmail._id = objectId;
     parsedEmail.emailId = toAddress; // Add emailId field for single collection schema
     parsedEmail.readStatus = false;
@@ -133,7 +135,7 @@ async function handleIncomingEmail(stream, session) {
   try {
     const parsedEmail = await simpleParser(stream);
     parsedEmail.originalAttachments = parsedEmail.attachments;
-    for (toAddress of session.envelope.rcptTo) {
+    for (const toAddress of session.envelope.rcptTo) {
       await saveEmailToDB(parsedEmail, toAddress.address.toLowerCase());
     }
   } catch (error) {

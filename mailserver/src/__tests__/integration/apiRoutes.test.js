@@ -10,10 +10,12 @@ const { Readable } = require("stream");
 const { handleIncomingEmail } = require("../../services/emailService");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { resolveAttachmentPath } = require("../../utils/attachments");
 
 let mongoServer;
 let app;
 let authToken;
+let userToken;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
@@ -36,6 +38,21 @@ beforeAll(async () => {
   // Generate JWT token
   authToken = jwt.sign(
     { id: result.insertedId.toString(), username: testUser.username, role: testUser.role },
+    config.jwtSecret,
+    { expiresIn: "24h" }
+  );
+
+  const normalUser = {
+    username: "normaluser",
+    password: hashedPassword,
+    role: "user",
+    allowedDomains: ["myserver.pw", "example.com"],
+    createdAt: new Date(),
+  };
+  const normalUserResult = await db.collection("users").insertOne(normalUser);
+
+  userToken = jwt.sign(
+    { id: normalUserResult.insertedId.toString(), username: normalUser.username, role: normalUser.role },
     config.jwtSecret,
     { expiresIn: "24h" }
   );
@@ -109,6 +126,23 @@ describe("API Routes", () => {
     expect(response.body.length).toBe(2);
     expect(response.body[0].subject).toBe("Test Email 1");
     expect(response.body[1].subject).toBe("Test Email 2");
+  });
+
+  test("GET /api/sse-all should reject non-admin users", async () => {
+    const response = await request(app)
+      .get("/api/sse-all")
+      .set("Authorization", `Bearer ${userToken}`);
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toContain("Forbidden");
+  });
+
+  test("GET /api/attachment/:directory/:filename should block path traversal", async () => {
+    const response = await request(app)
+      .get("/api/attachment/%2e%2e/secret.txt")
+      .set("Authorization", `Bearer ${authToken}`);
+
+    expect([403, 404]).toContain(response.status);
   });
 
   test("GET /api/email/:emailID/:email_id should return a specific email and update readStatus", async () => {
@@ -221,7 +255,7 @@ describe("API Routes", () => {
     expect(response.text).toBe("This is a test attachment content.");
 
     await db.collection("emails").deleteOne({ _id: savedEmail._id });
-    const attachmentPath = path.join(__dirname, "../../attachments", attachment.directory, attachment.filename);
+    const attachmentPath = resolveAttachmentPath(attachment.directory, attachment.filename);
     if (fs.existsSync(attachmentPath)) {
       fs.unlinkSync(attachmentPath);
       fs.rmdirSync(path.dirname(attachmentPath));

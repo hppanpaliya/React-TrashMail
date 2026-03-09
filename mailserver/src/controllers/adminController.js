@@ -1,6 +1,8 @@
 const { getDB } = require("../db");
 const { ObjectId } = require("mongodb");
 const auditService = require("../services/auditService");
+const { resolveAttachmentPath } = require("../utils/attachments");
+const { generateInviteCode } = require("../utils/inviteCode");
 
 const adminController = {
   getLogs: async (req, res) => {
@@ -97,7 +99,7 @@ const adminController = {
       const db = getDB();
       const invitesCollection = db.collection("invites");
 
-      const code = "WELCOME-TRASHMAIL-" + Math.random().toString(36).substring(7).toUpperCase();
+      const code = generateInviteCode();
       
       await invitesCollection.insertOne({
         code: code,
@@ -325,15 +327,13 @@ const adminController = {
 
       // Calculate attachment sizes
       const fs = require('fs');
-      const path = require('path');
-      const attachmentsDir = path.join(__dirname, '../../attachments');
 
       const emailsWithSizes = emails.map(email => {
         let totalSize = 0;
         if (email.attachments && email.attachments.length > 0) {
           email.attachments.forEach(attachment => {
-            const attachmentPath = path.join(attachmentsDir, attachment.directory, attachment.filename);
             try {
+              const attachmentPath = resolveAttachmentPath(attachment.directory, attachment.filename);
               if (fs.existsSync(attachmentPath)) {
                 const stats = fs.statSync(attachmentPath);
                 totalSize += stats.size;

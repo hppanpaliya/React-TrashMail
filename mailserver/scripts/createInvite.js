@@ -1,5 +1,6 @@
 const { MongoClient } = require("mongodb");
 const config = require("../src/config");
+const { generateInviteCode } = require("../src/utils/inviteCode");
 
 async function createInvite() {
   const client = new MongoClient(config.mongoURL);
@@ -12,7 +13,7 @@ async function createInvite() {
     const args = process.argv.slice(2);
     const role = args[0] || 'user'; // Default to 'user' if not specified
 
-    const code = "WELCOME-TRASHMAIL-" + Math.random().toString(36).substring(7).toUpperCase();
+    const code = generateInviteCode();
     
     await invitesCollection.insertOne({
       code: code,

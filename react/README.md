@@ -4,7 +4,13 @@ This is the React frontend for the TrashMail application.
 
 ## Environment Variables
 
-Create a `.env` file in the `react` directory and add the following variables:
+Copy `.env.example` to `.env` in the `react` directory and adjust values if needed:
+
+```shell
+cp .env.example .env
+```
+
+Environment variables:
 
 ```env
 REACT_APP_API_URL=http://localhost:4000

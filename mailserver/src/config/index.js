@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+const DEFAULT_JWT_SECRET = "your-secret-key-change-this-in-prod";
+
 const parseDomains = (envVar) => {
   if (!envVar) return ['example.com'];
   
@@ -34,11 +36,19 @@ const config = {
   dbName: process.env.DB_NAME || "myemails",
   webPort: parseInt(process.env.PORT) || 4000,
   emailRetentionDays: parseInt(process.env.EMAIL_RETENTION_DAYS) || 30,
-  jwtSecret: process.env.JWT_SECRET || "your-secret-key-change-this-in-prod",
+  jwtSecret: process.env.JWT_SECRET || DEFAULT_JWT_SECRET,
   jwtExpiry: process.env.JWT_EXPIRY || "5d",
   bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10,
   allowedDomains: parseDomains(process.env.ALLOWED_DOMAINS),
 };
+
+if (process.env.NODE_ENV === "production" && config.jwtSecret === DEFAULT_JWT_SECRET) {
+  throw new Error("JWT_SECRET must be set to a strong value in production.");
+}
+
+if (config.jwtSecret === DEFAULT_JWT_SECRET) {
+  console.warn("Using default JWT_SECRET. Set JWT_SECRET for non-development environments.");
+}
 
 
 module.exports = config;

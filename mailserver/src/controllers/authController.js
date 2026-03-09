@@ -7,23 +7,35 @@ const auditService = require('../services/auditService');
 const authController = {
   signup: async (req, res) => {
     const { username, password, inviteCode } = req.body;
+    let consumedInviteId = null;
 
     try {
       const db = getDB();
       const usersCollection = db.collection('users');
       const invitesCollection = db.collection('invites');
 
-      // 1. Verify Invite Code
+      // 1. Check if user already exists
+      let user = await usersCollection.findOne({ username });
+      if (user) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+
+      // 2. Validate and atomically consume invite code
       const invite = await invitesCollection.findOne({ code: inviteCode, used: false });
       if (!invite) {
         return res.status(400).json({ message: 'Invalid or used invite code' });
       }
 
-      // 2. Check if user already exists
-      let user = await usersCollection.findOne({ username });
-      if (user) {
-        return res.status(400).json({ message: 'User already exists' });
+      const consumeInviteResult = await invitesCollection.updateOne(
+        { _id: invite._id, used: false },
+        { $set: { used: true, usedAt: new Date() } }
+      );
+
+      if (consumeInviteResult.modifiedCount === 0) {
+        return res.status(400).json({ message: 'Invalid or used invite code' });
       }
+
+      consumedInviteId = invite._id;
 
       // 3. Hash Password
       const salt = await bcrypt.genSalt(config.bcryptSaltRounds);
@@ -40,11 +52,12 @@ const authController = {
 
       const result = await usersCollection.insertOne(user);
       const userId = result.insertedId;
+      consumedInviteId = null;
 
-      // 5. Mark invite as used
+      // 5. Attach consumed invite to created user
       await invitesCollection.updateOne(
         { _id: invite._id },
-        { $set: { used: true, usedBy: userId, usedAt: new Date() } }
+        { $set: { usedBy: userId } }
       );
 
       // Log Signup
@@ -69,6 +82,18 @@ const authController = {
         }
       );
     } catch (err) {
+      if (consumedInviteId) {
+        try {
+          const db = getDB();
+          await db.collection('invites').updateOne(
+            { _id: consumedInviteId, usedBy: { $exists: false } },
+            { $set: { used: false }, $unset: { usedAt: "" } }
+          );
+        } catch (rollbackError) {
+          console.error("Failed to roll back consumed invite:", rollbackError.message);
+        }
+      }
+
       console.error(err.message);
       res.status(500).send('Server error');
     }
