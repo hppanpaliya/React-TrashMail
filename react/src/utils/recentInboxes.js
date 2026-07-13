@@ -25,3 +25,4 @@ export const addRecentInbox = (emailId) => {
   } catch {
     // storage full/unavailable — non-fatal
   }
+};
