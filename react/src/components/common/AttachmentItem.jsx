@@ -8,7 +8,7 @@ import Chip from "../ui/Chip";
 import Skeleton from "../ui/Skeleton";
 import Button from "../ui/Button";
 
-const IMAGE_RE = /\.(png|jpe?g|gif|webp|bmp|avif|svg)$/i;
+const IMAGE_RE = /\.(png|jpe?g|gif|webp|bmp|avif)$/i;
 
 // A single email attachment: image attachments render an inline thumbnail
 // (fetched as a blob with the auth header) with click-to-open; everything
