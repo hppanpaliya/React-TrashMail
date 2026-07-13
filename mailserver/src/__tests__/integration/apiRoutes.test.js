@@ -20,7 +20,7 @@ beforeAll(async () => {
   config.mongoURL = mongoServer.getUri();
   await connectMongoDB();
   app = createApp();
-  
+
   // Create a test user and get auth token
   const db = getDB();
   const hashedPassword = await bcrypt.hash("testpassword", 10);
@@ -32,18 +32,54 @@ beforeAll(async () => {
     createdAt: new Date(),
   };
   const result = await db.collection("users").insertOne(testUser);
-  
+
   // Generate JWT token
-  authToken = jwt.sign(
-    { id: result.insertedId.toString(), username: testUser.username, role: testUser.role },
-    config.jwtSecret,
-    { expiresIn: "24h" }
-  );
+  authToken = jwt.sign({ id: result.insertedId.toString(), username: testUser.username, role: testUser.role }, config.jwtSecret, {
+    expiresIn: "24h",
+  });
 });
 
 afterAll(async () => {
   await closeMongoDB();
   await mongoServer.stop();
+});
+
+describe("GET /api/config", () => {
+  const makeUserToken = async (username, allowedDomains) => {
+    const db = getDB();
+    const doc = { username, password: "x", role: "user", createdAt: new Date() };
+    if (allowedDomains !== undefined) doc.allowedDomains = allowedDomains;
+    const { insertedId } = await db.collection("users").insertOne(doc);
+    return jwt.sign({ id: insertedId.toString(), username, role: "user" }, config.jwtSecret, { expiresIn: "1h" });
+  };
+
+  test("requires authentication", async () => {
+    const response = await request(app).get("/api/config");
+    expect(response.status).toBe(401);
+  });
+
+  test("returns retentionDays and the user's own allowed domains", async () => {
+    const response = await request(app).get("/api/config").set("Authorization", `Bearer ${authToken}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      retentionDays: config.emailRetentionDays,
+      domains: ["myserver.pw", "example.com"],
+    });
+  });
+
+  test("returns the global domain list for users with allowedDomains '*'", async () => {
+    const token = await makeUserToken("wildcarduser", "*");
+    const response = await request(app).get("/api/config").set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.domains).toEqual(config.allowedDomains);
+  });
+
+  test("returns the global domain list for users without allowedDomains", async () => {
+    const token = await makeUserToken("defaultuser");
+    const response = await request(app).get("/api/config").set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.domains).toEqual(config.allowedDomains);
+  });
 });
 
 describe("API Routes", () => {
@@ -53,7 +89,7 @@ describe("API Routes", () => {
   });
 
   const insertEmails = async (db, emails, emailId) => {
-    const emailsWithId = emails.map(email => ({ ...email, emailId }));
+    const emailsWithId = emails.map((email) => ({ ...email, emailId }));
     await db.collection("emails").insertMany(emailsWithId);
   };
 
@@ -75,7 +111,7 @@ describe("API Routes", () => {
     };
 
     await handleIncomingEmail(emailStream, session);
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const db = getDB();
     return db.collection("emails").findOne({ subject: testEmail.subject, emailId: testEmail.to });
   };
@@ -85,9 +121,7 @@ describe("API Routes", () => {
     await insertEmails(db, [{ from: { text: "sender@example.com" }, subject: "Test Email 1", date: new Date() }], "test@example.com");
     await insertEmails(db, [{ from: { text: "sender@example.com" }, subject: "Test Email 2", date: new Date() }], "other@example.com");
 
-    const response = await request(app)
-      .get("/api/all-emails")
-      .set("Authorization", `Bearer ${authToken}`);
+    const response = await request(app).get("/api/all-emails").set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
@@ -101,9 +135,7 @@ describe("API Routes", () => {
     ];
     await insertEmails(db, emails, "harshal@myserver.pw");
 
-    const response = await request(app)
-      .get("/api/emails-list/harshal@myserver.pw")
-      .set("Authorization", `Bearer ${authToken}`);
+    const response = await request(app).get("/api/emails-list/harshal@myserver.pw").set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
@@ -120,17 +152,13 @@ describe("API Routes", () => {
     };
 
     const savedEmail = await sendTestEmail(testEmail);
-    
+
     if (!savedEmail) {
       throw new Error("Email was not saved to database");
     }
 
-    let response = await request(app)
-      .get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`)
-      .set("Authorization", `Bearer ${authToken}`);
-    response = await request(app)
-      .get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`)
-      .set("Authorization", `Bearer ${authToken}`);
+    let response = await request(app).get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`).set("Authorization", `Bearer ${authToken}`);
+    response = await request(app).get(`/api/email/${testEmail.to}/${savedEmail._id.toString()}`).set("Authorization", `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body[0].subject).toBe("Test Email");
@@ -202,9 +230,9 @@ describe("API Routes", () => {
     };
 
     await handleIncomingEmail(emailStream, session);
-    
+
     // Wait for email processing
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const db = getDB();
     const savedEmail = await db.collection("emails").findOne({ subject: testEmail.subject, emailId: testEmail.to });

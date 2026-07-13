@@ -1,11 +1,148 @@
-body {
-  margin: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import "tailwindcss";
+
+/* Dark mode is driven by a `dark` class on <html> (see ThemeContext). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   TrashMail design tokens
+   Dark-first: background layers (base / raised / overlay), hairline borders,
+   gold brand accent, semantic colors. Values swap per theme via CSS vars.
+--------------------------------------------------------------------------- */
+
+:root {
+  --tm-base: #f6f5f2;
+  --tm-raised: rgba(255, 255, 255, 0.66);
+  --tm-raised-solid: #ffffff;
+  --tm-overlay: #ffffff;
+  --tm-ink: #1b1d22;
+  --tm-muted: #5d626c;
+  --tm-faint: #969ca7;
+  --tm-hairline: rgba(23, 25, 30, 0.1);
+  --tm-hairline-strong: rgba(23, 25, 30, 0.2);
+  --tm-accent: #b8933f;
+  --tm-accent-soft: rgba(184, 147, 63, 0.14);
+  --tm-accent-ink: #241b07;
+  --tm-success: #257a4e;
+  --tm-danger: #c2403f;
+  --tm-info: #2e6fad;
+  --tm-warning: #a06a10;
+  --tm-warning-soft: rgba(160, 106, 16, 0.14);
+  --tm-shadow: 0 1px 2px rgba(15, 17, 21, 0.05), 0 8px 24px -12px rgba(15, 17, 21, 0.18);
+  --tm-shadow-lift: 0 2px 4px rgba(15, 17, 21, 0.06), 0 16px 32px -12px rgba(15, 17, 21, 0.24);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+.dark {
+  --tm-base: #0b0c0f;
+  --tm-raised: rgba(255, 255, 255, 0.045);
+  --tm-raised-solid: #15171c;
+  --tm-overlay: #16181d;
+  --tm-ink: #edeef1;
+  --tm-muted: #9aa0ab;
+  --tm-faint: #666c76;
+  --tm-hairline: rgba(255, 255, 255, 0.09);
+  --tm-hairline-strong: rgba(255, 255, 255, 0.18);
+  --tm-accent: #ecca7b;
+  --tm-accent-soft: rgba(236, 202, 123, 0.12);
+  --tm-accent-ink: #241b07;
+  --tm-success: #57c98a;
+  --tm-danger: #e5716f;
+  --tm-info: #6aa9e0;
+  --tm-warning: #dfa94f;
+  --tm-warning-soft: rgba(223, 169, 79, 0.14);
+  --tm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --tm-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 16px 32px -12px rgba(0, 0, 0, 0.7);
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-base: var(--tm-base);
+  --color-raised: var(--tm-raised);
+  --color-raised-solid: var(--tm-raised-solid);
+  --color-overlay: var(--tm-overlay);
+  --color-ink: var(--tm-ink);
+  --color-muted: var(--tm-muted);
+  --color-faint: var(--tm-faint);
+  --color-hairline: var(--tm-hairline);
+  --color-hairline-strong: var(--tm-hairline-strong);
+  --color-accent: var(--tm-accent);
+  --color-accent-soft: var(--tm-accent-soft);
+  --color-accent-ink: var(--tm-accent-ink);
+  --color-gold: #ecca7b;
+  --color-success: var(--tm-success);
+  --color-danger: var(--tm-danger);
+  --color-info: var(--tm-info);
+  --color-warning: var(--tm-warning);
+  --color-warning-soft: var(--tm-warning-soft);
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Abhaya Libre", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+
+  --shadow-card: var(--tm-shadow);
+  --shadow-lift: var(--tm-shadow-lift);
+}
+
+/* ---------------------------------------------------------------------------
+   Base styles
+--------------------------------------------------------------------------- */
+
+body {
+  margin: 0;
+  background-color: var(--tm-base);
+  color: var(--tm-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease;
+}
+
+::selection {
+  background: var(--tm-accent);
+  color: var(--tm-accent-ink);
+}
+
+/* Timestamps and counters read best with tabular numerals. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbars (used on horizontally scrolling tab rows). */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shared glass surface for raised cards. */
+.glass {
+  background-color: var(--tm-raised);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--tm-hairline);
+}
+
+/* Focus ring driven by the brand accent. */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--tm-accent);
+  outline-offset: 2px;
+}
+
+/* Rendered email content (react-letter output). */
+.email-body {
+  overflow-wrap: break-word;
+}
+.email-body a {
+  color: var(--tm-info);
+  text-decoration: underline;
+}
+.email-body img {
+  max-width: 100%;
+  height: auto;
 }

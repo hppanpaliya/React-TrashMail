@@ -3,61 +3,46 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.13.6",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource/abhaya-libre": "^5.2.7",
+    "@tailwindcss/vite": "^4.3.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
     "axios": "^1.13.2",
     "dompurify": "^3.3.1",
-    "framer-motion": "^11.2.12",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.24.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-letter": "^0.4.0",
     "react-router-dom": "^6.30.2",
-    "react-scripts": "^5.0.1",
-    "web-vitals": "^5.1.0"
+    "tailwindcss": "^4.3.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint 'src/**/*.{js,jsx}'",
     "lint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
     "inject-env": "react-inject-env"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@babel/plugin-transform-private-property-in-object": "^7.27.1",
     "@eslint/js": "^9.39.2",
     "@testing-library/dom": "^10.4.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.0.0",
+    "jsdom": "^29.1.1",
     "prettier": "^3.7.4",
-    "react-inject-env": "^2.1.0"
+    "react-inject-env": "^2.1.0",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10"
   }
 }

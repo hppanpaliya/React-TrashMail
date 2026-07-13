@@ -27,10 +27,10 @@ export default [
       "react-hooks": reactHooks,
     },
     settings: {
-    react: {
-      version: "detect",
+      react: {
+        version: "detect",
+      },
     },
-  },
     rules: {
       "react-hooks/exhaustive-deps": "warn",
     },
