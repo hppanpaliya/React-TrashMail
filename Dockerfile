@@ -7,7 +7,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends curl gnupg git ca-certificates; \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
     apt-get install -y --no-install-recommends nodejs; \
-    npm install -g yarn; \
+    if ! command -v yarn >/dev/null 2>&1; then npm install -g yarn; fi; \
     yarn global add pm2; \
     apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
