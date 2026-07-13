@@ -1,12 +1,17 @@
 const express = require("express");
 const sseService = require("../services/sseService");
-const { validateEmailId } = require("../middleware/validationMiddleware");
+const { validateEmailId, handleValidationErrors } = require("../middleware/validationMiddleware");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
+const { getDB } = require("../db");
+const { ObjectId } = require("mongodb");
 
 const router = express.Router();
 
-const sseAuthMiddleware = (req, res, next) => {
+// Authenticates SSE connections via the ?token= query param. Mirrors
+// authMiddleware: the user is re-fetched from the DB so revoked roles or
+// domain access take effect immediately.
+const sseAuthMiddleware = async (req, res, next) => {
   const token = req.query.token;
   if (!token) {
     console.error("SSE Auth Failed: No token provided");
@@ -14,31 +19,40 @@ const sseAuthMiddleware = (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = decoded.user;
+    const userId = decoded.id || (decoded.user && decoded.user.id);
+
+    const db = getDB();
+    const user = await db.collection("users").findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = {
+      id: user._id.toString(),
+      username: user.username,
+      role: user.role || "user",
+      allowedDomains: user.allowedDomains,
+    };
     next();
   } catch (err) {
     console.error("SSE Auth Failed:", err.message);
-    console.error("Token:", token);
-    console.error("Secret used:", config.jwtSecret); // Be careful logging secrets in prod, but ok for debug
-    // If token is expired or invalid, we might want to allow connection but not associate with user
-    // But for now, let's be strict.
     res.status(401).json({ message: "Token is not valid" });
   }
 };
 
-router.get("/sse/:emailId", sseAuthMiddleware, validateEmailId, (req, res) => {
+// validateEmailId enforces the same per-user domain authorization used by the
+// REST email routes (user.allowedDomains or the global config.allowedDomains),
+// so users can only subscribe to inboxes on domains they may view.
+router.get("/sse/:emailId", sseAuthMiddleware, validateEmailId, handleValidationErrors, (req, res) => {
   const { emailId } = req.params;
-  // Double check if the user in token matches the emailId requested
-  // This prevents User A from listening to User B's events
-  // Note: emailId in params is the temporary email address, user.username is the account username.
-  // They are different concepts in this app.
-  // If the app design links them, we should check here.
-  
   sseService.addClient(emailId, res);
 });
 
-// SSE endpoint for all emails (authenticated users only)
+// SSE endpoint for all emails (admin only)
 router.get("/sse-all", sseAuthMiddleware, (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden: Insufficient permissions" });
+  }
   sseService.addAllEmailsClient(res);
 });
 

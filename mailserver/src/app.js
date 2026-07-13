@@ -11,6 +11,7 @@ const attachmentRoutes = require("./routes/attachmentRoutes");
 const sseRoutes = require("./routes/sseRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const webhookRoutes = require("./routes/webhookRoutes");
 
 function createApp() {
   const app = express();
@@ -20,34 +21,49 @@ function createApp() {
   // - 2: Behind two proxies (e.g., Cloudflare + Nginx)
   // - N: Behind N proxies
   // IMPORTANT: Setting this incorrectly allows rate limit bypass!
-  const trustProxy = process.env.TRUST_PROXY || '0';
-  app.set('trust proxy', trustProxy === 'false' ? false : parseInt(trustProxy, 10) || 0);
+  const trustProxy = process.env.TRUST_PROXY || "0";
+  app.set("trust proxy", trustProxy === "false" ? false : parseInt(trustProxy, 10) || 0);
 
-  // Security Headers
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"], // React often needs unsafe-inline for development or certain builds
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'"],
+  // Security Headers.
+  // Helmet's default CSP includes upgrade-insecure-requests, which makes
+  // browsers rewrite every asset request to https:// — on a plain-HTTP
+  // self-hosted deployment (the Docker default) the page then renders blank.
+  // It and HSTS are therefore opt-in via FORCE_HTTPS=true for deployments
+  // that actually terminate TLS.
+  const forceHttps = process.env.FORCE_HTTPS === "true";
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"], // React often needs unsafe-inline for development or certain builds
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "blob:"],
+          connectSrc: ["'self'"],
+          ...(forceHttps ? {} : { upgradeInsecureRequests: null }),
+        },
       },
-    },
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS for development
-  }));
+      hsts: forceHttps,
+      crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS for development
+    })
+  );
 
   // Enable CORS with exposed headers for pagination
-  app.use(cors({
-    exposedHeaders: ['X-Total-Count', 'X-Total-Pages', 'X-Current-Page']
-  }));
+  app.use(
+    cors({
+      exposedHeaders: ["X-Total-Count", "X-Total-Pages", "X-Current-Page"],
+    })
+  );
 
   // Rate Limiting (Global)
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 1000, // Increased limit to allow normal usage
     message: "Too many requests from this IP, please try again later.",
-    skip: (req) => req.originalUrl.includes('/sse/') // Skip rate limiting for SSE connections
+    // Skip rate limiting for SSE connections only. Match precisely on the
+    // path (relative to the /api mount) so "/sse/" appearing elsewhere in the
+    // URL or query string cannot be used to bypass rate limiting.
+    skip: (req) => req.path.startsWith("/sse/"),
   });
   app.use("/api", limiter);
 
@@ -56,19 +72,24 @@ function createApp() {
 
   // Prevent Parameter Pollution
   app.use(hpp());
-  
+
   // Parse JSON bodies (needed for auth)
-  app.use(express.json({ limit: '10kb' })); // Limit body size
+  app.use(express.json({ limit: "10kb" })); // Limit body size
 
   // Define routes
   app.use("/api/auth", authRoutes);
   app.use("/api/admin", adminRoutes);
+  // Webhook routes are mounted BEFORE emailRoutes: emailRoutes applies a
+  // generic HTML-escaping sanitizer at router level which would corrupt
+  // webhook URLs/secrets in request bodies as they pass through the /api
+  // chain. Webhook inputs are strictly validated instead.
+  app.use("/api", webhookRoutes);
   app.use("/api", emailRoutes);
   app.use("/api", attachmentRoutes);
   app.use("/api", sseRoutes);
-  
+
   // Serve static files from the React app build directory
-  const buildPath = path.join(__dirname, ".", "build"); 
+  const buildPath = path.join(__dirname, ".", "build");
   app.use(express.static(buildPath));
 
   if (fs.existsSync(path.join(buildPath, "index.html"))) {

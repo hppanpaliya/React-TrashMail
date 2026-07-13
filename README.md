@@ -12,7 +12,13 @@ TrashMail is a web application for generating disposable/temporary email address
 - **Search, Filter & Sort**: Advanced email management with search, filtering, and sorting capabilities.
 - **Pagination**: Efficient handling of large email lists with pagination support.
 - **Dark Mode**: Toggle between light and dark themes for better user experience.
-- **Responsive Design**: Optimized for desktop and mobile devices.
+- **Responsive Design**: Optimized for desktop and mobile devices, with a bottom tab bar on small screens.
+- **Command Palette & Shortcuts**: ⌘K / Ctrl+K fuzzy-searchable actions plus single-key shortcuts (`/`, `c`, `n`, `d`, `?`).
+- **Per-Address Webhooks**: HMAC-signed POST deliveries (with retries and SSRF protection) whenever an inbox receives mail, configurable per address from the inbox header.
+- **Expiry Countdowns**: Every email shows when it will be auto-deleted, driven by the server's `EMAIL_RETENTION_DAYS` via `GET /api/config`.
+- **Watch Mode**: `/watch` — an ultra-compact, text-first inbox reader for ~200px viewports (Apple Watch WebKit) with automatic OTP-code detection and tap-to-copy.
+- **QR Codes**: Scan any address (or its watch-mode URL) to open it on another device.
+- **Raw Email Download**: Download the original RFC822 source as an `.eml` file.
 - **Secure**:
     - **Audit Logging**: Comprehensive logging of user and admin activities.
     - **Sanitization**: All inputs and email content are sanitized to prevent XSS and NoSQL injection.
@@ -41,21 +47,25 @@ The React frontend provides the user interface for generating disposable emails,
 - Enter a custom disposable email address
 - View all received emails for an address with pagination
 - Search, filter, and sort emails
-- Read a specific email and attachments
-- Delete emails
-- Real-time email updates via SSE
-- Dark mode toggle
-- Responsive design optimized for mobile and desktop
+- Read a specific email (HTML / plain-text / original views) and attachments
+- Delete a single email or clear the whole inbox
+- Real-time email updates via SSE with automatic reconnect
+- Command palette (⌘K) and keyboard shortcuts
+- Webhook settings per inbox (URL, signing secret, test delivery)
+- Expiry countdown chips and QR codes for every address
+- Watch mode (`/watch`) for tiny wearable screens with OTP tap-to-copy
+- Dark/light theme (dark-first, persisted, system-pref default)
+- Responsive design: desktop nav rail, mobile bottom tab bar
 - Authentication: Login and Signup pages with invite codes
 - Admin Dashboard: Manage users, view logs, generate invites (admin only)
 
 ### Tech Stack
 
-- React
+- React 19 + Vite 7
 - React Router
-- Material UI
+- Tailwind CSS v4 (custom design system, no component library)
 - Axios
-- Framer Motion
+- Framer Motion 12
 
 ### Pages
 
@@ -117,11 +127,20 @@ The Node.js backend provides the mail server functionality for receiving emails 
 - `GET /auth/admin` - Check admin access
 
 #### Emails
-- `GET /emails/:emailId` - Get emails for an address (with pagination, search, filter, sort)
-- `GET /emails-list/:emailId` - Get email list summary
-- `GET /all-emails` - Get all emails (admin only)
-- `GET /email/:emailId/:email_id` - Get specific email
+- `GET /emails-list/:emailId` - Get emails for an address (pagination, search, filter, sort via query params)
+- `GET /emails-list/:emailId/unread-count` - Unread count for tab badges
+- `GET /all-emails` - Get all emails (admin only, same query params)
+- `GET /email/:emailId/:email_id` - Get specific email (marks it read)
+- `GET /email/:emailId/:email_id/raw` - Download raw RFC822 source (`.eml`)
 - `DELETE /email/:emailId/:email_id` - Delete email
+- `DELETE /emails/:emailId` - Delete ALL emails in an inbox
+
+#### Config & Webhooks
+- `GET /config` - `{ retentionDays, domains }` for the authenticated user (drives frontend expiry chips and domain picker)
+- `GET|PUT|DELETE /webhooks/:emailId` - Per-inbox webhook configuration (HMAC-signed deliveries with retries and SSRF protection)
+- `POST /webhooks/:emailId/test` - Send a test delivery
+
+See `mailserver/README.md` for full request/response details.
 
 #### Attachments
 - `GET /attachment/:directory/:filename` - Serve attachment file
@@ -168,6 +187,13 @@ EMAIL_RETENTION_DAYS=30
 # 1 = Behind one proxy (e.g., Nginx)
 # 2 = Behind two proxies (e.g., Cloudflare + Nginx)
 TRUST_PROXY=0
+# FORCE_HTTPS: set to true ONLY when serving behind TLS — enables HSTS and
+# the upgrade-insecure-requests CSP directive. Leaving it unset keeps
+# plain-HTTP self-hosted deployments working in modern browsers.
+FORCE_HTTPS=false
+# WEBHOOK_ALLOW_PRIVATE: set to true to allow webhook URLs that point at
+# private/loopback addresses (self-hosted escape hatch; SSRF checks skipped).
+WEBHOOK_ALLOW_PRIVATE=false
 ```
 
 **IMPORTANT - TRUST_PROXY Security:**
@@ -212,7 +238,7 @@ The frontend and backend can be deployed separately. The React frontend can be b
 
 ### Deploying with Docker
 
-For those who prefer a containerized deployment, Docker can be used to easily set up and run TrashMail. The repository includes a Dockerfile to simplify this process.
+For those who prefer a containerized deployment, Docker can be used to easily set up and run TrashMail. The repository includes a Dockerfile and a `docker-compose.yml` to simplify this process.
 
 #### Docker Setup
 
@@ -243,11 +269,21 @@ For those who prefer a containerized deployment, Docker can be used to easily se
    **Important**: Always set a strong `JWT_SECRET` in production!
    
    This command starts the TrashMail application and exposes it on ports 4000 (API) and 2525 (SMTP).
+   
+3. **Docker Compose (recommended for local or simple setups)**
 
-3. **Accessing the Application**:
-   Once the container is running, you can access the frontend at [http://localhost:3000](http://localhost:3000) and the backend on port 4000.
+   A `docker-compose.yml` is provided which by default pulls your published image `hppanpaliya/react-trashmail:latest` and runs it alongside a `mongo` service. To start the stack:
 
-Ensure you have Docker installed and running on your machine before executing these commands.
+   ```shell
+   docker-compose up -d
+   ```
+
+   The compose file will set `MONGO_URI=mongodb://mongo:27017` for the app by default.
+
+   To build and use the local Dockerfile instead of pulling the published image, uncomment the `build:` section in `docker-compose.yml`.
+
+4. **Accessing the Application**:
+   Once the container(s) are running, the app (frontend + API, served from the same origin) is available at [http://localhost:4000](http://localhost:4000).
 
 #### Docker environment variables and volume options:
 
@@ -264,6 +300,8 @@ Ensure you have Docker installed and running on your machine before executing th
 | `-e JWT_EXPIRY=24h`                                        | JWT token expiration time                                                                                                             | 24h |
 | `-e BCRYPT_SALT_ROUNDS=10`                                 | Bcrypt salt rounds for password hashing                                                                                               | 10 |
 | `-e EMAIL_RETENTION_DAYS=30`                               | Number of days to retain emails before automatic cleanup                                                                              | 30 |
+| `-e FORCE_HTTPS=true`                                      | Enable HSTS + upgrade-insecure-requests. Only set when serving behind TLS; breaks plain-HTTP deployments if enabled without it.        | false |
+| `-e WEBHOOK_ALLOW_PRIVATE=true`                            | Allow webhook deliveries to private/loopback addresses (skips SSRF protection)                                                         | false |
 | `-v ./attachments:/React-TrashMail/mailserver/attachments` | Volume mount for attachments. Maps a local directory to a container directory.                                                        | Required |
 | `-v /my/local/mongodb:/data/db`                            | (Optional) Volume mount for MongoDB data. Maps a local directory to the MongoDB data directory in the container.                      | Optional |
 

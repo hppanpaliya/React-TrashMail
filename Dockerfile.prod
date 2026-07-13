@@ -1,7 +1,7 @@
-# Start with the official MongoDB image
-FROM mongo:latest
+# Use a lightweight Node base image (no Mongo bundled)
+FROM node:20-bullseye-slim
 
-# Install OS deps + Node.js 20 + yarn/pm2 in fewer layers (better caching & smaller image)
+# Install OS deps + Node.js + yarn/pm2 in fewer layers
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends curl gnupg git ca-certificates; \
@@ -26,7 +26,6 @@ COPY mailserver/jest-config.js ./
 COPY mailserver/jest-setup.js ./
 
 # React build (prebuilt by GitHub Actions) -> directly into mailserver build dir
-# This replaces: rm/mkdir/cp steps
 COPY react/build ./src/build
 
 # Root-level files
@@ -39,6 +38,8 @@ VOLUME ["/React-TrashMail/mailserver/attachments"]
 
 # Set default environment variables
 ENV TRUST_PROXY=2
+ENV MONGO_URI=mongodb://mongo:27017
+ENV DB_NAME=myemails
 
 # Startup + healthcheck
 COPY docker_start.sh /docker_start.sh

@@ -10,6 +10,10 @@ let smtpServer;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   config.mongoURL = mongoServer.getUri();
+  // Make the SMTP recipient-domain gate deterministic regardless of .env
+  config.allowedDomainsConfigured = true;
+  config.acceptUnknownDomains = false;
+  config.allowedDomains = ["myserver.pw"];
   await connectMongoDB();
   smtpServer = await startSMTPServer();
 });
@@ -51,5 +55,29 @@ describe("Email Receiving and Storage", () => {
     expect(emails[0].to.text).toBe("harshal@myserver.pw");
     expect(emails[0].readStatus).toBe(false);
     expect(emails[0].createdAt).toBeDefined();
+    // Raw RFC822 source should be stored alongside the parsed email
+    expect(emails[0].raw).toBeDefined();
+  });
+
+  test("should reject recipients on domains not in allowedDomains", async () => {
+    const transporter = nodemailer.createTransport({
+      host: "localhost",
+      port: config.smtpPort,
+      secure: false,
+      tls: { rejectUnauthorized: false },
+    });
+
+    await expect(
+      transporter.sendMail({
+        from: "SendTestEmail <noreply@sendtestemail.com>",
+        to: "someone@not-allowed-domain.com",
+        subject: "Should be rejected",
+        text: "This should never be stored.",
+      })
+    ).rejects.toThrow(/550|recipient/i);
+
+    const db = getDB();
+    const emails = await db.collection("emails").find({ emailId: "someone@not-allowed-domain.com" }).toArray();
+    expect(emails.length).toBe(0);
   });
 });

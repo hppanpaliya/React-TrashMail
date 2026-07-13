@@ -83,5 +83,3 @@ class SSEService extends EventEmitter {
 }
 
 module.exports = new SSEService();
-
-module.exports = new SSEService();

@@ -1,73 +1,64 @@
-# Start with the official MongoDB image
-FROM mongo:latest
+# Use a lightweight Node base image (no Mongo bundled)
+FROM node:20-bullseye-slim
 
-RUN apt-get update
+# Install system deps (curl, git) and yarn/pm2
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends curl gnupg git ca-certificates; \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
+    apt-get install -y --no-install-recommends nodejs; \
+    npm install -g yarn; \
+    yarn global add pm2; \
+    apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Node.js and Git
-RUN apt-get install -y curl gnupg git
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
-RUN apt-get install -y nodejs
-
-# Install yarn globally
-RUN npm install -g yarn
-
-# Install pm2 globally
-RUN yarn global add pm2
-
-# Copy in package.json files and run install to allow docker to cache them
-COPY react/package.json /React-TrashMail/react/
-COPY react/yarn.lock /React-TrashMail/react/
+# Copy and install React deps for cached builds
+COPY react/package.json react/yarn.lock /React-TrashMail/react/
 WORKDIR /React-TrashMail/react
-RUN yarn install
+RUN yarn install --frozen-lockfile || true
 
-COPY mailserver/package.json /React-TrashMail/mailserver/
-COPY mailserver/yarn.lock /React-TrashMail/mailserver/
+# Copy and install mailserver deps
+COPY mailserver/package.json mailserver/yarn.lock /React-TrashMail/mailserver/
 WORKDIR /React-TrashMail/mailserver
-RUN yarn install
+RUN yarn install --frozen-lockfile || true
 
-# Copy application code individually
-# Copy React application files
+# Copy application code (Vite builds from index.html + vite.config.js at the react root)
 COPY react/src /React-TrashMail/react/src
 COPY react/public /React-TrashMail/react/public
-COPY react/jsconfig.json /React-TrashMail/react/jsconfig.json
+COPY react/index.html react/vite.config.js react/jsconfig.json /React-TrashMail/react/
 
-# Copy mailserver application files
 COPY mailserver/server.js /React-TrashMail/mailserver/
 COPY mailserver/src /React-TrashMail/mailserver/src
 COPY mailserver/scripts /React-TrashMail/mailserver/scripts
 COPY mailserver/jest-config.js /React-TrashMail/mailserver/
 COPY mailserver/jest-setup.js /React-TrashMail/mailserver/
 
-# Copy root level files
-COPY README.md /React-TrashMail/
-COPY test_email.sh /React-TrashMail/
-
+# Build React
 WORKDIR /React-TrashMail/react
-RUN yarn build 
+RUN yarn build
 RUN rm -rf /React-TrashMail/react/node_modules/
 
+# Copy react build into mailserver build dir
 WORKDIR /React-TrashMail/mailserver
-RUN rm -rf src/build/*
+RUN rm -rf src/build/* || true
 RUN mkdir -p src/build
 RUN cp -r ../react/build/* src/build/
 
-RUN rm -rf /React-TrashMail/react/node_modules
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Define mountable volume
-VOLUME ["/React-TrashMail/mailserver/attachments"]
-# Set default environment variables
+# Expose port and mount attachments volume
+ENV PORT=4000
 ENV TRUST_PROXY=2
-# Copy startup script
+VOLUME ["/React-TrashMail/mailserver/attachments"]
+
+# Default MONGO_URI can be overridden in compose / cloud env
+ENV MONGO_URI=mongodb://mongo:27017
+ENV DB_NAME=myemails
+
+# Startup + healthcheck
 COPY docker_start.sh /docker_start.sh
 RUN chmod +x /docker_start.sh
-
-# Set the health check
 COPY healthcheck.sh /healthcheck.sh
 RUN chmod +x /healthcheck.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD /healthcheck.sh
 
-# Set the command to start the application using the startup script
 CMD ["/docker_start.sh"]
