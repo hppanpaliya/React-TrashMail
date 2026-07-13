@@ -1,13 +1,11 @@
 # Use a lightweight Node base image (no Mongo bundled)
 FROM node:20-bullseye-slim
 
-# Install OS deps + Node.js + yarn/pm2 in fewer layers
+# The node:20-bullseye-slim base already ships Node 20 and yarn.
+# Install curl (used by healthcheck) + git, and pm2 for process management.
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends curl gnupg git ca-certificates; \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
-    apt-get install -y --no-install-recommends nodejs; \
-    npm install -g yarn; \
+    apt-get install -y --no-install-recommends curl git ca-certificates; \
     yarn global add pm2; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
