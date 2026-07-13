@@ -20,5 +20,8 @@ export const addRecentInbox = (emailId) => {
     // storage full/unavailable — non-fatal
   }
   // Kept for backward compatibility with the /inbox redirect.
-  localStorage.setItem("lastEmailId", emailId);
-};
+  try {
+    localStorage.setItem("lastEmailId", emailId);
+  } catch {
+    // storage full/unavailable — non-fatal
+  }
