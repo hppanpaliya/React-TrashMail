@@ -14,7 +14,7 @@ RUN set -eux; \
 # Copy and install React deps for cached builds
 COPY react/package.json react/yarn.lock /React-TrashMail/react/
 WORKDIR /React-TrashMail/react
-RUN yarn install --frozen-lockfile || true
+RUN yarn install --frozen-lockfile
 
 # Copy and install mailserver deps
 COPY mailserver/package.json mailserver/yarn.lock /React-TrashMail/mailserver/
