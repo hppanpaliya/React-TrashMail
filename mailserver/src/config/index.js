@@ -42,6 +42,10 @@ if (!jwtSecret) {
   console.warn("*".repeat(80));
   jwtSecret = DEV_JWT_FALLBACK;
 }
+if (process.env.NODE_ENV === "production" && jwtSecret === DEV_JWT_FALLBACK) {
+  console.error("FATAL: JWT_SECRET is set to the insecure default. Refusing to start in production.");
+  process.exit(1);
+}
 
 const config = {
   smtpPort: parseInt(process.env.SMTP_PORT) || 25,
