@@ -19,7 +19,7 @@ RUN yarn install --frozen-lockfile
 # Copy and install mailserver deps
 COPY mailserver/package.json mailserver/yarn.lock /React-TrashMail/mailserver/
 WORKDIR /React-TrashMail/mailserver
-RUN yarn install --frozen-lockfile || true
+RUN yarn install --frozen-lockfile
 
 # Copy application code (Vite builds from index.html + vite.config.js at the react root)
 COPY react/src /React-TrashMail/react/src
