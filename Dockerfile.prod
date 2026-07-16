@@ -1,5 +1,7 @@
-# Use a lightweight Node base image (no Mongo bundled)
-FROM node:20-bullseye-slim
+# Use a lightweight Node base image (no Mongo bundled).
+# Node 22 (current LTS) is required: sanitize-html >=2.17 and vite 8 both
+# declare engines >=22.12.0, and the base already ships yarn.
+FROM node:22-bullseye-slim
 
 # The node:20-bullseye-slim base already ships Node 20 and yarn.
 # Install curl (used by healthcheck) + git, and pm2 for process management.
