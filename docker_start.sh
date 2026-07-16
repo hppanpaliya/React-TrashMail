@@ -12,8 +12,6 @@ if [ ! -f "$FIRST_RUN_FLAG" ]; then
     echo "REACT_APP_API_URL=$REACT_APP_API_URL" > /React-TrashMail/react/.env
     echo "REACT_APP_DOMAINS=$REACT_APP_DOMAINS" >> /React-TrashMail/react/.env
 
-    pm2-runtime stop yarn -- start || true
-
     # Set environment variables in react
     cd /React-TrashMail/react
     
@@ -41,6 +39,10 @@ EOF
 # If the DB is remote and requires setup you may want to wait or run migrations here
 cd /React-TrashMail/mailserver && npm run create-invite-admin || true
 
-# Start the application (uses start:docker script)
+# Start the application.
+# NOTE: run node directly, not `pm2-runtime start yarn`. PM2 launches its
+# target with Node in fork mode, so pointing it at the `yarn` shell script
+# made Node try to parse shell as JS ("SyntaxError: missing ) after argument
+# list") and crash-loop forever. `start:docker` is just `node server.js`.
 cd /React-TrashMail/mailserver
-PM2_HOME=/React-TrashMail/mailserver pm2-runtime start yarn -- start:docker
+PM2_HOME=/React-TrashMail/mailserver pm2-runtime start server.js --name mailserver
