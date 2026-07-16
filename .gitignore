@@ -39,3 +39,6 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+
+# Use yarn.lock as the single source of truth (see commit "replace package-lock with yarn.lock")
+package-lock.json
