@@ -3,7 +3,7 @@
 export const parseDomains = (envVar) => {
   if (!envVar) return ["example.com"];
 
-  let domains = [];
+  let domains;
 
   try {
     const parsed = JSON.parse(envVar);

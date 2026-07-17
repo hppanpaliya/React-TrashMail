@@ -4,7 +4,7 @@ React frontend for the TrashMail disposable-email application.
 
 ## Stack
 
-- **React 19** + **Vite 7** (`@vitejs/plugin-react`), JSX components in `.jsx`
+- **React 19** + **Vite 8** (`@vitejs/plugin-react`), JSX components in `.jsx`
 - **Tailwind CSS v4** (via `@tailwindcss/vite`) with a custom design-token system — no component library
 - **framer-motion 12** for page transitions and micro-interactions (respects `prefers-reduced-motion`)
 - **Vitest** + Testing Library for tests, ESLint (flat config) + Prettier
@@ -61,5 +61,5 @@ npm run format     # Prettier write; npm run format:check to verify
 
 ## Notes
 
-- Requires Node 20.19+ (or 22.12+) for Vite 7.
+- Requires Node 22.12+ for Vite 8; the project targets Node 24 LTS (see the root `.nvmrc` and Docker base image).
 - The build output directory is `build/` (not Vite's default `dist/`) — the Docker image and the mailserver's static file serving rely on it.

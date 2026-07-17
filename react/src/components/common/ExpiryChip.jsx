@@ -14,6 +14,7 @@ const ExpiryChip = ({ date, className }) => {
   const received = new Date(date).getTime();
   if (Number.isNaN(received)) return null;
 
+  // eslint-disable-next-line react-hooks/purity -- intentional: chip shows time left as of render; a stale value is fine
   const msLeft = received + retentionDays * DAY_MS - Date.now();
 
   let label;

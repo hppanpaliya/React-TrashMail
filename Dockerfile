@@ -1,9 +1,10 @@
 # Use a lightweight Node base image (no Mongo bundled).
-# Node 22 (current LTS) is required: sanitize-html >=2.17 and vite 8 both
-# declare engines >=22.12.0, and the base already ships yarn.
-FROM node:22-bullseye-slim
+# Node 24 (current LTS). Minimum is 22.12: sanitize-html >=2.17 and vite 8
+# declare engines >=22.12.0. Node 24 images are Debian bookworm-based
+# (no bullseye variant exists); the base already ships yarn.
+FROM node:24-bookworm-slim
 
-# The node:20-bullseye-slim base already ships Node 20 and yarn.
+# The node:24-bookworm-slim base already ships Node 24 and yarn.
 # Install curl (used by healthcheck) + git, and pm2 for process management.
 RUN set -eux; \
     apt-get update; \
