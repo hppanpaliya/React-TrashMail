@@ -40,5 +40,6 @@ yarn-error.log*
 .env.production.local
 
 
-# Use yarn.lock as the single source of truth (see commit "replace package-lock with yarn.lock")
+# pnpm-lock.yaml is the single source of truth — never commit npm or yarn lockfiles
 package-lock.json
+yarn.lock

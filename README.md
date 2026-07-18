@@ -79,15 +79,17 @@ The React frontend provides the user interface for generating disposable emails,
 
 ```shell
 cd react
-yarn install
+pnpm install
 ```
 
-(The project is yarn-only — `yarn.lock` is the single source of truth; there is no `package-lock.json`.)
+(The project is pnpm-only — `pnpm-lock.yaml` is the single source of truth; there is no `package-lock.json` or `yarn.lock`.)
+
+- **Supply-chain policy**: new dependency releases are held back for 14 days before they can be installed (`minimumReleaseAge: 20160` in each app's `pnpm-workspace.yaml`).
 
 ### Running
 
 ```shell
-yarn start
+pnpm start
 ```
 
 The frontend will run on [http://localhost:3000](http://localhost:3000)
@@ -166,7 +168,7 @@ See `mailserver/README.md` for full request/response details.
 
 ```shell
 cd mailserver
-yarn install
+pnpm install
 ```
 
 ### Configuration
@@ -221,7 +223,7 @@ The backend includes comprehensive API tests with JWT authentication.
 
 ```shell
 cd mailserver
-yarn test
+pnpm test
 ```
 
 ### Email Testing Script

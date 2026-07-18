@@ -51,15 +51,17 @@ In Docker, `docker_start.sh` regenerates `build/env.js` with `npx react-inject-e
 ## Scripts
 
 ```bash
-npm start          # Vite dev server
-npm run build      # Production build into build/ (Docker + mailserver static serving depend on this path)
-npm run preview    # Serve the production build locally
-npm test           # Vitest (single run); npm run test:watch for watch mode
-npm run lint       # ESLint; npm run lint:fix to autofix
-npm run format     # Prettier write; npm run format:check to verify
+pnpm install       # Install dependencies (pnpm-lock.yaml is the source of truth)
+pnpm start         # Vite dev server
+pnpm run build     # Production build into build/ (Docker + mailserver static serving depend on this path)
+pnpm run preview   # Serve the production build locally
+pnpm test          # Vitest (single run); pnpm run test:watch for watch mode
+pnpm run lint      # ESLint; pnpm run lint:fix to autofix
+pnpm run format    # Prettier write; pnpm run format:check to verify
 ```
 
 ## Notes
 
 - Requires Node 22.12+ for Vite 8; the project targets Node 24 LTS (see the root `.nvmrc` and Docker base image).
+- The project is pnpm-only — `pnpm-lock.yaml` is the single source of truth. As a supply-chain precaution, new dependency releases are held back for 14 days before install (`minimumReleaseAge: 20160` in `pnpm-workspace.yaml`).
 - The build output directory is `build/` (not Vite's default `dist/`) — the Docker image and the mailserver's static file serving rely on it.
