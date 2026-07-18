@@ -1,19 +1,29 @@
-# Use a lightweight Node base image (no Mongo bundled)
-FROM node:20-bullseye-slim
+# Use a lightweight Node base image (no Mongo bundled).
+# Node 24 (current LTS). Minimum is 22.12: sanitize-html >=2.17 and vite 8
+# declare engines >=22.12.0. Node 24 images are Debian bookworm-based
+# (no bullseye variant exists) and bundle corepack.
+FROM node:24-bookworm-slim
 
-# The node:20-bullseye-slim base already ships Node 20 and yarn.
 # Install curl (used by healthcheck) + git, and pm2 for process management.
+# pm2 is a global CLI tool, so it is installed via npm (avoids PNPM_HOME
+# global-bin setup); app dependencies below are managed by pnpm.
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends curl git ca-certificates; \
-    yarn global add pm2; \
+    npm install -g pm2; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Enable pnpm via corepack (bundled with node:24). The pnpm version is pinned
+# by each app's "packageManager" field in package.json — do not hardcode one here.
+RUN corepack enable
+
 # ---------- Mailserver deps (copy only lockfiles first for caching) ----------
+# (pnpm-workspace.yaml carries the supply-chain policy: minimumReleaseAge 20160
+#  — pnpm 11 ignores non-auth settings in .npmrc)
 WORKDIR /React-TrashMail/mailserver
-COPY mailserver/package.json mailserver/yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY mailserver/package.json mailserver/pnpm-lock.yaml mailserver/pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # ---------- Copy app source ----------
 # Mailserver source

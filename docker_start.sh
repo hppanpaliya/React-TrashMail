@@ -14,7 +14,10 @@ if [ ! -f "$FIRST_RUN_FLAG" ]; then
 
     # Set environment variables in react
     cd /React-TrashMail/react
-    
+
+    # NOTE: deliberately npx, not `pnpm exec`. The image deletes
+    # react/node_modules after the Vite build, so pnpm exec cannot resolve
+    # react-inject-env here; npx fetches it on demand at first start.
     npx react-inject-env set || true
     mv ./build/env.js ../mailserver/src/build/ || true
 
@@ -37,7 +40,8 @@ EMAIL_RETENTION_DAYS=${EMAIL_RETENTION_DAYS:-30}
 EOF
 
 # If the DB is remote and requires setup you may want to wait or run migrations here
-cd /React-TrashMail/mailserver && npm run create-invite-admin || true
+# (pnpm is available at runtime via corepack, enabled in the Dockerfile)
+cd /React-TrashMail/mailserver && pnpm run create-invite-admin || true
 
 # Start the application.
 # NOTE: run node directly, not `pm2-runtime start yarn`. PM2 launches its

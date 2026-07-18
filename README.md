@@ -61,7 +61,7 @@ The React frontend provides the user interface for generating disposable emails,
 
 ### Tech Stack
 
-- React 19 + Vite 7
+- React 19 + Vite 8
 - React Router
 - Tailwind CSS v4 (custom design system, no component library)
 - Axios
@@ -79,13 +79,17 @@ The React frontend provides the user interface for generating disposable emails,
 
 ```shell
 cd react
-npm install
+pnpm install
 ```
+
+(The project is pnpm-only — `pnpm-lock.yaml` is the single source of truth; there is no `package-lock.json` or `yarn.lock`.)
+
+- **Supply-chain policy**: new dependency releases are held back for 14 days before they can be installed (`minimumReleaseAge: 20160` in each app's `pnpm-workspace.yaml`).
 
 ### Running
 
 ```shell
-npm start
+pnpm start
 ```
 
 The frontend will run on [http://localhost:3000](http://localhost:3000)
@@ -110,8 +114,8 @@ The Node.js backend provides the mail server functionality for receiving emails 
 
 ### Tech Stack
 
-- Node.js
-- Express
+- Node.js 24 (LTS)
+- Express 5
 - MongoDB
 - SMTP Server
 - Mailparser
@@ -164,7 +168,7 @@ See `mailserver/README.md` for full request/response details.
 
 ```shell
 cd mailserver
-npm install
+pnpm install
 ```
 
 ### Configuration
@@ -219,7 +223,7 @@ The backend includes comprehensive API tests with JWT authentication.
 
 ```shell
 cd mailserver
-npm test
+pnpm test
 ```
 
 ### Email Testing Script
@@ -238,7 +242,7 @@ The frontend and backend can be deployed separately. The React frontend can be b
 
 ### Deploying with Docker
 
-For those who prefer a containerized deployment, Docker can be used to easily set up and run TrashMail. The repository includes a Dockerfile and a `docker-compose.yml` to simplify this process.
+For those who prefer a containerized deployment, Docker can be used to easily set up and run TrashMail. The repository includes a Dockerfile (based on `node:24-bookworm-slim`, Node 24 LTS) and a `docker-compose.yml` to simplify this process.
 
 #### Docker Setup
 
@@ -272,7 +276,7 @@ For those who prefer a containerized deployment, Docker can be used to easily se
    
 3. **Docker Compose (recommended for local or simple setups)**
 
-   A `docker-compose.yml` is provided which by default pulls your published image `hppanpaliya/react-trashmail:latest` and runs it alongside a `mongo` service. To start the stack:
+   A `docker-compose.yml` is provided which by default pulls your published image `hppanpaliya/react-trashmail:latest` and runs it alongside a `mongo` (MongoDB 8) service. To start the stack:
 
    ```shell
    docker-compose up -d

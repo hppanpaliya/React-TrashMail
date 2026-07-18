@@ -1,14 +1,25 @@
+import { createRequire } from "node:module";
 import js from "@eslint/js";
 import globals from "globals";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 
+// eslint-plugin-react's runtime `version: "detect"` uses context.getFilename(),
+// which was removed in ESLint 10, so detect the installed React version here
+// at config-load time instead and pass it explicitly.
+const require = createRequire(import.meta.url);
+const reactVersion = require("react/package.json").version;
+
 export default [
   {
-    ignores: ["node_modules/", "build/", "dist/"],
+    ignores: ["build/", "node_modules/", "coverage/"],
   },
+  js.configs.recommended,
+  react.configs.flat.recommended,
+  react.configs.flat["jsx-runtime"],
+  reactHooks.configs.flat.recommended,
   {
-    files: ["**/*.{js,jsx}"],
+    files: ["**/*.{js,jsx,mjs}"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -19,49 +30,39 @@ export default [
       },
       globals: {
         ...globals.browser,
-        ...globals.node,
       },
-    },
-    plugins: {
-      react,
-      "react-hooks": reactHooks,
     },
     settings: {
       react: {
-        version: "detect",
+        version: reactVersion,
       },
     },
     rules: {
-      "react-hooks/exhaustive-deps": "warn",
+      // Plain-JS app; prop-types are not used anywhere in this codebase.
+      "react/prop-types": "off",
+      // React Compiler-era rule; this codebase deliberately uses the classic
+      // "reset state in an effect keyed on props/route change" pattern in many
+      // components, and restructuring them is not behavior-preserving.
+      "react-hooks/set-state-in-effect": "off",
     },
   },
   {
-    files: ["**/*.test.{js,jsx}"],
+    // Node-run config files.
+    files: ["*.{js,mjs,cjs}", "vite.config.js", "eslint.config.mjs"],
     languageOptions: {
       globals: {
-        ...globals.browser,
         ...globals.node,
-        test: "readonly",
-        expect: "readonly",
-        describe: "readonly",
-        it: "readonly",
-        beforeEach: "readonly",
-        afterEach: "readonly",
       },
     },
-    plugins: {
-      react,
-      "react-hooks": reactHooks,
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-      ...react.configs.recommended.rules,
-      ...react.configs["jsx-runtime"].rules,
-      ...reactHooks.configs.recommended.rules,
-      "react/react-in-scope": "off",
-      "react/prop-types": "off",
-      "no-unused-vars": "warn",
-      "no-useless-escape": "warn",
+  },
+  {
+    // Vitest runs with globals: true (see vite.config.js).
+    files: ["src/**/*.test.{js,jsx}", "src/setupTests.js"],
+    languageOptions: {
+      globals: {
+        ...globals.vitest,
+        ...globals.node,
+      },
     },
   },
 ];

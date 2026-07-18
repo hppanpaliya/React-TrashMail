@@ -25,7 +25,11 @@ services:
       retries: 3
 
   mongo:
-    image: mongo:6.0
+    # NOTE: MongoDB cannot skip major versions on existing data files.
+    # If you have an existing mongo_data volume created by mongo:6.0, upgrade
+    # stepwise (6.0 -> 7.0 -> 8.0, setting featureCompatibilityVersion at each
+    # step) before switching this tag — or start from a fresh volume.
+    image: mongo:8.0
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db

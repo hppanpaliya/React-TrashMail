@@ -1,23 +1,33 @@
-# Use a lightweight Node base image (no Mongo bundled)
-FROM node:20-bullseye-slim
+# Use a lightweight Node base image (no Mongo bundled).
+# Node 24 (current LTS). Minimum is 22.12: sanitize-html >=2.17 and vite 8
+# declare engines >=22.12.0. Node 24 images are Debian bookworm-based
+# (no bullseye variant exists) and bundle corepack.
+FROM node:24-bookworm-slim
 
-# The node:20-bullseye-slim base already ships Node 20 and yarn.
 # Install curl (used by healthcheck) + git, and pm2 for process management.
+# pm2 is a global CLI tool, so it is installed via npm (avoids PNPM_HOME
+# global-bin setup); app dependencies below are managed by pnpm.
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends curl git ca-certificates; \
-    yarn global add pm2; \
+    npm install -g pm2; \
     apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Enable pnpm via corepack (bundled with node:24). The pnpm version is pinned
+# by each app's "packageManager" field in package.json — do not hardcode one here.
+RUN corepack enable
+
 # Copy and install React deps for cached builds
-COPY react/package.json react/yarn.lock /React-TrashMail/react/
+# (pnpm-workspace.yaml carries the supply-chain policy: minimumReleaseAge 20160
+#  — pnpm 11 ignores non-auth settings in .npmrc)
+COPY react/package.json react/pnpm-lock.yaml react/pnpm-workspace.yaml /React-TrashMail/react/
 WORKDIR /React-TrashMail/react
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy and install mailserver deps
-COPY mailserver/package.json mailserver/yarn.lock /React-TrashMail/mailserver/
+COPY mailserver/package.json mailserver/pnpm-lock.yaml mailserver/pnpm-workspace.yaml /React-TrashMail/mailserver/
 WORKDIR /React-TrashMail/mailserver
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy application code (Vite builds from index.html + vite.config.js at the react root)
 COPY react/src /React-TrashMail/react/src
@@ -32,7 +42,7 @@ COPY mailserver/jest-setup.js /React-TrashMail/mailserver/
 
 # Build React
 WORKDIR /React-TrashMail/react
-RUN yarn build
+RUN pnpm run build
 RUN rm -rf /React-TrashMail/react/node_modules/
 
 # Copy react build into mailserver build dir
