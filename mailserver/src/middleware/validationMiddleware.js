@@ -33,7 +33,13 @@ const validateEmailId = [
       
       const domain = value.split('@')[1];
       if (!allowedDomains.includes(domain)) {
-        console.log(`Validation failed: Domain '${domain}' not in allowed list:`, allowedDomains);
+        // Never dump the account's allow-list at default log level — it is
+        // configuration, and this failure is user-triggerable.
+        if (process.env.LOG_LEVEL === 'debug') {
+          console.log(`Validation failed: Domain '${domain}' not in allowed list:`, allowedDomains);
+        } else {
+          console.log('Validation failed: domain not in account allow-list');
+        }
         throw new Error(`Email domain '${domain}' is not allowed for your account.`);
       }
       return true;
@@ -76,30 +82,41 @@ const validateLogin = [
     .withMessage('Password is required'),
 ];
 
+// Fields whose bytes must be preserved verbatim (never HTML-escaped on input).
+// Escaping these breaks password hashing/comparison and invite-code matching.
+const SKIP_ESCAPE_KEYS = new Set(['password', 'inviteCode', 'token', 'secret']);
+// MongoDB operator characters that must never appear in object keys.
+const PROHIBITED_KEY_CHARS = /[$.]/;
+
 // Input sanitization middleware
 const sanitizeInput = (req, res, next) => {
-  // Sanitize all string inputs
-  const sanitizeValue = (value) => {
-    if (typeof value === 'string') {
-      return validator.escape(value.trim());
-    }
-    return value;
-  };
-
   const sanitizeObject = (obj) => {
-    for (const key in obj) {
-      if (obj[key] && typeof obj[key] === 'object') {
-        sanitizeObject(obj[key]);
-      } else {
-        obj[key] = sanitizeValue(obj[key]);
+    if (!obj || typeof obj !== 'object') return;
+    for (const key of Object.keys(obj)) {
+      // Defense-in-depth: strip keys carrying NoSQL operators.
+      if (PROHIBITED_KEY_CHARS.test(key)) {
+        delete obj[key];
+        continue;
+      }
+      const value = obj[key];
+      if (value && typeof value === 'object') {
+        sanitizeObject(value);
+      } else if (typeof value === 'string') {
+        const trimmed = value.trim();
+        obj[key] = SKIP_ESCAPE_KEYS.has(key) ? trimmed : validator.escape(trimmed);
       }
     }
   };
 
   sanitizeObject(req.body);
   sanitizeObject(req.params);
-  sanitizeObject(req.query);
-  
+  // req.query is read-only in Express 5; mongoSanitizeMiddleware handles it.
+  try {
+    sanitizeObject(req.query);
+  } catch (e) {
+    // ignore — query sanitization is covered by mongoSanitize
+  }
+
   next();
 };
 

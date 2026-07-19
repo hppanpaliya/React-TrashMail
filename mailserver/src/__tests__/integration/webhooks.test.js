@@ -205,7 +205,8 @@ describe("POST /api/webhooks/:emailId/test", () => {
 
     const response = await auth(api().post(`/api/webhooks/${INBOX}/test`));
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ ok: true, status: 200 });
+    // The upstream HTTP status is deliberately NOT echoed (SSRF status oracle).
+    expect(response.body).toEqual({ ok: true });
 
     expect(received.length).toBe(1);
     const delivery = received[0];
@@ -234,7 +235,10 @@ describe("POST /api/webhooks/:emailId/test", () => {
     const response = await auth(api().post(`/api/webhooks/${INBOX}/test`));
     expect(response.status).toBe(200);
     expect(response.body.ok).toBe(false);
-    expect(response.body.error).toMatch(/HTTP 500/);
+    // Generic message only - the real status/error must never reach the caller
+    // (it would turn the endpoint into a port-scan/status oracle).
+    expect(response.body.error).toBe("Webhook test delivery failed");
+    expect(response.body.error).not.toMatch(/HTTP|refused|timed out|private/i);
     expect(received.length).toBe(1); // exactly one attempt - no retries for test fires
 
     const status = await auth(api().get(`/api/webhooks/${INBOX}`));

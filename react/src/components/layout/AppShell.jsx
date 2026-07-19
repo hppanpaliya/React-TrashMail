@@ -7,12 +7,12 @@ import { cx } from "../../utils/cx";
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
 
-// Faint giant brand watermark — a nod to the original design.
-export const Watermark = () => (
-  <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[-1] hidden overflow-hidden sm:block">
-    <span className="absolute -bottom-20 -right-12 select-none font-display text-[13rem] font-semibold leading-none tracking-tighter text-gold opacity-[0.05] lg:text-[17rem]">
-      TrashMail
-    </span>
+// Ambient page backdrop: a soft accent glow up top plus a faint dot grid that
+// fades out downward. Fully on-screen at every viewport size.
+export const Backdrop = () => (
+  <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
+    <div className="absolute -top-40 left-1/2 h-[480px] w-[720px] max-w-full -translate-x-1/2 rounded-full bg-accent opacity-[0.05] blur-3xl dark:opacity-[0.07]" />
+    <div className="absolute inset-0 bg-[radial-gradient(var(--tm-hairline)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:linear-gradient(to_bottom,black,transparent_70%)]" />
   </div>
 );
 
@@ -71,10 +71,12 @@ const AppShell = ({ children, onOpenPalette }) => {
     navigate("/login");
   };
 
+  const isAdmin = pathname.startsWith("/admin");
+
   if (!token) {
     return (
       <div className="min-h-dvh">
-        <Watermark />
+        <Backdrop />
         <header className="flex h-14 items-center justify-between px-4 sm:px-6">
           <Wordmark />
           <ThemeToggle />
@@ -86,7 +88,7 @@ const AppShell = ({ children, onOpenPalette }) => {
 
   return (
     <div className="min-h-dvh">
-      <Watermark />
+      <Backdrop />
 
       {/* Desktop nav rail */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col border-r border-hairline bg-raised/60 backdrop-blur-xl md:flex">
@@ -134,7 +136,14 @@ const AppShell = ({ children, onOpenPalette }) => {
 
       {/* Content column */}
       <main className="pb-24 md:pb-12 md:pl-56">
-        <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6 md:pt-8">{children}</div>
+        <div
+          className={cx(
+            "mx-auto w-full px-4 pt-4 sm:px-6 md:pt-8",
+            isAdmin ? "max-w-none lg:px-8 2xl:max-w-[1600px]" : "max-w-6xl"
+          )}
+        >
+          {children}
+        </div>
       </main>
 
       {/* Mobile bottom tab bar */}

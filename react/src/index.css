@@ -5,50 +5,50 @@
 
 /* ---------------------------------------------------------------------------
    TrashMail design tokens
-   Dark-first: background layers (base / raised / overlay), hairline borders,
-   gold brand accent, semantic colors. Values swap per theme via CSS vars.
+   Neutral monochrome: background layers (base / raised / overlay), hairline
+   borders, single blue accent, semantic colors. Values swap per theme.
 --------------------------------------------------------------------------- */
 
 :root {
-  --tm-base: #f6f5f2;
-  --tm-raised: rgba(255, 255, 255, 0.66);
+  --tm-base: #fafafa;
+  --tm-raised: rgba(255, 255, 255, 0.7);
   --tm-raised-solid: #ffffff;
   --tm-overlay: #ffffff;
-  --tm-ink: #1b1d22;
-  --tm-muted: #5d626c;
-  --tm-faint: #969ca7;
-  --tm-hairline: rgba(23, 25, 30, 0.1);
-  --tm-hairline-strong: rgba(23, 25, 30, 0.2);
-  --tm-accent: #b8933f;
-  --tm-accent-soft: rgba(184, 147, 63, 0.14);
-  --tm-accent-ink: #241b07;
-  --tm-success: #257a4e;
-  --tm-danger: #c2403f;
-  --tm-info: #2e6fad;
-  --tm-warning: #a06a10;
-  --tm-warning-soft: rgba(160, 106, 16, 0.14);
-  --tm-shadow: 0 1px 2px rgba(15, 17, 21, 0.05), 0 8px 24px -12px rgba(15, 17, 21, 0.18);
-  --tm-shadow-lift: 0 2px 4px rgba(15, 17, 21, 0.06), 0 16px 32px -12px rgba(15, 17, 21, 0.24);
+  --tm-ink: #171717;
+  --tm-muted: #666666;
+  --tm-faint: #a1a1a1;
+  --tm-hairline: rgba(0, 0, 0, 0.08);
+  --tm-hairline-strong: rgba(0, 0, 0, 0.16);
+  --tm-accent: #2563eb;
+  --tm-accent-soft: rgba(37, 99, 235, 0.09);
+  --tm-accent-ink: #ffffff;
+  --tm-success: #15803d;
+  --tm-danger: #dc2626;
+  --tm-info: #2563eb;
+  --tm-warning: #b45309;
+  --tm-warning-soft: rgba(180, 83, 9, 0.1);
+  --tm-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.12);
+  --tm-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.05), 0 16px 32px -12px rgba(0, 0, 0, 0.16);
 }
 
 .dark {
-  --tm-base: #0b0c0f;
-  --tm-raised: rgba(255, 255, 255, 0.045);
-  --tm-raised-solid: #15171c;
-  --tm-overlay: #16181d;
-  --tm-ink: #edeef1;
-  --tm-muted: #9aa0ab;
-  --tm-faint: #666c76;
+  --tm-base: #0a0a0a;
+  --tm-raised: rgba(255, 255, 255, 0.04);
+  --tm-raised-solid: #141414;
+  --tm-overlay: #171717;
+  --tm-ink: #ededed;
+  --tm-muted: #a1a1a1;
+  --tm-faint: #666666;
   --tm-hairline: rgba(255, 255, 255, 0.09);
   --tm-hairline-strong: rgba(255, 255, 255, 0.18);
-  --tm-accent: #ecca7b;
-  --tm-accent-soft: rgba(236, 202, 123, 0.12);
-  --tm-accent-ink: #241b07;
-  --tm-success: #57c98a;
-  --tm-danger: #e5716f;
-  --tm-info: #6aa9e0;
-  --tm-warning: #dfa94f;
-  --tm-warning-soft: rgba(223, 169, 79, 0.14);
+  --tm-accent: #60a5fa;
+  --tm-accent-soft: rgba(96, 165, 250, 0.12);
+  --tm-accent-ink: #0a0a0a;
+  --tm-success: #4ade80;
+  --tm-danger: #f87171;
+  --tm-info: #60a5fa;
+  --tm-warning: #fbbf24;
+  --tm-warning-soft: rgba(251, 191, 36, 0.12);
   --tm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --tm-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 16px 32px -12px rgba(0, 0, 0, 0.7);
 }
@@ -67,7 +67,6 @@
   --color-accent: var(--tm-accent);
   --color-accent-soft: var(--tm-accent-soft);
   --color-accent-ink: var(--tm-accent-ink);
-  --color-gold: #ecca7b;
   --color-success: var(--tm-success);
   --color-danger: var(--tm-danger);
   --color-info: var(--tm-info);
@@ -78,7 +77,7 @@
   --color-transparent: transparent;
 
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Abhaya Libre", ui-serif, Georgia, "Times New Roman", serif;
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
 
   --shadow-card: var(--tm-shadow);

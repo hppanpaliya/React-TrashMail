@@ -27,8 +27,8 @@ const Select = forwardRef(({ label, options = [], className, selectClassName, id
           {...props}
         >
           {children ||
-            options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+            options.map((opt, i) => (
+              <option key={`${i}-${opt.value ?? ""}`} value={opt.value}>
                 {opt.label}
               </option>
             ))}

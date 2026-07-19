@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Healthcheck: verify the backend HTTP endpoint is serving
-# Note: DB health is provided by the DB container when using docker-compose
-if ! curl -f http://localhost:4000/ > /dev/null 2>&1; then
+# Healthcheck: /health verifies the backend AND its MongoDB connection
+# (a plain GET / would serve the static SPA even with the DB down).
+if ! curl -f http://localhost:4000/health > /dev/null 2>&1; then
   echo "Backend is down"
   exit 1
 fi

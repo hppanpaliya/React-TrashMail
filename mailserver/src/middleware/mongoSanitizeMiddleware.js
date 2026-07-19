@@ -3,7 +3,12 @@
  * Replaces express-mongo-sanitize which is not compatible with Express 5
  */
 
-const PROHIBITED_CHARACTERS = /[$.]|^\$/;
+// Stateless test regex (no /g so lastIndex never carries between .test calls)
+const PROHIBITED_CHARACTERS = /[$.]/;
+// Global variant for full replacement of every offending character
+const PROHIBITED_GLOBAL = /[$.]/g;
+// Keys that enable prototype pollution; always dropped
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 /**
  * Recursively sanitizes an object by removing keys that contain MongoDB operators
@@ -20,19 +25,22 @@ function sanitize(payload, replaceWith = '') {
   const sanitized = {};
   
   for (const key in payload) {
-    if (Object.prototype.hasOwnProperty.call(payload, key)) {
-      // Check if key contains prohibited characters
-      if (PROHIBITED_CHARACTERS.test(key)) {
-        // Replace key with sanitized version or remove it
-        if (replaceWith) {
-          const sanitizedKey = key.replace(PROHIBITED_CHARACTERS, replaceWith);
-          sanitized[sanitizedKey] = sanitize(payload[key], replaceWith);
-        }
-        // If replaceWith is empty, skip this key (remove it)
-      } else {
-        // Recursively sanitize nested objects
-        sanitized[key] = sanitize(payload[key], replaceWith);
+    if (!Object.prototype.hasOwnProperty.call(payload, key)) continue;
+    // Always drop prototype-pollution keys
+    if (FORBIDDEN_KEYS.has(key)) continue;
+
+    if (PROHIBITED_CHARACTERS.test(key)) {
+      if (replaceWith) {
+        // Strip ALL offending characters, and guard against the replacement
+        // producing a forbidden key
+        const sanitizedKey = key.replace(PROHIBITED_GLOBAL, replaceWith);
+        if (FORBIDDEN_KEYS.has(sanitizedKey)) continue;
+        sanitized[sanitizedKey] = sanitize(payload[key], replaceWith);
       }
+      // If replaceWith is empty, skip this key (remove it)
+    } else {
+      // Recursively sanitize nested objects
+      sanitized[key] = sanitize(payload[key], replaceWith);
     }
   }
   
@@ -51,12 +59,13 @@ function mongoSanitize(options = {}) {
   return function mongoSanitizeMiddleware(req, res, next) {
     // Sanitize req.body
     if (req.body && typeof req.body === 'object') {
+      const originalBody = JSON.stringify(req.body);
       const sanitizedBody = sanitize(req.body, replaceWith);
       // Use Object.assign to update body without replacing the reference
       Object.keys(req.body).forEach(key => delete req.body[key]);
       Object.assign(req.body, sanitizedBody);
-      
-      if (onSanitize && JSON.stringify(req.body) !== JSON.stringify(sanitizedBody)) {
+
+      if (onSanitize && originalBody !== JSON.stringify(sanitizedBody)) {
         onSanitize({ req, key: 'body' });
       }
     }
@@ -68,28 +77,21 @@ function mongoSanitize(options = {}) {
       Object.assign(req.params, sanitizedParams);
     }
 
-    // Sanitize req.query - Express 5 has a getter, so we need to handle differently
+    // Sanitize req.query - unified with the body/params path; Express 5 exposes
+    // req.query via a getter, so fall back to redefining the whole property
     if (req.query && typeof req.query === 'object') {
       const sanitizedQuery = sanitize(req.query, replaceWith);
-      // In Express 5, req.query is read-only, so we work with the sanitized copy
-      // The query parser will need to be configured properly
-      Object.keys(req.query).forEach(key => {
-        if (PROHIBITED_CHARACTERS.test(key)) {
-          delete req.query[key];
-        }
-      });
-      // Merge sanitized values back
-      Object.keys(sanitizedQuery).forEach(key => {
-        if (!(key in req.query)) {
-          // This handles renamed keys
-          Object.defineProperty(req.query, key, {
-            value: sanitizedQuery[key],
-            writable: true,
-            enumerable: true,
-            configurable: true
-          });
-        }
-      });
+      try {
+        Object.keys(req.query).forEach(key => delete req.query[key]);
+        Object.assign(req.query, sanitizedQuery);
+      } catch (e) {
+        Object.defineProperty(req, 'query', {
+          value: sanitizedQuery,
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
+      }
     }
 
     // Sanitize headers if needed

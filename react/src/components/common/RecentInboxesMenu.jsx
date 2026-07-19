@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Menu from "../ui/Menu";
 import IconButton from "../ui/IconButton";
 import { getRecentInboxes } from "../../utils/recentInboxes";
+import { inboxPath } from "../../utils/routes";
 
 // Quick-switch menu between recently visited inbox addresses.
 const RecentInboxesMenu = ({ current }) => {
@@ -22,7 +23,7 @@ const RecentInboxesMenu = ({ current }) => {
         key: address,
         label: address,
         icon: Inbox,
-        onSelect: () => navigate(`/inbox/${address}`),
+        onSelect: () => navigate(inboxPath(address)),
       }))}
     />
   );

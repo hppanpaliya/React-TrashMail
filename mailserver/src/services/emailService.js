@@ -1,6 +1,7 @@
 const { simpleParser } = require("mailparser");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const { getDB } = require("../db");
 const { ObjectId, Binary } = require("mongodb");
 const sseService = require("./sseService");
@@ -20,9 +21,8 @@ const { Readable } = require("stream");
 async function saveAttachment(attachmentFolder, attachment) {
   const attachmentsDir = path.join(attachmentsRoot, attachmentFolder);
 
-  if (!fs.existsSync(attachmentsDir)) {
-    fs.mkdirSync(attachmentsDir, { recursive: true });
-  }
+  // recursive:true is idempotent, so no racy existsSync pre-check is needed.
+  await fs.promises.mkdir(attachmentsDir, { recursive: true });
 
   const safeName = sanitizeAttachmentFilename(attachment.filename);
   const filename = dedupeFilename(fs, attachmentsDir, safeName);
@@ -45,8 +45,14 @@ async function saveAttachment(attachmentFolder, attachment) {
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);
     } else if (attachment.content instanceof Readable) {
-      // Handle attachment content as a Readable stream
+      // Handle attachment content as a Readable stream. pipe() does not
+      // forward source errors, so listen on the source too or the promise
+      // never settles and the error crashes the process.
       writeStream = fs.createWriteStream(savePath);
+      attachment.content.on("error", (err) => {
+        writeStream.destroy();
+        reject(err);
+      });
       attachment.content.pipe(writeStream);
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);
@@ -94,13 +100,24 @@ function bufferStream(stream, maxBytes) {
  * as read-only shared state; every recipient gets a fresh document.
  */
 async function saveEmailToDB(parsedEmail, originalAttachments, toAddress, rawBuffer) {
+  // Generate a new MongoDB ObjectId; it doubles as the attachment folder name.
+  const objectId = new ObjectId();
+  const attachmentFolder = objectId.toHexString();
+  const attachmentsDirAbs = path.join(attachmentsRoot, attachmentFolder);
+  let wroteAttachments = false;
+
+  const cleanupAttachments = async () => {
+    if (!wroteAttachments) return;
+    try {
+      await fs.promises.rm(attachmentsDirAbs, { recursive: true, force: true });
+    } catch (cleanupErr) {
+      console.error("Failed to clean orphaned attachments:", cleanupErr);
+    }
+  };
+
   try {
     const db = getDB();
     const collection = db.collection("emails");
-
-    // Generate a new MongoDB ObjectId; it doubles as the attachment folder name.
-    const objectId = new ObjectId();
-    const attachmentFolder = objectId.toHexString();
 
     // Build a fresh document per recipient (shallow clone + fixed fields) so
     // concurrent/multi-recipient deliveries never share mutated state.
@@ -112,6 +129,7 @@ async function saveEmailToDB(parsedEmail, originalAttachments, toAddress, rawBuf
       const attachmentsMeta = [];
       for (const attachment of originalAttachments) {
         const savedFilename = await saveAttachment(attachmentFolder, attachment);
+        wroteAttachments = true;
         attachmentsMeta.push({
           filename: savedFilename,
           directory: attachmentFolder,
@@ -126,12 +144,29 @@ async function saveEmailToDB(parsedEmail, originalAttachments, toAddress, rawBuf
     emailDoc.createdAt = new Date();
 
     // Store the raw RFC822 source (for .eml download) unless it is too large
-    // to fit comfortably inside a MongoDB document.
-    if (rawBuffer && rawBuffer.length <= config.maxRawStoreSize) {
+    // to fit comfortably inside a MongoDB document. Storing it per email up to
+    // the cap is an intentional storage trade-off.
+    const rawCap = config.maxRawStoreSize;
+    if (rawBuffer && Number.isFinite(rawCap) && rawCap > 0 && rawBuffer.length <= rawCap) {
       emailDoc.raw = new Binary(rawBuffer);
+    } else if (rawBuffer && rawBuffer.length > rawCap) {
+      console.warn(`Raw source (${rawBuffer.length}B) exceeds maxRawStoreSize (${rawCap}B); not persisted for ${toAddress}`);
     }
 
-    await collection.insertOne(emailDoc);
+    // Idempotency: an SMTP retry of the same message for the same recipient
+    // must not create a duplicate. Message-ID is attacker-controllable, so mix
+    // in a hash of the raw source when available.
+    const rawHash = rawBuffer ? crypto.createHash("sha256").update(rawBuffer).digest("hex") : "";
+    emailDoc.dedupeKey = `${parsedEmail.messageId || ""}:${rawHash}:${toAddress}`;
+
+    const upsertResult = await collection.updateOne({ dedupeKey: emailDoc.dedupeKey }, { $setOnInsert: emailDoc }, { upsert: true });
+    if (!upsertResult.upsertedId) {
+      // Duplicate delivery (retry): drop the freshly written attachment folder
+      // and skip SSE/webhook so clients are not notified twice.
+      await cleanupAttachments();
+      console.log(`Duplicate delivery suppressed for ${toAddress} (dedupeKey match)`);
+      return;
+    }
     console.log("Email saved to MongoDB collection: emails (for user " + toAddress + ")");
 
     const updatePayload = {
@@ -160,15 +195,17 @@ async function saveEmailToDB(parsedEmail, originalAttachments, toAddress, rawBuf
       accessedBy: [], // Initially no one has accessed it
     });
 
-    // Fire-and-forget webhook delivery. deliverForEmail swallows all of its
-    // own errors and retries in the background; it must never fail or slow
-    // down email ingestion.
-    try {
-      webhookService.deliverForEmail(toAddress, emailDoc);
-    } catch (webhookError) {
-      console.error("Error scheduling webhook delivery:", webhookError);
-    }
+    // Fire-and-forget webhook delivery; a .catch (not try/catch) is required
+    // because a floating async rejection would otherwise be unhandled. Never
+    // await it — ingestion must not block on webhook delivery.
+    Promise.resolve()
+      .then(() => webhookService.deliverForEmail(toAddress, emailDoc))
+      .catch((webhookError) => {
+        console.error(`Error in webhook delivery for ${toAddress}:`, webhookError);
+      });
   } catch (error) {
+    // A DB failure after attachments hit disk would otherwise orphan them.
+    await cleanupAttachments();
     console.error("Error saving email or attachments:", error);
     throw error;
   }
@@ -210,8 +247,20 @@ async function handleIncomingEmail(stream, session) {
       parsedEmail.textAsHtml = textToHTML(parsedEmail.text);
     }
 
+    // Per-recipient isolation: if one recipient fails after others succeeded,
+    // re-throwing would make the sender retry the whole message and duplicate
+    // the successes. Only re-throw when every recipient failed (clean retry).
+    const failures = [];
     for (const toAddress of session.envelope.rcptTo) {
-      await saveEmailToDB(parsedEmail, originalAttachments, toAddress.address.toLowerCase(), rawBuffer);
+      try {
+        await saveEmailToDB(parsedEmail, originalAttachments, toAddress.address.toLowerCase(), rawBuffer);
+      } catch (err) {
+        failures.push({ address: toAddress.address, err });
+        console.error(`Failed to persist for ${toAddress.address}:`, err);
+      }
+    }
+    if (failures.length > 0 && failures.length === session.envelope.rcptTo.length) {
+      throw failures[0].err;
     }
   } catch (error) {
     console.error("Error parsing or saving email:", error);

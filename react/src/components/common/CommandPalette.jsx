@@ -14,6 +14,7 @@ import { copyText } from "../../utils/clipboard";
 import { randomUsername } from "../../utils/random";
 import { parseDomains } from "../../utils/domains";
 import { getRecentInboxes } from "../../utils/recentInboxes";
+import { inboxPath, watchPath } from "../../utils/routes";
 
 // Address of the inbox currently on screen, if any.
 export const currentInboxFromPath = (pathname) => {
@@ -63,16 +64,20 @@ const CommandPalette = ({ open, onClose, onShowShortcuts }) => {
       });
     }
 
-    items.push({
-      id: "random-address",
-      label: "New random address",
-      hint: "N",
-      icon: Shuffle,
-      run: () => {
-        const domain = domains[Math.floor(Math.random() * domains.length)];
-        navigate(`/inbox/${randomUsername(10)}@${domain}`);
-      },
-    });
+    // No action when no domains are configured — it could only navigate to
+    // a broken @undefined address.
+    if (domains.length > 0) {
+      items.push({
+        id: "random-address",
+        label: "New random address",
+        hint: "N",
+        icon: Shuffle,
+        run: () => {
+          const domain = domains[Math.floor(Math.random() * domains.length)];
+          navigate(inboxPath(`${randomUsername(10)}@${domain}`));
+        },
+      });
+    }
 
     for (const address of getRecentInboxes()
       .filter((item) => item !== currentAddress)
@@ -81,7 +86,7 @@ const CommandPalette = ({ open, onClose, onShowShortcuts }) => {
         id: `recent-${address}`,
         label: `Open ${address}`,
         icon: History,
-        run: () => navigate(`/inbox/${address}`),
+        run: () => navigate(inboxPath(address)),
       });
     }
 
@@ -97,7 +102,7 @@ const CommandPalette = ({ open, onClose, onShowShortcuts }) => {
         id: "watch-mode",
         label: "Open watch view",
         icon: Watch,
-        run: () => navigate(currentAddress ? `/watch/${currentAddress}` : "/watch"),
+        run: () => navigate(currentAddress ? watchPath(currentAddress) : "/watch"),
       },
       { id: "shortcuts", label: "Keyboard shortcuts", hint: "?", icon: Keyboard, run: onShowShortcuts },
       {

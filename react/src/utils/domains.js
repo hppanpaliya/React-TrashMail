@@ -9,8 +9,11 @@ export const parseDomains = (envVar) => {
     const parsed = JSON.parse(envVar);
     if (Array.isArray(parsed)) {
       domains = parsed.flatMap((item) => (typeof item === "string" ? item.split(",").map((d) => d.trim()) : []));
-    } else {
+    } else if (typeof parsed === "string" || typeof parsed === "number") {
       domains = [String(parsed)];
+    } else {
+      // object/boolean/null JSON is not a valid domain source; fall back to CSV
+      domains = envVar.split(",").map((d) => d.trim());
     }
   } catch {
     domains = envVar.split(",").map((d) => d.trim());

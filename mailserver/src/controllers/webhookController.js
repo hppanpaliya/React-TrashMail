@@ -99,12 +99,23 @@ const webhookController = {
       // (signature, headers, SSRF checks) as real email deliveries.
       const outcome = await webhookService.sendTestDelivery(webhook);
 
-      await auditService.logActivity(new ObjectId(req.user.id), "WEBHOOK_TEST", { emailId, ok: outcome.ok }, req.user.role);
+      // Detailed status/error stays server-side (logs + audit) only: echoing
+      // it to the caller would turn this endpoint into an SSRF status oracle
+      // (port scan, internal-IP disclosure) since the URL is user-chosen.
+      if (!outcome.ok) {
+        console.error(`Webhook test failed for ${emailId}: ${outcome.error}`);
+      }
+      await auditService.logActivity(
+        new ObjectId(req.user.id),
+        "WEBHOOK_TEST",
+        { emailId, ok: outcome.ok, status: outcome.status ?? null, error: outcome.ok ? null : outcome.error },
+        req.user.role
+      );
 
       if (outcome.ok) {
-        return res.status(200).json({ ok: true, status: outcome.status });
+        return res.status(200).json({ ok: true });
       }
-      res.status(200).json({ ok: false, error: outcome.error });
+      res.status(200).json({ ok: false, error: "Webhook test delivery failed" });
     } catch (error) {
       console.error("Error testing webhook:", error);
       res.status(500).json({ message: "Internal server error" });

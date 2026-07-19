@@ -17,6 +17,9 @@ const SingleEmailItem = ({
   showRecipient = false,
 }) => {
   const reduceMotion = useReducedMotion();
+
+  if (!email) return null;
+
   const unread = !email.readStatus;
   const recipient = showRecipient ? email.to?.value?.[0]?.address : null;
 

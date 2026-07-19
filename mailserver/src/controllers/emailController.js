@@ -22,7 +22,9 @@ const buildSearchFilterQuery = (baseQuery, { search, filter }) => {
   }
 
   if (search) {
-    const regex = { $regex: escapeRegex(search), $options: "i" };
+    // Cap length so a multi-KB search term cannot force expensive regex scans.
+    const term = String(search).slice(0, 256);
+    const regex = { $regex: escapeRegex(term), $options: "i" };
     query.$and = [{ $or: [{ subject: regex }, { "from.text": regex }, { text: regex }] }];
   }
 
@@ -243,7 +245,7 @@ const emailController = {
       }
 
       if (!emails[0]["readStatus"]) {
-        await collection.updateOne({ _id: email_id }, { $set: { readStatus: true } });
+        await collection.updateOne({ _id: email_id, emailId: emailId }, { $set: { readStatus: true } });
       }
 
       return res.json(emails);
@@ -352,10 +354,10 @@ const emailController = {
       const db = getDB();
       const collection = db.collection("emails");
 
-      // Collect ids first so attachment folders can be removed.
-      const emails = await collection.find({ emailId: emailId }, { projection: { _id: 1 } }).toArray();
-
-      for (const email of emails) {
+      // Stream ids instead of materializing the whole inbox so large inboxes
+      // don't blow memory; attachment folders are removed per document.
+      const cursor = collection.find({ emailId: emailId }, { projection: { _id: 1 }, batchSize: 500 });
+      for await (const email of cursor) {
         const attachmentsPath = attachmentFolderPath(email._id);
         if (fs.existsSync(attachmentsPath)) {
           fs.rmSync(attachmentsPath, { recursive: true, force: true });

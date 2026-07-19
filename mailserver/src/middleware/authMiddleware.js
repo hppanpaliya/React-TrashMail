@@ -21,7 +21,7 @@ const authMiddleware = async (req, res, next) => {
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
+    const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
     
     // Fetch full user from DB to get latest roles and allowedDomains
     const db = getDB();
@@ -29,6 +29,11 @@ const authMiddleware = async (req, res, next) => {
     
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
+    }
+
+    // Disabled accounts lose access immediately, even with a valid JWT.
+    if (user.disabled) {
+      return res.status(403).json({ message: 'Account disabled' });
     }
 
     req.user = {

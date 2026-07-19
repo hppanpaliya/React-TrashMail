@@ -1,4 +1,4 @@
-import { cloneElement, useEffect, useId, useRef, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cx } from "../../utils/cx";
 
@@ -22,8 +22,10 @@ const Menu = ({ trigger, items = [], align = "right", className }) => {
       if (event.key === "Escape") {
         setOpen(false);
       } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        if (items.length === 0) return; // nothing to navigate; avoid % 0 → NaN
         event.preventDefault();
         setActiveIndex((prev) => {
+          if (items.length === 0) return -1;
           const delta = event.key === "ArrowDown" ? 1 : -1;
           const next = (prev + delta + items.length) % items.length;
           listRef.current?.children[next]?.focus();
@@ -40,6 +42,23 @@ const Menu = ({ trigger, items = [], align = "right", className }) => {
     };
   }, [open, items.length]);
 
+  // Focus lifecycle: remember the opener, focus the first item on open (after
+  // the animated <ul> mounts), and restore focus to the opener on close.
+  const openerRef = useRef(null);
+  useEffect(() => {
+    if (open) {
+      openerRef.current = document.activeElement;
+      if (items.length > 0) {
+        requestAnimationFrame(() => {
+          listRef.current?.children[0]?.focus();
+        });
+      }
+    } else if (openerRef.current) {
+      openerRef.current.focus?.();
+      openerRef.current = null;
+    }
+  }, [open, items.length]);
+
   const pick = (item) => {
     setOpen(false);
     item.onSelect?.();
@@ -47,15 +66,17 @@ const Menu = ({ trigger, items = [], align = "right", className }) => {
 
   return (
     <div ref={rootRef} className={cx("relative inline-flex", className)}>
-      {cloneElement(trigger, {
-        onClick: () => {
-          setOpen((prev) => !prev);
-          setActiveIndex(-1);
-        },
-        "aria-haspopup": "menu",
-        "aria-expanded": open,
-        "aria-controls": menuId,
-      })}
+      {isValidElement(trigger)
+        ? cloneElement(trigger, {
+            onClick: () => {
+              setOpen((prev) => !prev);
+              setActiveIndex(-1);
+            },
+            "aria-haspopup": "menu",
+            "aria-expanded": open,
+            "aria-controls": menuId,
+          })
+        : trigger}
 
       <AnimatePresence>
         {open && (

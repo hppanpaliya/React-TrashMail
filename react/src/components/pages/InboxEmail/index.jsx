@@ -30,6 +30,9 @@ const InboxEmail = () => {
   const [showHeaders, setShowHeaders] = useState(false);
   const [viewMode, setViewMode] = useState("html"); // 'html', 'text', 'original'
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  // Remote email content (tracking pixels, remote CSS) is blocked until the
+  // user opts in, so opening a mail doesn't leak IP/open events to the sender.
+  const [loadRemote, setLoadRemote] = useState(false);
   const { token } = useAuth();
   const showSnackbar = useSnackbar();
   const reduceMotion = useReducedMotion();
@@ -43,6 +46,7 @@ const InboxEmail = () => {
     const fetchEmailData = async () => {
       setLoading(true);
       setError(null);
+      setLoadRemote(false); // re-block remote content for each email
       try {
         const response = await api.get(`/api/email/${emailId}/${email_id}`, { signal: controller.signal });
         setEmailData(response.data?.[0] || null);
@@ -226,8 +230,22 @@ const InboxEmail = () => {
                 </pre>
               ) : (
                 <div className="email-body max-w-full overflow-x-auto rounded-xl bg-white p-3 text-black sm:p-4">
+                  {!loadRemote && (
+                    <button
+                      type="button"
+                      onClick={() => setLoadRemote(true)}
+                      className="mb-2 rounded-md bg-raised px-3 py-1 text-xs text-muted hover:text-ink"
+                    >
+                      Remote images blocked for privacy — Show remote content
+                    </button>
+                  )}
                   {/* Empty html lets react-letter fall back to the text part. */}
                   <Letter
+                    useIframe
+                    iframeTitle="Email content"
+                    // Block remote http(s) resources until opted in; keep
+                    // inline cid:/data: parts working.
+                    rewriteExternalResources={(url) => (loadRemote ? url : /^https?:/i.test(url) ? "" : url)}
                     html={(viewMode === "original" ? emailData?.htmlOriginal || emailData?.html : emailData?.html) || ""}
                     text={emailData?.text || "No Message"}
                   />
