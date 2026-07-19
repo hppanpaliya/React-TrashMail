@@ -7,13 +7,29 @@ let db;
 async function connectWithRetry(retries = 5, delay = 5000) {
   for (let i = 0; i < retries; i++) {
     try {
-      client = new MongoClient(config.mongoURL);
+      client = new MongoClient(config.mongoURL, {
+        serverSelectionTimeoutMS: config.mongoServerSelectionTimeoutMS || 5000,
+        connectTimeoutMS: config.mongoConnectTimeoutMS || 10000,
+        socketTimeoutMS: config.mongoSocketTimeoutMS || 45000,
+        maxPoolSize: config.mongoMaxPoolSize || 10,
+      });
+
+      // Observe connection-state changes so post-startup connection loss is
+      // visible in logs (driver handles reconnection itself).
+      client.on("serverHeartbeatFailed", (e) => console.error("MongoDB heartbeat failed:", e && e.failure));
+      client.on("topologyClosed", () => console.warn("MongoDB topology closed"));
+
       await client.connect();
       db = client.db(config.dbName);
 
-      // Create index for emailId to optimize queries
-      await db.collection("emails").createIndex({ emailId: 1 });
-      await db.collection("emails").createIndex({ date: -1 }); // For sorting by date
+      // Create indexes for emails to optimize queries. Failures are logged
+      // but do not prevent startup.
+      try {
+        await db.collection("emails").createIndex({ emailId: 1 });
+        await db.collection("emails").createIndex({ date: -1 }); // For sorting by date
+      } catch (indexErr) {
+        console.error("Warning: could not create emails indexes:", indexErr.message);
+      }
 
       // Unique indexes so concurrent signups cannot create duplicate users or
       // double-spend invite codes. Failures (e.g. pre-existing duplicate data)
@@ -28,6 +44,13 @@ async function connectWithRetry(retries = 5, delay = 5000) {
       } catch (indexErr) {
         console.error("Warning: could not create unique index on invites.code:", indexErr.message);
       }
+      // Idempotent inbound delivery: SMTP retries must not duplicate emails.
+      // sparse so pre-existing documents without a dedupeKey are excluded.
+      try {
+        await db.collection("emails").createIndex({ dedupeKey: 1 }, { unique: true, sparse: true });
+      } catch (indexErr) {
+        console.error("Warning: could not create unique index on emails.dedupeKey:", indexErr.message);
+      }
       // One webhook per inbox address.
       try {
         await db.collection("webhooks").createIndex({ emailId: 1 }, { unique: true });
@@ -39,6 +62,15 @@ async function connectWithRetry(retries = 5, delay = 5000) {
       return;
     } catch (err) {
       console.error(`Attempt ${i + 1} failed: ${err.message}`);
+      // Close the failed client before retrying so we don't leak sockets/timers.
+      if (client) {
+        try {
+          await client.close();
+        } catch (closeErr) {
+          console.error("Error closing failed MongoDB client:", closeErr.message);
+        }
+        client = null;
+      }
       if (i === retries - 1) throw err;
       await new Promise((resolve) => setTimeout(resolve, delay));
     }

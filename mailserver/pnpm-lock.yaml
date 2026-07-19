@@ -50,15 +50,15 @@ importers:
       node-cron:
         specifier: ^4.6.0
         version: 4.6.0
-      nodemon:
-        specifier: ^3.1.14
-        version: 3.1.14
       sanitize-html:
         specifier: ^2.17.6
         version: 2.17.6
       smtp-server:
         specifier: ^3.19.2
         version: 3.19.2
+      undici:
+        specifier: ^8.6.0
+        version: 8.6.0
       validator:
         specifier: ^13.15.35
         version: 13.15.35
@@ -75,6 +75,9 @@ importers:
       nodemailer:
         specifier: ^9.0.3
         version: 9.0.3
+      nodemon:
+        specifier: ^3.1.14
+        version: 3.1.14
       prettier:
         specifier: ^3.9.5
         version: 3.9.5
@@ -2124,6 +2127,10 @@ packages:
 
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
+
+  undici@8.6.0:
+    resolution: {integrity: sha512-l2FlC6I510GawyEd1qgcE/okihKrzy+BRTEBlu6T0fdbM9m5yxtIH5Oa3ysRsH0zC4EhmWUEaSDsy2QngBeRlw==}
+    engines: {node: '>=22.19.0'}
 
   unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
@@ -4546,6 +4553,8 @@ snapshots:
   undefsafe@2.0.5: {}
 
   undici-types@8.3.0: {}
+
+  undici@8.6.0: {}
 
   unpipe@1.0.0: {}
 

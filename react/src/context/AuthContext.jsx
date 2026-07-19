@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext, useCallback } from "react";
+import { createContext, useState, useEffect, useContext, useCallback, useMemo } from "react";
 import { env } from "../env";
 import { setUnauthorizedHandler } from "../api";
 
@@ -23,39 +23,52 @@ export const AuthProvider = ({ children }) => {
   }, [logout]);
 
   useEffect(() => {
-    const fetchUser = async (authToken) => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    // Re-verify: hold route guards on the loader until the user is known,
+    // otherwise a post-login render pass sees token set but user null and
+    // fail-closed guards would bounce a legitimate admin.
+    setLoading(true);
+
+    // ignore + abort: a late /me response for a superseded token must never
+    // resurrect a logged-out session.
+    let ignore = false;
+    const controller = new AbortController();
+
+    (async () => {
       try {
         const response = await fetch(`${env.REACT_APP_API_URL}/api/auth/me`, {
-          headers: {
-            "x-auth-token": authToken,
-          },
+          headers: { "x-auth-token": token },
+          signal: controller.signal,
         });
-
+        if (ignore) return;
         if (response.ok) {
           const userData = await response.json();
-          setUser(userData);
+          if (!ignore) setUser(userData);
         } else {
           logout();
         }
       } catch (error) {
+        if (error.name === "AbortError" || ignore) return; // expected on token change/unmount
         console.error("Error fetching user:", error);
         logout();
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
-    };
+    })();
 
-    if (token) {
-      // Verify token and get user info
-      fetchUser(token);
-    } else {
-      setLoading(false);
-    }
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
   }, [token, logout]);
 
   // Shared login/signup POST: network failures and non-JSON responses
   // surface as a message instead of an unhandled rejection.
-  const authenticate = async (path, body, fallbackMessage) => {
+  const authenticate = useCallback(async (path, body, fallbackMessage) => {
     try {
       const response = await fetch(`${env.REACT_APP_API_URL}${path}`, {
         method: "POST",
@@ -68,9 +81,14 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        setToken(data.token);
-        return { success: true };
+        // Guard: setItem(undefined) would store the literal string "undefined"
+        // and make the app appear logged in with a garbage token.
+        if (typeof data.token === "string" && data.token) {
+          localStorage.setItem("token", data.token);
+          setToken(data.token);
+          return { success: true };
+        }
+        return { success: false, message: fallbackMessage };
       }
       // Express-validator errors arrive as { error, details: [{ msg }] }.
       const message = data.message || data.details?.[0]?.msg || data.error || fallbackMessage;
@@ -78,13 +96,18 @@ export const AuthProvider = ({ children }) => {
     } catch {
       return { success: false, message: "Could not reach the server. Please try again." };
     }
-  };
+  }, []);
 
-  const login = (username, password) => authenticate("/api/auth/login", { username, password }, "Login failed");
+  const login = useCallback((username, password) => authenticate("/api/auth/login", { username, password }, "Login failed"), [authenticate]);
 
-  const signup = (username, password, inviteCode) => authenticate("/api/auth/signup", { username, password, inviteCode }, "Signup failed");
+  const signup = useCallback(
+    (username, password, inviteCode) => authenticate("/api/auth/signup", { username, password, inviteCode }, "Signup failed"),
+    [authenticate]
+  );
 
-  return <AuthContext.Provider value={{ user, token, loading, login, signup, logout }}>{children}</AuthContext.Provider>;
+  const value = useMemo(() => ({ user, token, loading, login, signup, logout }), [user, token, loading, login, signup, logout]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

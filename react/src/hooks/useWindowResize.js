@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 
+const getIsMobile = (breakpoint) => typeof window !== "undefined" && window.innerWidth <= breakpoint;
+
 const useWindowResize = (breakpoint = 899) => {
-  const [isMobile, setIsMobile] = useState(false);
+  // Lazy initializer avoids a one-frame desktop-layout flash on mobile.
+  const [isMobile, setIsMobile] = useState(() => getIsMobile(breakpoint));
 
   useEffect(() => {
     const handleResize = () => {

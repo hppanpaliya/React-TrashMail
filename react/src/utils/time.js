@@ -11,6 +11,10 @@ export const formatRelativeTime = (date) => {
   if (isNaN(d.getTime())) return "";
 
   const diffSeconds = Math.round((Date.now() - d.getTime()) / 1000);
+  if (diffSeconds < 0) {
+    // Future timestamp: tolerate minor clock skew, otherwise show absolute.
+    return diffSeconds > -120 ? "just now" : formatAbsoluteTime(date);
+  }
   if (diffSeconds < 45) return "just now";
 
   const minutes = Math.round(diffSeconds / 60);

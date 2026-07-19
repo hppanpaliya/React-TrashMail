@@ -1,15 +1,19 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import IconButton from "./IconButton";
 import { cx } from "../../utils/cx";
 
-// Accessible modal dialog: portal, backdrop + Escape close, focus handling.
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// Accessible modal dialog: portal, backdrop + Escape close, focus trap.
 const Dialog = ({ open, onClose, title, children, maxWidth = "max-w-md", hideClose = false }) => {
   const panelRef = useRef(null);
   const previouslyFocused = useRef(null);
   const reduceMotion = useReducedMotion();
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -27,6 +31,32 @@ const Dialog = ({ open, onClose, title, children, maxWidth = "max-w-md", hideClo
       if (event.key === "Escape") {
         event.stopPropagation();
         onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      // Trap: keep Tab/Shift+Tab cycling inside the panel (WCAG 2.1.2/2.4.3).
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = Array.from(panel.querySelectorAll(FOCUSABLE)).filter((el) => el.offsetParent !== null || el === panel);
+      if (items.length === 0) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+
+      if (!panel.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener("keydown", onKeyDown);
@@ -55,7 +85,7 @@ const Dialog = ({ open, onClose, title, children, maxWidth = "max-w-md", hideClo
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-label={typeof title === "string" ? title : undefined}
+            aria-labelledby={title ? titleId : undefined}
             tabIndex={-1}
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -65,7 +95,13 @@ const Dialog = ({ open, onClose, title, children, maxWidth = "max-w-md", hideClo
           >
             {(title || !hideClose) && (
               <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-1">
-                {title ? <h2 className="text-base font-semibold text-ink leading-6 pt-1">{title}</h2> : <span />}
+                {title ? (
+                  <h2 id={titleId} className="text-base font-semibold text-ink leading-6 pt-1">
+                    {title}
+                  </h2>
+                ) : (
+                  <span />
+                )}
                 {!hideClose && (
                   <IconButton label="Close" size="sm" onClick={onClose} data-dialog-close className="-mr-1.5">
                     <X />

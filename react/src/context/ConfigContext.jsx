@@ -12,7 +12,12 @@ export const ConfigProvider = ({ children }) => {
   const [config, setConfig] = useState({ retentionDays: null, domains: null });
 
   useEffect(() => {
-    if (!token) return undefined;
+    if (!token) {
+      // Reset on logout so the next session never sees the previous user's
+      // domains/retention config.
+      setConfig({ retentionDays: null, domains: null });
+      return undefined;
+    }
 
     const controller = new AbortController();
 

@@ -11,6 +11,24 @@ import { formatAbsoluteTime, formatRelativeTime } from "../../utils/time";
 
 const EMPTY_FORM = { url: "", secret: "", enabled: true };
 
+// Client-side sanity check only; the backend keeps the real SSRF protection.
+// https is required except for localhost (self-host/testing convenience).
+const validateWebhookUrl = (raw) => {
+  const value = raw.trim();
+  if (!value) return "Please enter a webhook URL";
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return "Enter a valid URL (e.g. https://example.com/hooks/trashmail)";
+  }
+  const isLocalhost = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+  if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && isLocalhost)) {
+    return "Webhook URL must use https://";
+  }
+  return null;
+};
+
 // Per-inbox webhook settings. GET 404 means "not configured" → empty form.
 const WebhookDialog = ({ open, onClose, emailId }) => {
   const showSnackbar = useSnackbar();
@@ -60,13 +78,15 @@ const WebhookDialog = ({ open, onClose, emailId }) => {
   }, [open, emailId]);
 
   const handleSave = async () => {
-    if (!form.url.trim()) {
-      showSnackbar("Please enter a webhook URL", "warning");
+    const url = form.url.trim();
+    const urlError = validateWebhookUrl(url);
+    if (urlError) {
+      showSnackbar(urlError, "warning");
       return;
     }
     setSaving(true);
     try {
-      const body = { url: form.url.trim(), enabled: form.enabled };
+      const body = { url, enabled: form.enabled };
       if (form.secret) body.secret = form.secret;
       await api.put(`/api/webhooks/${emailId}`, body);
       setConfigured(true);

@@ -17,6 +17,10 @@ const SIZES = {
 const IconButton = forwardRef(({ label, tone = "default", size = "md", className, children, type = "button", ...props }, ref) => {
   const reduceMotion = useReducedMotion();
 
+  if (import.meta.env.DEV && !label) {
+    console.warn("IconButton: `label` is required for accessibility (aria-label).");
+  }
+
   return (
     <motion.button
       ref={ref}

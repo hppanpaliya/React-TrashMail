@@ -21,8 +21,20 @@ function createApp() {
   // - 2: Behind two proxies (e.g., Cloudflare + Nginx)
   // - N: Behind N proxies
   // IMPORTANT: Setting this incorrectly allows rate limit bypass!
-  const trustProxy = process.env.TRUST_PROXY || "0";
-  app.set("trust proxy", trustProxy === "false" ? false : parseInt(trustProxy, 10) || 0);
+  const rawTrustProxy = process.env.TRUST_PROXY || "0";
+  let trustProxyValue;
+  if (rawTrustProxy === "false") {
+    trustProxyValue = false;
+  } else {
+    const n = parseInt(rawTrustProxy, 10);
+    if (Number.isNaN(n)) {
+      console.warn(`Invalid TRUST_PROXY value "${rawTrustProxy}"; defaulting to 0 (no proxy trust).`);
+      trustProxyValue = 0;
+    } else {
+      trustProxyValue = n;
+    }
+  }
+  app.set("trust proxy", trustProxyValue);
 
   // Security Headers.
   // Helmet's default CSP includes upgrade-insecure-requests, which makes
@@ -48,9 +60,23 @@ function createApp() {
     })
   );
 
-  // Enable CORS with exposed headers for pagination
+  // Enable CORS with exposed headers for pagination. Cross-origin browser
+  // callers must be allowlisted via ALLOWED_ORIGINS (comma-separated); the SPA
+  // is served same-origin, so no Origin header means the request is allowed.
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  if (allowedOrigins.length === 0) {
+    console.warn("ALLOWED_ORIGINS is not set; cross-origin browser requests will be rejected (same-origin only).");
+  }
   app.use(
     cors({
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        if (allowedOrigins.includes(origin)) return cb(null, true);
+        return cb(null, false);
+      },
       exposedHeaders: ["X-Total-Count", "X-Total-Pages", "X-Current-Page"],
     })
   );
@@ -67,14 +93,14 @@ function createApp() {
   });
   app.use("/api", limiter);
 
-  // Data Sanitization against NoSQL query injection
+  // Parse JSON bodies first so downstream sanitizers see req.body
+  app.use(express.json({ limit: "10kb" })); // Limit body size
+
+  // Data Sanitization against NoSQL query injection (must run AFTER body parse)
   app.use(mongoSanitize());
 
   // Prevent Parameter Pollution
   app.use(hpp());
-
-  // Parse JSON bodies (needed for auth)
-  app.use(express.json({ limit: "10kb" })); // Limit body size
 
   // Define routes
   app.use("/api/auth", authRoutes);
@@ -88,6 +114,23 @@ function createApp() {
   app.use("/api", attachmentRoutes);
   app.use("/api", sseRoutes);
 
+  // Liveness/readiness probe: verifies the DB connection, unauthenticated and
+  // outside /api so rate limiting never rejects the container healthcheck.
+  app.get("/health", async (req, res) => {
+    try {
+      const { getDB } = require("./db");
+      await getDB().command({ ping: 1 });
+      res.status(200).json({ status: "ok" });
+    } catch (err) {
+      res.status(503).json({ status: "unhealthy" });
+    }
+  });
+
+  // Unknown API routes -> JSON 404 (must come before the SPA fallback)
+  app.use("/api", (req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
+
   // Serve static files from the React app build directory
   const buildPath = path.join(__dirname, ".", "build");
   app.use(express.static(buildPath));
@@ -97,6 +140,17 @@ function createApp() {
       res.sendFile(path.join(buildPath, "index.html"));
     });
   }
+
+  // Central error handler: sanitized JSON, stack only outside production
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    const status = err.status || 500;
+    res.status(status).json({
+      error: status === 500 ? "Internal server error" : err.message,
+      ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {}),
+    });
+  });
 
   return app;
 }

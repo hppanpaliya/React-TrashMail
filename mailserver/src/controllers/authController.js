@@ -5,6 +5,10 @@ const config = require("../config");
 const auditService = require("../services/auditService");
 const { escapeRegex } = require("../utils/regex");
 
+// A real bcrypt hash used to equalize login timing when the username does not
+// exist, preventing username enumeration via response-time differences.
+const DUMMY_HASH = bcrypt.hashSync("dummy-password-for-timing", config.bcryptSaltRounds);
+
 const authController = {
   signup: async (req, res) => {
     const { username, password, inviteCode } = req.body;
@@ -24,7 +28,11 @@ const authController = {
       // 2. Atomically claim the invite code. findOneAndUpdate ensures two
       // concurrent signups can never both consume the same invite.
       const invite = await invitesCollection.findOneAndUpdate(
-        { code: inviteCode, used: false },
+        {
+          code: inviteCode,
+          used: false,
+          $or: [{ expiresAt: null }, { expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
+        },
         { $set: { used: true, usedAt: new Date() } },
         { returnDocument: "after" }
       );
@@ -102,6 +110,8 @@ const authController = {
       // 1. Check if user exists
       const user = await usersCollection.findOne({ username });
       if (!user) {
+        // Burn a bcrypt comparison so this path takes as long as a wrong-password one.
+        await bcrypt.compare(password, DUMMY_HASH);
         await auditService.logActivity(null, "LOGIN_FAILED", { username, ip: req.ip, reason: "User not found" }, "unknown");
         return res.status(400).json({ message: "Invalid Credentials" });
       }
@@ -113,10 +123,17 @@ const authController = {
         return res.status(400).json({ message: "Invalid Credentials" });
       }
 
+      // 3. Reject disabled accounts (only after a valid password so this
+      // cannot be used to probe which usernames exist).
+      if (user.disabled) {
+        await auditService.logActivity(user._id, "LOGIN_FAILED", { username, ip: req.ip, reason: "Account disabled" }, user.role || "user");
+        return res.status(403).json({ message: "Account disabled" });
+      }
+
       // Log Login
       await auditService.logActivity(user._id, "LOGIN", { ip: req.ip }, user.role || "user");
 
-      // 3. Return JWT
+      // 4. Return JWT
       const payload = {
         user: {
           id: user._id,
@@ -146,6 +163,10 @@ const authController = {
         { projection: { password: 0 } } // Exclude password
       );
 
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
       res.json(user);
     } catch (err) {
       console.error(err.message);
@@ -168,7 +189,9 @@ const authController = {
         filter.username = { $regex: escapeRegex(search), $options: "i" };
       }
 
-      const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+      const allowedSortFields = ["username", "role", "createdAt"];
+      const sortField = allowedSortFields.includes(sortBy) ? sortBy : "username";
+      const sort = { [sortField]: sortOrder === "asc" ? 1 : -1 };
 
       const users = await usersCollection
         .find(filter, { projection: { password: 0 } })

@@ -114,7 +114,7 @@ The Node.js backend provides the mail server functionality for receiving emails 
 
 ### Tech Stack
 
-- Node.js 24 (LTS)
+- Node.js >= 22.12.0 (24 LTS recommended)
 - Express 5
 - MongoDB
 - SMTP Server
@@ -124,45 +124,47 @@ The Node.js backend provides the mail server functionality for receiving emails 
 
 ### API Endpoints
 
+All routes are served under the `/api` base path.
+
 #### Authentication
-- `POST /auth/signup` - User signup with invite code
-- `POST /auth/login` - User login
-- `GET /auth/me` - Get current user info
-- `GET /auth/admin` - Check admin access
+- `POST /api/auth/signup` - User signup with invite code
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user info
+- `GET /api/auth/admin` - Check admin access
 
 #### Emails
-- `GET /emails-list/:emailId` - Get emails for an address (pagination, search, filter, sort via query params)
-- `GET /emails-list/:emailId/unread-count` - Unread count for tab badges
-- `GET /all-emails` - Get all emails (admin only, same query params)
-- `GET /email/:emailId/:email_id` - Get specific email (marks it read)
-- `GET /email/:emailId/:email_id/raw` - Download raw RFC822 source (`.eml`)
-- `DELETE /email/:emailId/:email_id` - Delete email
-- `DELETE /emails/:emailId` - Delete ALL emails in an inbox
+- `GET /api/emails-list/:emailId` - Get emails for an address (pagination, search, filter, sort via query params)
+- `GET /api/emails-list/:emailId/unread-count` - Unread count for tab badges
+- `GET /api/all-emails` - Get all emails (admin only, same query params)
+- `GET /api/email/:emailId/:email_id` - Get specific email (marks it read)
+- `GET /api/email/:emailId/:email_id/raw` - Download raw RFC822 source (`.eml`)
+- `DELETE /api/email/:emailId/:email_id` - Delete email
+- `DELETE /api/emails/:emailId` - Delete ALL emails in an inbox
 
 #### Config & Webhooks
-- `GET /config` - `{ retentionDays, domains }` for the authenticated user (drives frontend expiry chips and domain picker)
-- `GET|PUT|DELETE /webhooks/:emailId` - Per-inbox webhook configuration (HMAC-signed deliveries with retries and SSRF protection)
-- `POST /webhooks/:emailId/test` - Send a test delivery
+- `GET /api/config` - `{ retentionDays, domains }` for the authenticated user (drives frontend expiry chips and domain picker)
+- `GET|PUT|DELETE /api/webhooks/:emailId` - Per-inbox webhook configuration (HMAC-signed deliveries with retries and SSRF protection)
+- `POST /api/webhooks/:emailId/test` - Send a test delivery
 
 See `mailserver/README.md` for full request/response details.
 
 #### Attachments
-- `GET /attachment/:directory/:filename` - Serve attachment file
+- `GET /api/attachment/:directory/:filename` - Serve attachment file
 
 #### SSE (Server-Sent Events)
-- `GET /sse/:emailId` - Real-time updates for specific email address
-- `GET /sse-all` - Real-time updates for all emails (admin)
+- `GET /api/sse/:emailId` - Real-time updates for specific email address
+- `GET /api/sse-all` - Real-time updates for all emails (admin)
 
 #### Admin Routes
-- `GET /admin/users` - Get all users
-- `PUT /admin/users/:userId/domains` - Update user domain access
-- `POST /admin/invites` - Generate new invite codes
-- `GET /admin/logs` - Get audit logs
-- `DELETE /admin/logs` - Clear audit logs
-- `GET /admin/conflicts` - Get domain conflicts
-- `GET /admin/system-emails` - Get system emails
-- `GET /admin/received-emails` - Get received emails stats
-- `GET /admin/top-emails` - Get top email addresses
+- `GET /api/admin/users` - Get all users
+- `PUT /api/admin/users/:userId/domains` - Update user domain access
+- `POST /api/admin/invites` - Generate new invite codes
+- `GET /api/admin/logs` - Get audit logs
+- `DELETE /api/admin/logs` - Clear audit logs
+- `GET /api/admin/conflicts` - Get domain conflicts
+- `GET /api/admin/system-emails` - Get system emails
+- `GET /api/admin/received-emails` - Get received emails stats
+- `GET /api/admin/top-emails` - Get top email addresses
 
 ### Installation
 
@@ -298,7 +300,7 @@ For those who prefer a containerized deployment, Docker can be used to easily se
 | `-e PORT=4000`                                             | Backend API server port                                                                                                               | 4000 |
 | `-e MONGO_URI=mongodb://localhost:27017`                   | MongoDB connection string                                                                                                             | mongodb://localhost:27017 |
 | `-e DB_NAME=trashmail`                                     | Database name                                                                                                                         | trashmail |
-| `-e SMTP_PORT=2525`                                        | SMTP server port                                                                                                                      | 2525 |
+| `-e SMTP_PORT=2525`                                        | SMTP server port                                                                                                                      | 25 (in-image default; docker-compose sets 2525) |
 | `-e ALLOWED_DOMAINS=example.com,test.org`                  | Comma-separated list of allowed email domains                                                                                          | example.com |
 | `-e JWT_SECRET=your-secret-key`                            | **Required** - Secret key for JWT token signing. **Must be changed in production!**                                                   | your-secret-key-change-this-in-prod |
 | `-e JWT_EXPIRY=24h`                                        | JWT token expiration time                                                                                                             | 24h |

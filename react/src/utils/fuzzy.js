@@ -3,6 +3,7 @@
 // (higher is better) or -1 when the query is not a subsequence of the text.
 export const fuzzyScore = (query, text) => {
   if (!query) return 0;
+  if (typeof text !== "string") return -1;
 
   const q = query.toLowerCase();
   const t = text.toLowerCase();

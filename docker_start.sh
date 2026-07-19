@@ -25,19 +25,28 @@ if [ ! -f "$FIRST_RUN_FLAG" ]; then
     touch "$FIRST_RUN_FLAG"
 fi
 
-# Create .env file for mailserver with all required variables
-cat > /React-TrashMail/mailserver/.env << EOF
+# Create .env file for mailserver with all required variables.
+# Written with a restrictive umask + chmod 600 so secrets are never
+# world/group-readable on the container filesystem. JWT_SECRET gets no
+# insecure default: the app itself refuses to start without a real secret
+# outside NODE_ENV=development.
+ENV_FILE=/React-TrashMail/mailserver/.env
+(
+  umask 077
+  cat > "$ENV_FILE" << EOF
 PORT=${PORT:-4000}
 # Default to the mongo-compose service, but allow overriding via env (for cloud)
 MONGO_URI=${MONGO_URI:-mongodb://mongo:27017}
 DB_NAME=${DB_NAME:-trashmail}
 SMTP_PORT=${SMTP_PORT:-25}
 ALLOWED_DOMAINS=${ALLOWED_DOMAINS:-example.com}
-JWT_SECRET=${JWT_SECRET:-your-secret-key-change-this-in-prod}
+${JWT_SECRET:+JWT_SECRET=${JWT_SECRET}}
 JWT_EXPIRY=${JWT_EXPIRY:-24h}
 BCRYPT_SALT_ROUNDS=${BCRYPT_SALT_ROUNDS:-10}
 EMAIL_RETENTION_DAYS=${EMAIL_RETENTION_DAYS:-30}
 EOF
+)
+chmod 600 "$ENV_FILE"
 
 # If the DB is remote and requires setup you may want to wait or run migrations here
 # (pnpm is available at runtime via corepack, enabled in the Dockerfile)

@@ -16,10 +16,14 @@ const SEVERITIES = {
 export const SnackbarProvider = ({ children }) => {
   const [snack, setSnack] = useState(null);
   const timerRef = useRef(null);
+  // Monotonic counter: Date.now() can collide within one millisecond, which
+  // would suppress the replace animation for back-to-back toasts.
+  const keyRef = useRef(0);
   const reduceMotion = useReducedMotion();
 
   const showSnackbar = useCallback((message, severity = "success") => {
-    setSnack({ message, severity, key: Date.now() });
+    keyRef.current += 1;
+    setSnack({ message, severity, key: keyRef.current });
   }, []);
 
   useEffect(() => {

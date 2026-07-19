@@ -43,3 +43,4 @@ yarn-error.log*
 # pnpm-lock.yaml is the single source of truth — never commit npm or yarn lockfiles
 package-lock.json
 yarn.lock
+audit-findings/

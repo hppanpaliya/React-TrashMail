@@ -20,13 +20,13 @@ const FILTER_OPTIONS = [
 
 // Server-side search / filter / sort controls shared by the email list pages.
 const EmailListControls = ({
-  searchTerm,
-  onSearchChange,
-  filterRead,
-  onFilterChange,
-  sortBy,
-  onSortChange,
-  onClear,
+  searchTerm = "",
+  onSearchChange = () => {},
+  filterRead = "all",
+  onFilterChange = () => {},
+  sortBy = "",
+  onSortChange = () => {},
+  onClear = () => {},
   sortOptions = DEFAULT_SORT_OPTIONS,
   resultSummary,
 }) => {

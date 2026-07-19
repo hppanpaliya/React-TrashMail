@@ -2,12 +2,16 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 import IconButton from "./IconButton";
 import { cx } from "../../utils/cx";
 
-// Windowed page numbers around the current page.
-const pageWindow = (page, totalPages, span = 2) => {
-  const start = Math.max(1, Math.min(page - span, totalPages - span * 2));
-  const end = Math.min(totalPages, start + span * 2);
+// Windowed page numbers around the current page: at most span*2+1 pages,
+// centered on `page`, shifted inward at either edge so it never overflows.
+export const pageWindow = (page, totalPages, span = 2) => {
+  if (totalPages < 1) return [];
+  const size = span * 2 + 1;
+  const maxStart = Math.max(1, totalPages - size + 1);
+  const start = Math.min(Math.max(1, page - span), maxStart);
+  const end = Math.min(totalPages, start + size - 1);
   const pages = [];
-  for (let p = Math.max(1, start); p <= end; p++) pages.push(p);
+  for (let p = start; p <= end; p++) pages.push(p);
   return pages;
 };
 

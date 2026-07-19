@@ -55,7 +55,13 @@ const useGlobalShortcuts = ({ enabled, onOpenPalette, onOpenHelp }) => {
         }
         case "n":
         case "N": {
-          const domains = configDomains || parseDomains(env.REACT_APP_DOMAINS);
+          // An empty config list falls back to env; an empty result must never
+          // navigate to /inbox/...@undefined.
+          const domains = configDomains && configDomains.length ? configDomains : parseDomains(env.REACT_APP_DOMAINS);
+          if (!domains || !domains.length) {
+            showSnackbar("No mail domains are configured", "error");
+            return;
+          }
           const domain = domains[Math.floor(Math.random() * domains.length)];
           navigate(`/inbox/${randomUsername(10)}@${domain}`);
           break;

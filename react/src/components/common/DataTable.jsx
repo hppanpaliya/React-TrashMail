@@ -10,9 +10,9 @@ const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100].map((n) => ({ value: n, label: `
 // stacked cards on mobile. `page` is zero-based (matches admin API usage).
 const DataTable = ({
   columns,
-  data,
-  total,
-  page,
+  data = [],
+  total = 0,
+  page = 0,
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
@@ -22,10 +22,27 @@ const DataTable = ({
   loading,
   noDataMessage = "No records found",
   hidePagination = false,
+  getRowKey,
 }) => {
-  const lastPage = Math.max(0, Math.ceil(total / rowsPerPage) - 1);
-  const from = total === 0 ? 0 : page * rowsPerPage + 1;
-  const to = Math.min(total, (page + 1) * rowsPerPage);
+  // Async callers may pass undefined/null before the first successful fetch;
+  // guard everything so no TypeError or NaN pagination can escape.
+  const rows = Array.isArray(data) ? data : [];
+  const safeTotal = Number.isFinite(total) ? total : 0;
+  const perPage = Number.isInteger(rowsPerPage) && rowsPerPage > 0 ? rowsPerPage : 10;
+
+  const lastPage = Math.max(0, Math.ceil(safeTotal / perPage) - 1);
+  const from = safeTotal === 0 ? 0 : page * perPage + 1;
+  const to = Math.min(safeTotal, (page + 1) * perPage);
+
+  const rowKey = (row, index) => {
+    if (getRowKey) return getRowKey(row, index);
+    const id = row?._id ?? row?.id;
+    if (id != null) return id;
+    if (import.meta.env?.DEV) {
+      console.warn("DataTable: row missing _id/id, falling back to index key", row);
+    }
+    return index;
+  };
 
   const sortButton = (column) => (
     <button
@@ -65,15 +82,15 @@ const DataTable = ({
                   <Spinner className="mx-auto" />
                 </td>
               </tr>
-            ) : data.length === 0 ? (
+            ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-muted">
                   {noDataMessage}
                 </td>
               </tr>
             ) : (
-              data.map((row, index) => (
-                <tr key={row._id || index} className="border-b border-hairline last:border-b-0 hover:bg-raised">
+              rows.map((row, index) => (
+                <tr key={rowKey(row, index)} className="border-b border-hairline last:border-b-0 hover:bg-raised">
                   {columns.map((column) => (
                     <td key={column.id} className="max-w-72 break-words px-4 py-2.5 align-top text-[13px] text-ink">
                       {column.format ? column.format(row[column.id], row) : row[column.id]}
@@ -92,12 +109,12 @@ const DataTable = ({
           <div className="flex justify-center py-10">
             <Spinner />
           </div>
-        ) : data.length === 0 ? (
+        ) : rows.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted">{noDataMessage}</p>
         ) : (
           <ul className="divide-y divide-hairline">
-            {data.map((row, index) => (
-              <li key={row._id || index} className="flex flex-col gap-1.5 px-4 py-3">
+            {rows.map((row, index) => (
+              <li key={rowKey(row, index)} className="flex flex-col gap-1.5 px-4 py-3">
                 {columns.map((column) => (
                   <div key={column.id} className="flex items-baseline gap-2 text-[13px]">
                     <span className="w-24 shrink-0 text-[11px] font-medium uppercase tracking-wide text-faint">{column.label}</span>
@@ -126,7 +143,7 @@ const DataTable = ({
           />
           <div className="flex items-center gap-1">
             <span className={cx("tabular-nums px-2 text-xs text-muted")}>
-              {from}–{to} of {total}
+              {from}–{to} of {safeTotal}
             </span>
             <IconButton label="Previous page" size="sm" disabled={page === 0} onClick={() => onPageChange(page - 1)}>
               <ChevronLeft />

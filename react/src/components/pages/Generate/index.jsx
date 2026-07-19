@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { QrCode, Copy, Shuffle, Inbox, History } from "lucide-react";
@@ -25,7 +25,8 @@ const Generate = () => {
   const [recentInboxes] = useState(getRecentInboxes);
 
   // Server config is the source of truth for domains; env is the fallback.
-  const domains = useMemo(() => configDomains || parseDomains(env.REACT_APP_DOMAINS), [configDomains]);
+  const domains = useMemo(() => configDomains || parseDomains(env.REACT_APP_DOMAINS) || [], [configDomains]);
+  const hasDomains = domains.length > 0;
 
   const getInitialState = () => {
     const lastEmail = window.localStorage.getItem("lastEmailId");
@@ -37,16 +38,27 @@ const Generate = () => {
         return { user, domain };
       }
     }
-    return { user: "", domain: domains[0] };
+    return { user: "", domain: domains[0] ?? "" };
   };
 
   const [emailDetails, setEmailDetails] = useState(getInitialState);
 
-  // If the config arrives after mount and the chosen domain isn't valid, snap to the first one.
-  const domain = domains.includes(emailDetails.domain) ? emailDetails.domain : domains[0];
-  const fullEmail = `${emailDetails.user}@${domain}`;
+  // Reconcile the selected domain when the config list arrives after mount, so
+  // state (not just the rendered value) stays valid. Never overwrites a valid
+  // manual selection.
+  useEffect(() => {
+    setEmailDetails((prev) => (prev.domain && domains.includes(prev.domain) ? prev : { ...prev, domain: domains[0] ?? "" }));
+  }, [domains]);
 
-  const requireUser = () => {
+  // If the config arrives after mount and the chosen domain isn't valid, snap to the first one.
+  const domain = domains.includes(emailDetails.domain) ? emailDetails.domain : (domains[0] ?? "");
+  const fullEmail = hasDomains ? `${emailDetails.user}@${domain}` : "";
+
+  const requireReady = () => {
+    if (!hasDomains) {
+      showSnackbar("No mail domains are configured", "error");
+      return false;
+    }
     if (!emailDetails.user) {
       showSnackbar("Please enter a username", "warning");
       return false;
@@ -55,7 +67,7 @@ const Generate = () => {
   };
 
   const copyToClipboard = async () => {
-    if (!requireUser()) return;
+    if (!requireReady()) return;
     const ok = await copyText(fullEmail);
     showSnackbar(ok ? "Copied!" : "Could not copy address", ok ? "success" : "error");
   };
@@ -67,18 +79,22 @@ const Generate = () => {
   };
 
   const generateRandomEmail = () => {
+    if (!hasDomains) {
+      showSnackbar("No mail domains are configured", "error");
+      return;
+    }
     const user = randomUsername(10);
     const chosenDomain = domains[Math.floor(Math.random() * domains.length)];
     setEmailDetails({ user, domain: chosenDomain });
   };
 
   const handleInboxRedirect = () => {
-    if (!requireUser()) return;
+    if (!requireReady()) return;
     navigate("/inbox/" + fullEmail);
   };
 
   const handleShowQr = () => {
-    if (!requireUser()) return;
+    if (!requireReady()) return;
     setOpenQrDialog(true);
   };
 

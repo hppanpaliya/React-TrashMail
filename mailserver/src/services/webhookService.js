@@ -1,6 +1,9 @@
 const crypto = require("crypto");
 const net = require("net");
 const dns = require("dns");
+// undici's own fetch + Agent are used (rather than the global fetch) so the
+// DNS-pinning dispatcher below is guaranteed compatible with the client.
+const { fetch: undiciFetch, Agent } = require("undici");
 const { getDB } = require("../db");
 const config = require("../config");
 
@@ -9,6 +12,10 @@ const config = require("../config");
 // runtime. Tests inject their own (zeroed) schedule.
 const DEFAULT_BACKOFF_MS = [1000, 5000, 25000, 60000, 120000];
 const MAX_ATTEMPTS = 5;
+const MAX_BACKOFF_MS = 60000;
+// Auto-disable a webhook after this many consecutive failed deliveries so a
+// dead endpoint cannot generate retry storms forever.
+const FAILURE_DISABLE_THRESHOLD = 15;
 const REQUEST_TIMEOUT_MS = 10000;
 const MAX_URL_LENGTH = 2048;
 const MAX_TEXT_BYTES = 10 * 1024; // ~10KB of body text in the payload
@@ -24,13 +31,20 @@ function getWebhooksCollection() {
 function isPrivateIPv4(ip) {
   const octets = ip.split(".").map(Number);
   if (octets.length !== 4 || octets.some((o) => Number.isNaN(o))) return true; // fail closed
-  const [a, b] = octets;
+  const [a, b, c] = octets;
   if (a === 0) return true; // 0.0.0.0/8 ("this" network, incl. 0.0.0.0)
   if (a === 127) return true; // loopback 127.0.0.0/8
   if (a === 10) return true; // private 10.0.0.0/8
   if (a === 172 && b >= 16 && b <= 31) return true; // private 172.16.0.0/12
   if (a === 192 && b === 168) return true; // private 192.168.0.0/16
   if (a === 169 && b === 254) return true; // link-local 169.254.0.0/16
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
+  if (a === 198 && (b === 18 || b === 19)) return true; // benchmarking 198.18.0.0/15
+  if (a === 192 && b === 0 && c === 0) return true; // IETF protocol 192.0.0.0/24
+  if (a === 192 && b === 0 && c === 2) return true; // TEST-NET-1 192.0.2.0/24
+  if (a === 198 && b === 51 && c === 100) return true; // TEST-NET-2 198.51.100.0/24
+  if (a === 203 && b === 0 && c === 113) return true; // TEST-NET-3 203.0.113.0/24
+  if (a >= 224) return true; // multicast 224/4, reserved 240/4, broadcast
   return false;
 }
 
@@ -48,9 +62,22 @@ function isPrivateIPv6(ip) {
     const lo = parseInt(hexV4[2], 16);
     return isPrivateIPv4(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
   }
+  // IPv4-compatible ::a.b.c.d (deprecated ::/96) - check the embedded IPv4
+  const compatV4 = s.match(/^::(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (compatV4) return isPrivateIPv4(compatV4[1]);
   const firstGroup = parseInt(s.split(":")[0] || "0", 16);
   if (firstGroup >= 0xfe80 && firstGroup <= 0xfebf) return true; // link-local fe80::/10
   if (firstGroup >= 0xfc00 && firstGroup <= 0xfdff) return true; // unique-local fc00::/7
+  if (firstGroup >= 0xff00) return true; // multicast ff00::/8
+  // 6to4 2002:AABB:CCDD:: embeds IPv4 A.B.C.D
+  const sixToFour = s.match(/^2002:([0-9a-f]{1,4}):([0-9a-f]{1,4})/);
+  if (sixToFour) {
+    const hi = parseInt(sixToFour[1], 16);
+    const lo = parseInt(sixToFour[2], 16);
+    return isPrivateIPv4(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+  }
+  // NAT64 64:ff9b::/96 - block outright (may embed arbitrary IPv4)
+  if (s.startsWith("64:ff9b:")) return true;
   return false;
 }
 
@@ -115,7 +142,7 @@ function validateWebhookUrl(rawUrl, { allowPrivate = config.webhookAllowPrivate 
  * save-time). Throws when the destination is not allowed.
  */
 async function assertSafeDestination(hostname, { allowPrivate = config.webhookAllowPrivate, lookupImpl = dns.promises.lookup } = {}) {
-  if (allowPrivate) return;
+  if (allowPrivate) return null; // no pinning needed
 
   const host = normalizeHostname(hostname);
   if (host === "localhost" || host.endsWith(".localhost")) {
@@ -126,7 +153,7 @@ async function assertSafeDestination(hostname, { allowPrivate = config.webhookAl
     if (isPrivateAddress(host)) {
       throw new Error(`Refusing to deliver webhook to private address ${host}`);
     }
-    return;
+    return [host];
   }
 
   const results = await lookupImpl(host, { all: true, verbatim: true });
@@ -139,6 +166,35 @@ async function assertSafeDestination(hostname, { allowPrivate = config.webhookAl
       throw new Error(`Refusing to deliver webhook: ${host} resolves to private address ${address}`);
     }
   }
+  // Return the validated addresses so the connection can be pinned to them
+  // (closing the check-vs-connect DNS rebinding window).
+  return addresses.map((r) => r.address);
+}
+
+/**
+ * undici Agent whose connector resolves to a pre-validated address only, so
+ * the socket target is exactly what assertSafeDestination approved. The
+ * returned address is re-checked, failing closed even if state changed.
+ * TLS SNI/cert validation still uses the original hostname (undici keeps
+ * servername from the URL).
+ */
+function pinnedDispatcher(addresses, timeoutMs) {
+  return new Agent({
+    connectTimeout: timeoutMs,
+    connect: {
+      lookup(hostname, opts, cb) {
+        const ip = addresses[0];
+        const family = net.isIP(ip);
+        if (!family || isPrivateAddress(ip)) {
+          return cb(new Error("Refusing webhook delivery: pinned address is not a safe public IP"));
+        }
+        if (opts && opts.all) {
+          return cb(null, [{ address: ip, family }]);
+        }
+        return cb(null, ip, family);
+      },
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -205,9 +261,9 @@ function withJitter(ms) {
  * error, timeout, non-2xx response). Redirects are NOT followed - a redirect
  * could otherwise bounce the request to an internal address.
  */
-async function attemptDelivery(webhook, payload, { fetchImpl = fetch, lookupImpl, timeoutMs = REQUEST_TIMEOUT_MS, allowPrivate } = {}) {
+async function attemptDelivery(webhook, payload, { fetchImpl, lookupImpl, timeoutMs = REQUEST_TIMEOUT_MS, allowPrivate } = {}) {
   const url = new URL(webhook.url);
-  await assertSafeDestination(url.hostname, { allowPrivate, lookupImpl });
+  const addresses = await assertSafeDestination(url.hostname, { allowPrivate, lookupImpl });
 
   const body = JSON.stringify(payload);
   const headers = {
@@ -223,13 +279,19 @@ async function attemptDelivery(webhook, payload, { fetchImpl = fetch, lookupImpl
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   if (typeof timer.unref === "function") timer.unref();
 
+  // Pin the connection to the validated address unless a test injected its own
+  // fetch (mocks never open sockets, so pinning is meaningless there).
+  const dispatcher = !fetchImpl && addresses ? pinnedDispatcher(addresses, timeoutMs) : undefined;
+  const doFetch = fetchImpl || undiciFetch;
+
   try {
-    const response = await fetchImpl(webhook.url, {
+    const response = await doFetch(webhook.url, {
       method: "POST",
       headers,
       body,
       signal: controller.signal,
       redirect: "manual",
+      ...(dispatcher ? { dispatcher } : {}),
     });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -237,6 +299,9 @@ async function attemptDelivery(webhook, payload, { fetchImpl = fetch, lookupImpl
     return response.status;
   } finally {
     clearTimeout(timer);
+    if (dispatcher) {
+      dispatcher.close().catch(() => {});
+    }
   }
 }
 
@@ -258,7 +323,8 @@ async function deliverWithRetries(webhook, payload, options = {}) {
       lastError =
         err && err.name === "AbortError" ? `Request timed out after ${options.timeoutMs || REQUEST_TIMEOUT_MS}ms` : err.message || String(err);
       if (attempt < maxAttempts) {
-        const delay = schedule[attempt - 1] != null ? schedule[attempt - 1] : schedule[schedule.length - 1] || 0;
+        let delay = schedule[attempt - 1] != null ? schedule[attempt - 1] : schedule[schedule.length - 1] || 0;
+        delay = Math.min(delay, MAX_BACKOFF_MS);
         if (delay > 0) await sleep(withJitter(delay));
       }
     }
@@ -268,14 +334,27 @@ async function deliverWithRetries(webhook, payload, options = {}) {
 
 /** Persist the final outcome of a delivery on the webhook document. */
 async function recordOutcome(emailId, outcome) {
-  const update = {
-    lastStatus: outcome.ok ? "success" : "failed",
-    lastError: outcome.ok ? null : outcome.error,
-  };
   if (outcome.ok) {
-    update.lastDeliveredAt = new Date();
+    await getWebhooksCollection().updateOne(
+      { emailId },
+      { $set: { lastStatus: "success", lastError: null, lastDeliveredAt: new Date(), consecutiveFailures: 0 } }
+    );
+    return;
   }
-  await getWebhooksCollection().updateOne({ emailId }, { $set: update });
+  // mongodb driver v6+: findOneAndUpdate resolves to the document itself.
+  const updated = await getWebhooksCollection().findOneAndUpdate(
+    { emailId },
+    { $set: { lastStatus: "failed", lastError: outcome.error }, $inc: { consecutiveFailures: 1 } },
+    { returnDocument: "after" }
+  );
+  const failures = updated && (updated.consecutiveFailures ?? (updated.value && updated.value.consecutiveFailures));
+  if (failures >= FAILURE_DISABLE_THRESHOLD) {
+    await getWebhooksCollection().updateOne(
+      { emailId },
+      { $set: { enabled: false, disabledReason: "auto-disabled after repeated delivery failures" } }
+    );
+    console.error(`Webhook for ${emailId} auto-disabled after ${failures} consecutive failures`);
+  }
 }
 
 /**
@@ -292,7 +371,9 @@ async function deliverForEmail(emailId, emailDoc, options = {}) {
     const payload = buildEmailPayload(emailId, emailDoc);
     const outcome = await deliverWithRetries(webhook, payload, options);
     if (!outcome.ok) {
-      console.error(`Webhook delivery failed for ${emailId} after ${outcome.attempts} attempts: ${outcome.error}`);
+      // Redact the mailbox address at default log level (mild PII).
+      const target = process.env.LOG_LEVEL === "debug" ? emailId : `${String(emailId).slice(0, 3)}…`;
+      console.error(`Webhook delivery failed for ${target} after ${outcome.attempts} attempts: ${outcome.error}`);
     }
     await recordOutcome(emailId, outcome);
     return outcome;

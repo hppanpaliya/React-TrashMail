@@ -12,6 +12,7 @@ import Signup from "./components/pages/Signup";
 import AdminDashboard from "./components/pages/AdminDashboard";
 import WatchView from "./components/pages/WatchView";
 import AppShell from "./components/layout/AppShell";
+import ErrorBoundary from "./components/ErrorBoundary";
 import CommandPalette from "./components/common/CommandPalette";
 import ShortcutsDialog from "./components/common/ShortcutsDialog";
 import Spinner from "./components/ui/Spinner";
@@ -32,17 +33,27 @@ const PrivateRoute = ({ children }) => {
 
   if (loading) return <CenteredLoader />;
 
-  return token ? children : <Navigate to="/login" />;
+  return token ? children : <Navigate to="/login" replace />;
 };
 
 const AdminRoute = ({ children }) => {
   const { token, user, loading } = useAuth();
 
   if (loading) return <CenteredLoader />;
-  if (!token) return <Navigate to="/login" />;
-  if (user && user.role !== "admin") return <Navigate to="/" />;
+  if (!token) return <Navigate to="/login" replace />;
+  // Fail closed: null/unknown user is NOT an admin.
+  if (!user || user.role !== "admin") return <Navigate to="/" replace />;
 
   return children;
+};
+
+// Keep authenticated users out of the auth pages.
+const PublicOnlyRoute = ({ children }) => {
+  const { token, loading } = useAuth();
+
+  if (loading) return <CenteredLoader />;
+
+  return token ? <Navigate to="/" replace /> : children;
 };
 
 // Location-keyed route transitions so page animations actually run.
@@ -60,8 +71,22 @@ const AnimatedRoutes = () => {
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
         <Routes location={location}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <PublicOnlyRoute>
+                <Signup />
+              </PublicOnlyRoute>
+            }
+          />
           <Route
             path="/admin"
             element={
@@ -140,8 +165,22 @@ const AppContent = () => {
   if (isWatch) {
     return (
       <Routes>
-        <Route path="/watch" element={<WatchView />} />
-        <Route path="/watch/:emailId" element={<WatchView />} />
+        <Route
+          path="/watch"
+          element={
+            <PrivateRoute>
+              <WatchView />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/watch/:emailId"
+          element={
+            <PrivateRoute>
+              <WatchView />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     );
   }
@@ -155,19 +194,22 @@ const AppContent = () => {
   );
 };
 
+// Router sits outermost so every provider below may safely use router hooks.
 const App = () => {
   return (
-    <AuthProvider>
-      <ConfigProvider>
-        <ThemeProvider>
-          <SnackbarProvider>
-            <Router>
-              <AppContent />
-            </Router>
-          </SnackbarProvider>
-        </ThemeProvider>
-      </ConfigProvider>
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <ConfigProvider>
+          <ThemeProvider>
+            <SnackbarProvider>
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
+            </SnackbarProvider>
+          </ThemeProvider>
+        </ConfigProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 

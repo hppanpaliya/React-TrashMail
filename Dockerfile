@@ -66,7 +66,17 @@ RUN chmod +x /docker_start.sh
 COPY healthcheck.sh /healthcheck.sh
 RUN chmod +x /healthcheck.sh
 
+# Run as the non-root `node` user (UID/GID 1000, shipped with the base image).
+# All runtime-writable paths (.env, env.js move, first-run flag, attachments,
+# PM2 home) live under /React-TrashMail, chowned here. npx/pm2 need a writable
+# HOME as non-root. Binding SMTP port 25 as non-root requires
+# NET_BIND_SERVICE (see docker-compose.yml) or a high SMTP_PORT.
+RUN mkdir -p /React-TrashMail/mailserver/attachments \
+ && chown -R node:node /React-TrashMail
+ENV HOME=/React-TrashMail/mailserver
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD /healthcheck.sh
 
+USER node
 CMD ["/docker_start.sh"]

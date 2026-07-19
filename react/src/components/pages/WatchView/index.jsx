@@ -89,7 +89,12 @@ const WatchView = () => {
           setEmails([]);
           setError(null);
         } else {
-          setError("Could not load inbox");
+          // Only show the error screen on the initial load; keep a good list
+          // visible through a transient background-poll failure.
+          setEmails((current) => {
+            if (current === null) setError("Could not load inbox");
+            return current;
+          });
         }
       }
     },
@@ -100,14 +105,22 @@ const WatchView = () => {
   useEffect(() => {
     if (!token || !emailId) return undefined;
 
-    const controller = new AbortController();
+    // One controller per poll, aborting the previous request, so a slow older
+    // response can never land after (and overwrite) a newer one.
+    let activeController = null;
+    const run = () => {
+      if (activeController) activeController.abort();
+      activeController = new AbortController();
+      fetchList(activeController.signal);
+    };
+
     setEmails(null);
     setSelected(null);
-    fetchList(controller.signal);
-    const timer = setInterval(() => fetchList(controller.signal), POLL_INTERVAL_MS);
+    run();
+    const timer = setInterval(run, POLL_INTERVAL_MS);
 
     return () => {
-      controller.abort();
+      if (activeController) activeController.abort();
       clearInterval(timer);
     };
   }, [token, emailId, fetchList]);

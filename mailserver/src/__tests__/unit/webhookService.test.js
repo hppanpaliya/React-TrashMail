@@ -108,9 +108,9 @@ describe("webhookService - delivery-time DNS resolution (SSRF protection)", () =
     await expect(assertSafeDestination("mixed.example.com", { allowPrivate: false, lookupImpl })).rejects.toThrow(/private address/);
   });
 
-  test("allows hostnames that resolve to public addresses only", async () => {
+  test("allows hostnames that resolve to public addresses only and returns them for pinning", async () => {
     const lookupImpl = jest.fn(async () => [{ address: "93.184.216.34", family: 4 }]);
-    await expect(assertSafeDestination("hooks.example.com", { allowPrivate: false, lookupImpl })).resolves.toBeUndefined();
+    await expect(assertSafeDestination("hooks.example.com", { allowPrivate: false, lookupImpl })).resolves.toEqual(["93.184.216.34"]);
   });
 
   test("rejects localhost names without doing a DNS lookup", async () => {
@@ -121,7 +121,7 @@ describe("webhookService - delivery-time DNS resolution (SSRF protection)", () =
 
   test("skips all checks when allowPrivate is set", async () => {
     const lookupImpl = jest.fn();
-    await expect(assertSafeDestination("localhost", { allowPrivate: true, lookupImpl })).resolves.toBeUndefined();
+    await expect(assertSafeDestination("localhost", { allowPrivate: true, lookupImpl })).resolves.toBeNull();
     expect(lookupImpl).not.toHaveBeenCalled();
   });
 });

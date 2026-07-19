@@ -6,9 +6,9 @@ This is a Node.js-based mail server that provides SMTP (Simple Mail Transfer Pro
 
 Before running the mail server, ensure that you have the following prerequisites installed:
 
-- Node.js (version 14 or higher)
+- Node.js >= 22.12.0 (matches `engines` in `package.json`)
 - MongoDB
-- NPM (Node Package Manager)
+- pnpm (the repo's package manager — `packageManager: pnpm@11`)
 
 ## Installation
 
@@ -19,7 +19,7 @@ Before running the mail server, ensure that you have the following prerequisites
 3. Install the required dependencies by running the following command:
 
    ```shell
-   npm install
+   pnpm install
    ```
 
 ## Configuration
@@ -29,7 +29,7 @@ The mail server is configured using environment variables. Create a `.env` file 
 ```env
 PORT=4000
 MONGO_URI=mongodb://localhost:27017
-DB_NAME=trashmail
+DB_NAME=myemails
 SMTP_PORT=2525
 DOMAIN=localhost
 ALLOWED_DOMAINS=localhost,example.com
@@ -42,6 +42,10 @@ ACCEPT_UNKNOWN_DOMAINS=false
 SMTP_MAX_MESSAGE_SIZE=26214400
 MAX_RAW_STORE_SIZE=10485760
 WEBHOOK_ALLOW_PRIVATE=false
+# Deployment
+NODE_ENV=production
+TRUST_PROXY=0
+FORCE_HTTPS=false
 ```
 
 - `PORT`: The port the API server will listen on (default: 4000).
@@ -53,6 +57,9 @@ WEBHOOK_ALLOW_PRIVATE=false
 - `JWT_SECRET`: Secret key for signing JWT tokens. **Required in production** — the server refuses to start with `NODE_ENV=production` if it is unset. In development a loud warning is printed and an insecure fallback is used.
 - `BCRYPT_SALT_ROUNDS`: Cost factor for password hashing (default: 10).
 - `JWT_EXPIRY`: Token expiration time (default: 24h).
+- `NODE_ENV`: set to `production` for deployments. This activates the JWT_SECRET fail-fast guard; only `NODE_ENV=development` permits the insecure dev fallback.
+- `TRUST_PROXY`: number of reverse proxies in front of the app (0 = none). Wrong values allow rate-limit bypass.
+- `FORCE_HTTPS`: set `true` only when TLS is terminated in front of the app (enables HSTS + upgrade-insecure-requests).
 - `EMAIL_RETENTION_DAYS`: Number of days to retain emails (default: 30).
 - `ACCEPT_UNKNOWN_DOMAINS`: When `true`, the SMTP server accepts mail for any recipient domain. Default `false`: recipients whose domain is not in `ALLOWED_DOMAINS` are rejected with SMTP 550. Note: if `ALLOWED_DOMAINS` is not set at all, all domains are accepted (development behavior).
 - `SMTP_MAX_MESSAGE_SIZE`: Maximum accepted SMTP message size in bytes (default: 26214400 = 25MB).
@@ -87,7 +94,9 @@ This will generate a new invite code and print it to the console. Share this cod
 To start the mail server, run the following command:
 
 ```shell
-npm start
+pnpm start        # development (nodemon watch)
+# production / containers:
+pnpm start:docker  # plain `node server.js`
 ```
 
 The server will start the SMTP server on the specified port and the web server on the configured PORT.
@@ -97,7 +106,7 @@ The server will start the SMTP server on the specified port and the web server o
 The mail server includes comprehensive API tests with JWT authentication.
 
 ```shell
-npm test
+pnpm test
 ```
 
 ## SMTP Server

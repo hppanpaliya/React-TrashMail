@@ -15,12 +15,14 @@ const IMAGE_RE = /\.(png|jpe?g|gif|webp|bmp|avif)$/i;
 // else stays a downloadable chip.
 const AttachmentItem = ({ attachment }) => {
   const showSnackbar = useSnackbar();
-  const isImage = IMAGE_RE.test(attachment.filename || "");
+  const isImage = IMAGE_RE.test(attachment?.filename || "");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [failed, setFailed] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
 
-  const attachmentPath = `/api/attachment/${attachment.directory}/${attachment.filename}`;
+  // Segments are server-supplied; encode each independently so characters like
+  // spaces/#/? cannot alter the request URL.
+  const attachmentPath = `/api/attachment/${encodeURIComponent(attachment?.directory ?? "")}/${encodeURIComponent(attachment?.filename ?? "")}`;
 
   useEffect(() => {
     if (!isImage) return undefined;
@@ -47,6 +49,9 @@ const AttachmentItem = ({ attachment }) => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [attachmentPath, isImage]);
+
+  // Guard after all hooks (hooks must run unconditionally).
+  if (!attachment) return null;
 
   const handleDownload = async () => {
     try {

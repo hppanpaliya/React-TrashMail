@@ -12,8 +12,8 @@ import IconButton from "../../ui/IconButton";
 import Pagination from "../../ui/Pagination";
 import { useAuth } from "../../../context/AuthContext";
 import { useSnackbar } from "../../../context/SnackbarContext";
-import { env } from "../../../env";
 import api, { isCanceled } from "../../../api";
+import { openSSE } from "../../../sse";
 import useDebouncedValue from "../../../hooks/useDebouncedValue";
 import useUnreadTitle from "../../../hooks/useUnreadTitle";
 import { copyText } from "../../../utils/clipboard";
@@ -68,14 +68,21 @@ const EmailList = () => {
   const unreadCount = emailData.filter((email) => !email.readStatus).length;
   useUnreadTitle(unreadCount);
 
-  // Reset to page 1 whenever the query changes.
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, filterRead, sortBy]);
+  // Query signature: a query change while on page > 1 resets the page first
+  // and skips the fetch for the stale page, so exactly one request fires.
+  const querySig = `${debouncedSearch}|${filterRead}|${sortBy}`;
+  const lastSigRef = useRef(querySig);
 
   // Fetching: keyed on page + query state, with cancellation.
   useEffect(() => {
     if (!token) return undefined;
+
+    if (lastSigRef.current !== querySig && page !== 1) {
+      lastSigRef.current = querySig;
+      setPage(1);
+      return undefined; // no fetch for the stale page
+    }
+    lastSigRef.current = querySig;
 
     const controller = new AbortController();
     const [sortField, sortOrder] = sortBy.split("-");
@@ -118,51 +125,36 @@ const EmailList = () => {
     fetchEmails();
 
     return () => controller.abort();
-  }, [emailId, token, page, debouncedSearch, filterRead, sortBy]);
+  }, [emailId, token, page, debouncedSearch, filterRead, sortBy, querySig]);
 
-  // SSE lifecycle: keyed on emailId/token only.
+  // SSE lifecycle: keyed on emailId/token only. Token travels in the
+  // x-auth-token header (openSSE), never the URL.
   useEffect(() => {
     if (!token || !emailId) return undefined;
 
-    let closed = false;
-    let eventSource = null;
-    let reconnectTimer = null;
-
-    const connect = () => {
-      eventSource = new EventSource(`${env.REACT_APP_API_URL}/api/sse/${emailId}?token=${token}`);
-
-      eventSource.onmessage = (event) => {
-        const newEmail = JSON.parse(event.data);
-        if (!newEmail || !newEmail._id || emailIdsRef.current.has(newEmail._id)) return;
+    const close = openSSE(`/api/sse/${emailId}`, {
+      onData: (newEmail) => {
+        if (!newEmail._id || emailIdsRef.current.has(newEmail._id)) return;
 
         const { page: currentPage, search, filter, sort } = queryRef.current;
         // Only splice new mail into the default (unfiltered, newest-first) view.
         if (search || filter === "read") return;
 
-        setTotalCount((prev) => prev + 1);
+        setTotalCount((prev) => {
+          const next = prev + 1;
+          setTotalPages(Math.max(1, Math.ceil(next / ITEMS_PER_PAGE)));
+          return next;
+        });
         if (currentPage === 1 && sort === "date-desc") {
           setEmailData((prev) => {
             if (prev.some((email) => email._id === newEmail._id)) return prev;
             return [newEmail, ...prev].slice(0, ITEMS_PER_PAGE);
           });
         }
-      };
+      },
+    });
 
-      eventSource.onerror = () => {
-        eventSource.close();
-        if (!closed) {
-          reconnectTimer = setTimeout(connect, 5000);
-        }
-      };
-    };
-
-    connect();
-
-    return () => {
-      closed = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (eventSource) eventSource.close();
-    };
+    return close;
   }, [emailId, token]);
 
   const handleEmailClick = (email) => {
@@ -183,7 +175,11 @@ const EmailList = () => {
     try {
       await api.delete(`/api/email/${emailId}/${email._id}`);
       setEmailData((prev) => prev.filter((item) => item._id !== email._id));
-      setTotalCount((prev) => Math.max(0, prev - 1));
+      setTotalCount((prev) => {
+        const next = Math.max(0, prev - 1);
+        setTotalPages(Math.max(1, Math.ceil(next / ITEMS_PER_PAGE)));
+        return next;
+      });
       showSnackbar("Email deleted", "success");
     } catch (err) {
       console.error("Error deleting email:", err);

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useState } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from "react";
 
 // Theme state: persisted in localStorage ("darkMode"), defaulting to the
 // system preference. The `dark` class on <html> drives all CSS tokens.
@@ -20,7 +20,7 @@ export const ThemeProvider = ({ children }) => {
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", darkMode ? "#0b0c0f" : "#f6f5f2");
+    if (meta) meta.setAttribute("content", darkMode ? "#0a0a0a" : "#fafafa");
   }, [darkMode]);
 
   const setDarkMode = useCallback((value) => {
@@ -44,7 +44,9 @@ export const ThemeProvider = ({ children }) => {
     });
   }, []);
 
-  return <ThemeContext.Provider value={{ darkMode, setDarkMode, toggleDarkMode }}>{children}</ThemeContext.Provider>;
+  const value = useMemo(() => ({ darkMode, setDarkMode, toggleDarkMode }), [darkMode, setDarkMode, toggleDarkMode]);
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => useContext(ThemeContext);

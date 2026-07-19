@@ -2,27 +2,51 @@ version: "3.8"
 
 services:
   app:
+    # NOTE: pin this to a versioned tag (and ideally a digest) for reproducible
+    # deploys, e.g. hppanpaliya/react-trashmail:v1.2.0@sha256:<digest>.
     image: hppanpaliya/react-trashmail:latest
     # For local development you can uncomment the build section below
     # build:
     #   context: .
     #   dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
+      # If a reverse proxy fronts the app on this host, prefer
+      # "127.0.0.1:4000:4000" so the app is not reachable from the LAN.
       - "4000:4000"
+      - "2525:2525" # SMTP (inbound mail); point your MX/relay at host port 2525
     environment:
       - MONGO_URI=mongodb://mongo:27017
       - DB_NAME=${DB_NAME:-myemails}
       - PORT=4000
+      - SMTP_PORT=2525 # >1024 so the non-root user can bind without extra caps
       - TRUST_PROXY=${TRUST_PROXY:-1}
+      # NODE_ENV=production activates the JWT_SECRET fail-fast guard.
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set (openssl rand -hex 32)}
     volumes:
+      # Bind mount must be writable by UID 1000 (the image runs as user `node`).
       - ./mailserver/attachments:/React-TrashMail/mailserver/attachments
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/" ]
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s # first run does npx react-inject-env + build move
+    # --- hardening ---
+    mem_limit: 512m
+    cpus: "1.0"
+    pids_limit: 200
+    security_opt:
+      - "no-new-privileges:true"
+    cap_drop:
+      - ALL
+    cap_add:
+      # The image runs as non-root; SMTP (port 25) needs this to bind.
+      - NET_BIND_SERVICE
 
   mongo:
     # NOTE: MongoDB cannot skip major versions on existing data files.
@@ -35,6 +59,18 @@ services:
       - mongo_data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=${DB_NAME:-myemails}
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # --- hardening ---
+    mem_limit: 1g
+    cpus: "1.5"
+    pids_limit: 400
+    security_opt:
+      - "no-new-privileges:true"
 
 volumes:
   mongo_data:
